@@ -4,9 +4,7 @@ const ALLOWED_ORIGINS = [
   'http://localhost:8080',
   'http://localhost:8081',
   'http://localhost:5173',
-  // Add your production domain here, e.g.:
-  // 'https://your-app.vercel.app',
-  // 'https://your-custom-domain.com',
+  'https://knot-master.vercel.app',
 ];
 
 export const corsHeaders = {

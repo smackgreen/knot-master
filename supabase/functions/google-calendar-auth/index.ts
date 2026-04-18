@@ -15,6 +15,26 @@ const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+// Allowed origins for CORS
+const ALLOWED_ORIGINS = [
+  'http://localhost:8080',
+  'http://localhost:8081',
+  'http://localhost:5173',
+  'https://knot-master.vercel.app',
+];
+
+function getCorsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get("Origin") || "";
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "Access-Control-Max-Age": "86400",
+  };
+}
+
 interface TokenResponse {
   access_token: string;
   refresh_token: string;
@@ -24,16 +44,12 @@ interface TokenResponse {
 }
 
 serve(async (req) => {
-  // CORS headers
-  const headers = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  };
+  const corsHeaders = getCorsHeaders(req);
 
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, {
-      headers,
+      headers: corsHeaders,
       status: 204,
     });
   }
@@ -44,6 +60,13 @@ serve(async (req) => {
   try {
     // Step 1: Generate authorization URL
     if (path === "authorize") {
+      // Validate required environment variables
+      if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !REDIRECT_URI) {
+        throw new Error(
+          "Missing required environment variables: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, or REDIRECT_URI"
+        );
+      }
+
       const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
       authUrl.searchParams.append("client_id", GOOGLE_CLIENT_ID);
       authUrl.searchParams.append("redirect_uri", REDIRECT_URI);
@@ -58,7 +81,7 @@ serve(async (req) => {
 
       return new Response(
         JSON.stringify({ url: authUrl.toString() }),
-        { headers: { ...headers, "Content-Type": "application/json" } }
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -123,7 +146,7 @@ serve(async (req) => {
 
       return new Response(
         JSON.stringify({ success: true }),
-        { headers: { ...headers, "Content-Type": "application/json" } }
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -190,21 +213,22 @@ serve(async (req) => {
           access_token: tokens.access_token,
           expires_at: expiresAt.toISOString() 
         }),
-        { headers: { ...headers, "Content-Type": "application/json" } }
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     // Default response for unknown paths
     return new Response(
       JSON.stringify({ error: "Not found" }),
-      { status: 404, headers: { ...headers, "Content-Type": "application/json" } }
+      { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
-  } catch (error) {
-    console.error("Error:", error.message);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("Error:", message);
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...headers, "Content-Type": "application/json" } }
+      JSON.stringify({ error: message }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
