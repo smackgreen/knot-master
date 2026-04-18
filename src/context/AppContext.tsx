@@ -507,7 +507,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
           due_date: task.dueDate,
           status: task.status || 'not_started',
           priority: task.priority || 'medium',
-          category: task.category
+          category: task.category || null
         })
         .select()
         .single();
@@ -549,7 +549,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
       if (updates.dueDate !== undefined) dbUpdates.due_date = updates.dueDate;
       if (updates.status !== undefined) dbUpdates.status = updates.status;
       if (updates.priority !== undefined) dbUpdates.priority = updates.priority;
-      if (updates.category !== undefined) dbUpdates.category = updates.category;
+      if (updates.category !== undefined) dbUpdates.category = updates.category || null;
 
       const { error } = await supabase
         .from('tasks')
