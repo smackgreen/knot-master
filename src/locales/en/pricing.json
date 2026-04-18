@@ -1,0 +1,60 @@
+{
+  "title": "Pricing Plans",
+  "description": "Choose the plan that's right for your wedding planning business.",
+  "monthly": "Monthly",
+  "yearly": "Yearly",
+  "savePercent": "Save {{percent}}%",
+  "month": "month",
+  "year": "year",
+  "mostPopular": "Most Popular",
+  "getStarted": "Get Started",
+  "subscribe": "Subscribe",
+  "currentPlan": "Current Plan",
+  
+  "plans": {
+    "free": {
+      "name": "Free",
+      "description": "For individuals just starting out with wedding planning."
+    },
+    "starter": {
+      "name": "Starter",
+      "description": "For established wedding planners with a growing business."
+    },
+    "pro": {
+      "name": "Pro",
+      "description": "For professional wedding planners with multiple clients."
+    }
+  },
+  
+  "features": {
+    "clientManagement": "Client Management",
+    "taskManagement": "Task Management",
+    "calendarView": "Calendar View",
+    "vendorManagement": "Vendor Management",
+    "guestManagement": "Guest Management",
+    "budgetTracking": "Budget Tracking",
+    "invoicesQuotations": "Invoices & Quotations",
+    "seatingCharts": "Seating Charts",
+    "mealPlanning": "AI Meal Planning",
+    "designSuggestions": "AI Design Suggestions"
+  },
+  
+  "limits": {
+    "upTo": "Up to {{count}}"
+  },
+  
+  "unlimited": "Unlimited",
+  "basic": "Basic",
+  "advanced": "Advanced",
+  "full": "Full",
+  
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "q1": "Can I upgrade or downgrade my plan later?",
+    "a1": "Yes, you can upgrade or downgrade your plan at any time. When you upgrade, you'll be charged the prorated amount for the remainder of your billing cycle. When you downgrade, the new plan will take effect at the start of your next billing cycle.",
+    "q2": "What payment methods do you accept?",
+    "a2": "We accept all major credit cards, including Visa, Mastercard, American Express, and Discover. We also accept PayPal for payment.",
+    "q3": "Is there a contract or commitment?",
+    "a3": "No, all plans are month-to-month or year-to-year with no long-term commitment. You can cancel at any time and your plan will remain active until the end of your current billing cycle."
+  }
+}

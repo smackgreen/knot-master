@@ -1,0 +1,60 @@
+{
+  "title": "Forfaits Tarifaires",
+  "description": "Choisissez le forfait qui convient à votre entreprise de planification de mariage.",
+  "monthly": "Mensuel",
+  "yearly": "Annuel",
+  "savePercent": "Économisez {{percent}}%",
+  "month": "mois",
+  "year": "an",
+  "mostPopular": "Le Plus Populaire",
+  "getStarted": "Commencer",
+  "subscribe": "S'abonner",
+  "currentPlan": "Forfait Actuel",
+  
+  "plans": {
+    "free": {
+      "name": "Gratuit",
+      "description": "Pour les personnes qui débutent dans la planification de mariage."
+    },
+    "starter": {
+      "name": "Débutant",
+      "description": "Pour les planificateurs de mariage établis avec une entreprise en croissance."
+    },
+    "pro": {
+      "name": "Pro",
+      "description": "Pour les planificateurs de mariage professionnels avec plusieurs clients."
+    }
+  },
+  
+  "features": {
+    "clientManagement": "Gestion des Clients",
+    "taskManagement": "Gestion des Tâches",
+    "calendarView": "Vue Calendrier",
+    "vendorManagement": "Gestion des Fournisseurs",
+    "guestManagement": "Gestion des Invités",
+    "budgetTracking": "Suivi Budgétaire",
+    "invoicesQuotations": "Factures et Devis",
+    "seatingCharts": "Plans de Table",
+    "mealPlanning": "Planification de Repas IA",
+    "designSuggestions": "Suggestions de Design IA"
+  },
+  
+  "limits": {
+    "upTo": "Jusqu'à {{count}}"
+  },
+  
+  "unlimited": "Illimité",
+  "basic": "Basique",
+  "advanced": "Avancé",
+  "full": "Complet",
+  
+  "faq": {
+    "title": "Questions Fréquemment Posées",
+    "q1": "Puis-je passer à un forfait supérieur ou inférieur plus tard ?",
+    "a1": "Oui, vous pouvez passer à un forfait supérieur ou inférieur à tout moment. Lorsque vous passez à un forfait supérieur, vous serez facturé au prorata pour le reste de votre cycle de facturation. Lorsque vous passez à un forfait inférieur, le nouveau forfait prendra effet au début de votre prochain cycle de facturation.",
+    "q2": "Quels modes de paiement acceptez-vous ?",
+    "a2": "Nous acceptons toutes les principales cartes de crédit, y compris Visa, Mastercard, American Express et Discover. Nous acceptons également PayPal pour le paiement.",
+    "q3": "Y a-t-il un contrat ou un engagement ?",
+    "a3": "Non, il n'y a pas de contrat à long terme. Vous pouvez annuler votre abonnement à tout moment."
+  }
+}

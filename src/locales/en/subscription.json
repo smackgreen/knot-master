@@ -1,0 +1,58 @@
+{
+  "title": "Subscription Management",
+  "currentPlan": "Current Plan",
+  "managePlan": "Manage your subscription plan and billing",
+  "active": "Active",
+  "cancelPending": "Cancellation Pending",
+  "freePlan": "Free plan - No billing",
+  "starterPlanPrice": "$19.99 per month",
+  "proPlanPrice": "$39.99 per month",
+  "renewsOn": "Renews on {{date}}",
+  "expiresOn": "Expires on {{date}}",
+  "cancelPlan": "Cancel Plan",
+  "upgradePlan": "Upgrade Plan",
+  "reactivate": "Reactivate Subscription",
+  "subscribeTo": "Subscribe to {{plan}} Plan",
+  "starterPlanDetails": "Perfect for established wedding planners with a growing business.",
+  "proPlanDetails": "For professional wedding planners with multiple clients and advanced needs.",
+  "confirmSubscription": "Confirm Subscription",
+  "fetchError": "Failed to fetch subscription information",
+  "subscribeSuccess": "Successfully subscribed to plan",
+  "subscribeError": "Failed to subscribe to plan",
+  "cancelSuccess": "Successfully canceled subscription",
+  "cancelError": "Failed to cancel subscription",
+  "reactivateSuccess": "Successfully reactivated subscription",
+  "reactivateError": "Failed to reactivate subscription",
+  "portalError": "Failed to access billing portal",
+  "manageBilling": "Manage Billing",
+  "paymentMethod": "Payment Method",
+  "yearlyDiscount": "Save 15%",
+  "billingCycle": {
+    "monthly": "Monthly",
+    "yearly": "Yearly"
+  },
+  "billedMonthly": "Billed monthly",
+  "billedYearly": "Billed yearly, save 15%",
+  "securePayment": {
+    "title": "Secure Payment",
+    "description": "Your payment information is processed securely. We do not store your credit card details."
+  },
+  "proceedToCheckout": "Proceed to Checkout",
+  "viewPlans": "View Plans",
+
+  "cancelAlert": {
+    "title": "Subscription Cancellation",
+    "description": "Your subscription will remain active until {{date}}, after which you'll be downgraded to the Free plan."
+  },
+
+  "demoMode": {
+    "title": "Demo Mode",
+    "description": "This is a demonstration. In a real application, you would be redirected to a payment processor to complete your subscription."
+  },
+
+  "noSubscription": {
+    "title": "No Active Subscription",
+    "description": "You're currently on the Free plan. Upgrade to access more features and capabilities.",
+    "viewPlans": "View Plans"
+  }
+}

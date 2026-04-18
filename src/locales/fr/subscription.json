@@ -1,0 +1,58 @@
+{
+  "title": "Gestion de l'Abonnement",
+  "currentPlan": "Forfait Actuel",
+  "managePlan": "Gérez votre forfait d'abonnement et votre facturation",
+  "active": "Actif",
+  "cancelPending": "Annulation en Attente",
+  "freePlan": "Forfait gratuit - Pas de facturation",
+  "starterPlanPrice": "19,99 € par mois",
+  "proPlanPrice": "39,99 € par mois",
+  "renewsOn": "Se renouvelle le {{date}}",
+  "expiresOn": "Expire le {{date}}",
+  "cancelPlan": "Annuler le Forfait",
+  "upgradePlan": "Passer au Forfait Supérieur",
+  "reactivate": "Réactiver l'Abonnement",
+  "subscribeTo": "S'abonner au Forfait {{plan}}",
+  "starterPlanDetails": "Parfait pour les planificateurs de mariage établis avec une entreprise en croissance.",
+  "proPlanDetails": "Pour les planificateurs de mariage professionnels avec plusieurs clients et des besoins avancés.",
+  "confirmSubscription": "Confirmer l'Abonnement",
+  "fetchError": "Échec de la récupération des informations d'abonnement",
+  "subscribeSuccess": "Abonnement au forfait réussi",
+  "subscribeError": "Échec de l'abonnement au forfait",
+  "cancelSuccess": "Annulation de l'abonnement réussie",
+  "cancelError": "Échec de l'annulation de l'abonnement",
+  "reactivateSuccess": "Réactivation de l'abonnement réussie",
+  "reactivateError": "Échec de la réactivation de l'abonnement",
+  "portalError": "Échec de l'accès au portail de facturation",
+  "manageBilling": "Gérer la Facturation",
+  "paymentMethod": "Moyen de Paiement",
+  "yearlyDiscount": "Économisez 15%",
+  "billingCycle": {
+    "monthly": "Mensuel",
+    "yearly": "Annuel"
+  },
+  "billedMonthly": "Facturé mensuellement",
+  "billedYearly": "Facturé annuellement, économisez 15%",
+  "securePayment": {
+    "title": "Paiement Sécurisé",
+    "description": "Vos informations de paiement sont traitées en toute sécurité. Nous ne stockons pas les détails de votre carte de crédit."
+  },
+  "proceedToCheckout": "Procéder au Paiement",
+  "viewPlans": "Voir les Forfaits",
+
+  "cancelAlert": {
+    "title": "Annulation de l'Abonnement",
+    "description": "Votre abonnement restera actif jusqu'au {{date}}, après quoi vous serez rétrogradé au forfait Gratuit."
+  },
+
+  "demoMode": {
+    "title": "Mode Démo",
+    "description": "Ceci est une démonstration. Dans une application réelle, vous seriez redirigé vers un processeur de paiement pour compléter votre abonnement."
+  },
+
+  "noSubscription": {
+    "title": "Aucun Abonnement Actif",
+    "description": "Vous êtes actuellement sur le forfait Gratuit. Passez à un forfait supérieur pour accéder à plus de fonctionnalités et de capacités.",
+    "viewPlans": "Voir les Forfaits"
+  }
+}

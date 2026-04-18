@@ -1,0 +1,139 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 340 25% 98%;
+    --foreground: 240 10% 20%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 20%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 20%;
+
+    --primary: 340 80% 75%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 120 25% 85%;
+    --secondary-foreground: 240 10% 20%;
+
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 5% 45%;
+
+    --accent: 45 80% 90%;
+    --accent-foreground: 240 10% 20%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 340 80% 75%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 340 25% 98%;
+    --sidebar-foreground: 240 10% 20%;
+    --sidebar-primary: 340 80% 75%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 10% 96%;
+    --sidebar-accent-foreground: 240 10% 20%;
+    --sidebar-border: 240 6% 90%;
+    --sidebar-ring: 340 80% 75%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif;
+  }
+}
+
+.animate-in {
+  animation: fade-in 0.5s ease-out;
+}
+
+.card-wedding {
+  @apply border rounded-lg overflow-hidden transition-all duration-200 hover:shadow-md;
+}
+
+/* FullCalendar Styles */
+.fc {
+  @apply font-sans text-sm;
+}
+
+.fc .fc-toolbar-title {
+  @apply text-xl font-serif;
+}
+
+.fc .fc-button {
+  @apply bg-primary text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+}
+
+.fc .fc-button-primary:not(:disabled).fc-button-active,
+.fc .fc-button-primary:not(:disabled):active {
+  @apply bg-primary/80 text-primary-foreground;
+}
+
+.fc .fc-button-primary:disabled {
+  @apply bg-primary/50 text-primary-foreground/80;
+}
+
+.fc .fc-daygrid-day.fc-day-today {
+  @apply bg-accent/30;
+}
+
+.fc .fc-daygrid-day-number,
+.fc .fc-col-header-cell-cushion {
+  @apply text-foreground no-underline;
+}
+
+.fc .fc-list-day-cushion {
+  @apply bg-muted;
+}
+
+.fc .fc-event {
+  @apply border-none cursor-pointer;
+}
+
+.fc .fc-event:hover {
+  @apply opacity-90;
+}
+
+.fc .fc-timegrid-slot {
+  @apply h-12;
+}
+
+.fc-theme-standard .fc-list-day-cushion {
+  @apply bg-muted;
+}
+
+.fc-theme-standard td,
+.fc-theme-standard th,
+.fc-theme-standard .fc-scrollgrid {
+  @apply border-border;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 640px) {
+  .fc .fc-toolbar {
+    @apply flex-col gap-2;
+  }
+
+  .fc .fc-toolbar-chunk {
+    @apply flex justify-center;
+  }
+}

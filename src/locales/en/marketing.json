@@ -1,0 +1,65 @@
+{
+  "tagline": "Wedding Planner CRM",
+  "heroDescription": "Streamline your wedding planning business with our comprehensive client management system designed exclusively for wedding planners.",
+  "getStarted": "Get Started",
+  "viewPricing": "View Pricing",
+  "featuresTitle": "Everything you need to manage your wedding planning business",
+  "viewPricingPlans": "View Pricing Plans",
+  "readyToStart": "Ready to streamline your wedding planning business?",
+  "choosePlan": "Choose a plan that works for you and get started today.",
+  "featuresPageTitle": "Features",
+  "featuresPageDescription": "Discover all the powerful tools and features that Knot To It offers to help you manage your wedding planning business.",
+  
+  "features": {
+    "clientManagement": {
+      "title": "Client Management",
+      "description": "Keep all your client details organized in one place, from contact info to wedding preferences.",
+      "fullDescription": "Manage all your clients in one centralized system. Store contact information, wedding details, preferences, and notes. Track client status from inquiry to post-wedding follow-up. Easily search and filter clients based on various criteria."
+    },
+    "weddingTimelines": {
+      "title": "Wedding Timelines",
+      "description": "Track upcoming weddings, important deadlines, and vendor coordination all in one calendar.",
+      "fullDescription": "Create detailed timelines for each wedding. Set up important milestones and deadlines. Coordinate with vendors and clients using a shared calendar view. Get reminders for upcoming tasks and appointments."
+    },
+    "taskTracking": {
+      "title": "Task Tracking",
+      "description": "Never miss a deadline with our comprehensive task management system for each wedding.",
+      "fullDescription": "Create and assign tasks for each wedding. Set priorities, due dates, and categories. Track task status and progress. Get notifications for upcoming and overdue tasks. Organize tasks by client, priority, or deadline."
+    },
+    "budgetTracking": {
+      "title": "Budget Tracking",
+      "description": "Track wedding budgets, expenses, and payments in real-time.",
+      "fullDescription": "Create detailed budgets for each wedding. Track expenses by category. Monitor paid and unpaid amounts. Generate budget reports for clients. Compare estimated vs. actual costs."
+    },
+    "vendorManagement": {
+      "title": "Vendor Management",
+      "description": "Manage all your vendors, their services, and contracts in one place.",
+      "fullDescription": "Store vendor information and contact details. Track vendor services, pricing, and availability. Manage contracts and payment schedules. Rate vendors and keep notes on performance."
+    },
+    "invoicesQuotations": {
+      "title": "Invoices & Quotations",
+      "description": "Create professional invoices and quotations for your clients.",
+      "fullDescription": "Generate professional invoices and quotations. Customize with your company branding. Track payment status and send reminders. Download and share documents in PDF format."
+    },
+    "guestManagement": {
+      "title": "Guest Management",
+      "description": "Manage guest lists, RSVPs, and special requirements with ease.",
+      "fullDescription": "Create and manage comprehensive guest lists. Track RSVPs, meal choices, and special requirements. Import and export guest data from Excel. Organize guests by groups or relationships."
+    },
+    "seatingCharts": {
+      "title": "Seating Charts",
+      "description": "Design and manage seating arrangements with our intuitive drag-and-drop interface.",
+      "fullDescription": "Create visual seating charts with drag-and-drop functionality. Design different table layouts and arrangements. Assign guests to tables and track seating preferences. Generate printable place cards and seating charts."
+    },
+    "mealPlanning": {
+      "title": "AI Meal Planning",
+      "description": "Generate meal suggestions based on preferences, dietary restrictions, and budget.",
+      "fullDescription": "Use AI to generate customized meal suggestions. Consider dietary restrictions, cultural preferences, and seasonality. Plan menus within budget constraints. Organize meals by course and track costs per person."
+    },
+    "designSuggestions": {
+      "title": "AI Design Suggestions",
+      "description": "Get AI-powered design ideas for color schemes, decor, and venue layouts.",
+      "fullDescription": "Generate color schemes and design concepts with AI. Get decor ideas based on wedding themes and preferences. Visualize venue layouts and floor plans. Create mood boards and design presentations for clients."
+    }
+  }
+}
