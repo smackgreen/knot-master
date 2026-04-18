@@ -10,7 +10,7 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 const DEFAULT_FROM_EMAIL = 'onboarding@resend.dev';
 
 // Supabase Edge Function URL
-const EDGE_FUNCTION_URL = 'https://zkrtaixltensetceanmv.supabase.co/functions/v1/resend-email';
+const EDGE_FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/resend-email`;
 
 /**
  * Send a signature request email

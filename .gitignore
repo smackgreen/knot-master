@@ -12,6 +12,15 @@ dist
 dist-ssr
 *.local
 
+# Environment variables and secrets
+.env
+.env.local
+.env.*.local
+email-server/.env
+
+# Supabase temp files (contain project refs and connection strings)
+supabase/.temp/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

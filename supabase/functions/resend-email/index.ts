@@ -1,19 +1,31 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { Resend } from 'resend';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
-// Define CORS headers directly in this file for better control
-// Use a more permissive configuration to ensure it works with all clients
+// CORS headers — restrict to known origins
+const ALLOWED_ORIGINS = [
+  'http://localhost:8080',
+  'http://localhost:8081',
+  'http://localhost:5173',
+  Deno.env.get('VITE_APP_URL') || '',
+].filter(Boolean);
+
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': '*',
-  'Access-Control-Allow-Methods': '*',
+  'Access-Control-Allow-Origin': ALLOWED_ORIGINS.join(', '),
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Max-Age': '86400',
-  'Access-Control-Allow-Credentials': 'true',
 };
 
 // Initialize Resend with API key from environment variable
 const resendApiKey = Deno.env.get('RESEND_API_KEY');
 const resend = new Resend(resendApiKey);
+
+// Initialize Supabase admin client for JWT verification
+const supabaseAdmin = createClient(
+  Deno.env.get('SUPABASE_URL') || '',
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
+);
 
 // Default sender email - using Resend's default sender
 const DEFAULT_FROM_EMAIL = 'onboarding@resend.dev';
@@ -32,32 +44,46 @@ interface EmailRequest {
 }
 
 serve(async (req) => {
-  // Log request details for debugging
-  console.log(`Request method: ${req.method}`);
-  console.log(`Request URL: ${req.url}`);
-  console.log(`Request headers:`, Object.fromEntries(req.headers.entries()));
-
-  // Always include CORS headers in every response
+  // Determine the appropriate CORS origin
+  const origin = req.headers.get('Origin') || '';
+  const corsOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
   const responseHeaders = {
     ...corsHeaders,
+    'Access-Control-Allow-Origin': corsOrigin,
   };
 
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    console.log('Handling OPTIONS request for CORS preflight');
     return new Response(null, {
-      status: 204, // No content status is better for OPTIONS
+      status: 204,
       headers: responseHeaders
     });
   }
 
-  try {
-    console.log('Received request:', req.method, req.url);
-    console.log('Request headers:', Object.fromEntries(req.headers.entries()));
+  // Verify authentication — require a valid Supabase JWT
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) {
+    return new Response(
+      JSON.stringify({ error: 'Missing authorization header' }),
+      { status: 401, headers: { ...responseHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
 
+  const token = authHeader.replace('Bearer ', '');
+  const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+  if (authError || !user) {
+    console.error('Authentication failed:', authError);
+    return new Response(
+      JSON.stringify({ error: 'Unauthorized' }),
+      { status: 401, headers: { ...responseHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  console.log(`Authenticated request from user: ${user.id}`);
+
+  try {
     // Parse request body
     const body = await req.json();
-    console.log('Request body:', JSON.stringify(body));
 
     const { to, subject, html, text, from, name, templateType, signatureUrl, documentNames, originalRecipient } = body as EmailRequest;
 

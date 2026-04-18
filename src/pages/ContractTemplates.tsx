@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { ContractTemplate, ContractCategory } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import DOMPurify from 'dompurify';
 import {
   Select,
   SelectContent,
@@ -195,7 +196,7 @@ const ContractTemplates = () => {
                 </Button>
               </div>
               <div className="border rounded-md p-4 bg-white overflow-auto max-h-[60vh]">
-                <div dangerouslySetInnerHTML={{ __html: templateToView.content }} />
+                <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(templateToView.content) }} />
               </div>
             </div>
           </DialogContent>

@@ -2,7 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 // Stripe API endpoint (Supabase Edge Function)
-const STRIPE_API_ENDPOINT = 'https://zkrtaixltensetceanmv.supabase.co/functions/v1/stripe';
+const STRIPE_API_ENDPOINT = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe`;
 
 // Stripe price IDs for each plan
 // These would be created in the Stripe dashboard

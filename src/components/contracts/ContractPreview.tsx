@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Download, FileSignature, Send } from 'lucide-react';
 import SignatureDisplay from './SignatureDisplay';
 import { useReactToPrint } from 'react-to-print';
+import DOMPurify from 'dompurify';
 
 interface ContractPreviewProps {
   contract: Contract;
@@ -97,7 +98,7 @@ const ContractPreview: React.FC<ContractPreviewProps> = ({
             {/* Contract content */}
             <div 
               className="contract-content" 
-              dangerouslySetInnerHTML={{ __html: contract.content }} 
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(contract.content) }} 
             />
             
             {/* Signatures section */}
