@@ -7,12 +7,12 @@ export interface OAuthToken {
   user_id: string;
   provider: string;
   access_token: string;
-  refresh_token?: string;
-  token_type: string;
-  expires_at: string;
-  scope: string;
-  created_at: string;
-  updated_at: string;
+  refresh_token: string | null;
+  token_type: string | null;
+  expires_at: string | null;
+  scope: string | null;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 // Types for connected calendars
@@ -22,11 +22,11 @@ export interface ConnectedCalendar {
   provider: string;
   calendar_id: string;
   name: string;
-  description?: string;
-  color: string;
-  is_selected: boolean;
-  created_at: string;
-  updated_at: string;
+  description: string | null;
+  color: string | null;
+  is_selected: boolean | null;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 // Types for calendar events
@@ -100,6 +100,9 @@ class CalendarService {
    * and the `Authorization` header with the user's access token.
    */
   private async getFunctionHeaders(): Promise<Record<string, string>> {
+    if (!this.supabaseAnonKey) {
+      throw new Error("VITE_SUPABASE_ANON_KEY is not configured. Please set it in your .env file.");
+    }
     const accessToken = await this.getAccessToken();
     return {
       "Content-Type": "application/json",
