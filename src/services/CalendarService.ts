@@ -66,9 +66,11 @@ export interface CalendarEvent {
 class CalendarService {
   private user: User | null = null;
   private supabaseUrl: string;
+  private supabaseAnonKey: string;
 
   constructor() {
     this.supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
+    this.supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
   }
 
   /**
@@ -90,6 +92,38 @@ class CalendarService {
       throw new Error("No active Supabase session; please sign in again.");
     }
     return data.session.access_token;
+  }
+
+  /**
+   * Build the standard headers required for Supabase Edge Function calls.
+   * Includes both the `apikey` header (required by the Supabase gateway)
+   * and the `Authorization` header with the user's access token.
+   */
+  private async getFunctionHeaders(): Promise<Record<string, string>> {
+    const accessToken = await this.getAccessToken();
+    return {
+      "Content-Type": "application/json",
+      "apikey": this.supabaseAnonKey,
+      "Authorization": `Bearer ${accessToken}`,
+    };
+  }
+
+  /**
+   * Parse an error from an Edge Function response.
+   * Handles multiple response formats: { error }, { msg }, { message }, or plain text.
+   */
+  private async parseFunctionError(response: Response): Promise<string> {
+    try {
+      const text = await response.text();
+      try {
+        const json = JSON.parse(text);
+        return json.error || json.msg || json.message || `HTTP ${response.status}: ${text}`;
+      } catch {
+        return `HTTP ${response.status}: ${text}`;
+      }
+    } catch {
+      return `HTTP ${response.status}: Unknown error`;
+    }
   }
 
   /**
@@ -117,16 +151,13 @@ class CalendarService {
     }
 
     try {
-      const accessToken = await this.getAccessToken();
+      const headers = await this.getFunctionHeaders();
       // Call the Supabase Edge Function to get the authorization URL
       const response = await fetch(
         `${this.supabaseUrl}/functions/v1/google-calendar-auth/authorize`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
+          headers,
           body: JSON.stringify({
             state: this.user.id, // Pass the user ID as state
           }),
@@ -134,8 +165,8 @@ class CalendarService {
       );
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(`Failed to get authorization URL: ${error.error}`);
+        const errorMessage = await this.parseFunctionError(response);
+        throw new Error(`Failed to get authorization URL: ${errorMessage}`);
       }
 
       const { url } = await response.json();
@@ -151,16 +182,13 @@ class CalendarService {
    */
   async handleOAuthCallback(code: string, state: string): Promise<boolean> {
     try {
-      const accessToken = await this.getAccessToken();
+      const headers = await this.getFunctionHeaders();
       // Call the Supabase Edge Function to exchange the code for tokens
       const response = await fetch(
         `${this.supabaseUrl}/functions/v1/google-calendar-auth/callback`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
+          headers,
           body: JSON.stringify({
             code,
             state, // This contains the user ID
@@ -169,8 +197,8 @@ class CalendarService {
       );
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(`Failed to exchange code for tokens: ${error.error}`);
+        const errorMessage = await this.parseFunctionError(response);
+        throw new Error(`Failed to exchange code for tokens: ${errorMessage}`);
       }
 
       const { success } = await response.json();
@@ -348,15 +376,12 @@ class CalendarService {
     }
 
     try {
-      const accessToken = await this.getAccessToken();
+      const headers = await this.getFunctionHeaders();
       const response = await fetch(
         `${this.supabaseUrl}/functions/v1/google-calendar-auth/refresh`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
+          headers,
           body: JSON.stringify({
             userId: this.user.id,
           }),
@@ -364,8 +389,8 @@ class CalendarService {
       );
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(`Failed to refresh token: ${error.error}`);
+        const errorMessage = await this.parseFunctionError(response);
+        throw new Error(`Failed to refresh token: ${errorMessage}`);
       }
     } catch (error) {
       console.error("Error refreshing token:", error);
