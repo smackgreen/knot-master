@@ -401,9 +401,11 @@ const Calendar = () => {
         <h1 className="text-3xl font-serif font-bold">{t('calendar.title')}</h1>
 
         <div className="flex flex-wrap items-center gap-2">
+          {/* Add Event button hidden - functionality not yet implemented. Remove 'hidden' class to restore. */}
           <Button
             variant="outline"
             size="sm"
+            className="hidden"
             onClick={() => setIsAddEventModalOpen(true)}
           >
             <Plus className="h-4 w-4 mr-1" />
