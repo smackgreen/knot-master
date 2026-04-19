@@ -5,7 +5,17 @@ This guide explains how to set up and deploy the Supabase Edge Function for send
 ## Prerequisites
 
 1. Supabase CLI installed
-2. Resend API key (already added to your `.env.local` file)
+2. Resend API key (stored as a Supabase secret — **never in the frontend**)
+
+## Security Architecture
+
+The Resend API key is stored **exclusively** as a Supabase Edge Function secret. It is:
+
+- ✅ Read by the Edge Function via `Deno.env.get('RESEND_API_KEY')`
+- ❌ **NOT** in the frontend `.env` file (no `VITE_RESEND_API_KEY`)
+- ❌ **NOT** bundled into the frontend JavaScript
+
+This ensures the API key cannot be extracted from the browser.
 
 ## Deployment Steps
 
@@ -14,27 +24,29 @@ This guide explains how to set up and deploy the Supabase Edge Function for send
 We've created a batch file to simplify the deployment process. Run:
 
 ```
-deploy-edge-function.bat
+deploy-resend-function.bat
 ```
 
 This script will:
-1. Link to your Supabase project
-2. Deploy the Edge Function with JWT verification disabled
-3. Set the Resend API key as a secret
+1. Deploy the Edge Function with JWT verification disabled
+2. Set the Resend API key as a secret (reads from your system `%RESEND_API_KEY%` environment variable)
+
+**Important:** Before running the script, set the `RESEND_API_KEY` environment variable on your system:
+
+```batch
+set RESEND_API_KEY=your_resend_api_key
+```
 
 ### 2. Manual Deployment (Alternative)
 
-If you prefer to deploy manually, follow these steps:
+If you prefer to deploy manually:
 
 ```bash
-# Link to your Supabase project
-supabase link --project-ref ocrjmlizddgjlcwxpqmq
-
 # Deploy the Edge Function with JWT verification disabled
-supabase functions deploy resend-email --no-verify-jwt
+supabase functions deploy resend-email --project-ref zkrtaixltensetceanmv --no-verify-jwt
 
-# Set the Resend API key
-supabase secrets set RESEND_API_KEY=re_RrTyet8W_894eJUvcj5r5yohQeSkD7Ezc
+# Set the Resend API key as a secret
+supabase secrets set RESEND_API_KEY=your_resend_api_key --project-ref zkrtaixltensetceanmv
 ```
 
 ## Troubleshooting CORS Issues
@@ -47,30 +59,25 @@ If you encounter CORS issues, the Edge Function has been configured to handle th
 
 ## How It Works
 
-The email service in the application uses a multi-layered approach:
+The email service uses the Supabase Edge Function:
 
-1. **Primary Method**: Supabase Edge Function
-   - The application first tries to send emails using the Supabase Edge Function through the Supabase client
+1. **Frontend** (`emailService.ts`) calls `supabase.functions.invoke('resend-email', ...)`
+2. **Edge Function** authenticates the request, renders the email template, and sends via Resend API
+3. **Resend API** delivers the email
 
-2. **Direct API Fallback**: Direct Edge Function Call
-   - If the Supabase client method fails, it falls back to a direct fetch call to the Edge Function URL
-
-3. **Simulation Fallback**: Console Logs
-   - If both methods fail, it simulates sending emails by logging to the console
-
-This approach ensures maximum reliability while maintaining flexibility.
+All email templates are rendered server-side in the Edge Function.
 
 ## Testing
 
-You can test the email functionality using the Test Email button in the application. This will attempt to send a test email using the configured methods.
+You can test the email functionality using the Test Email button in the application. This will attempt to send a test email using the configured Edge Function.
 
 ## Edge Function Configuration
 
 The Edge Function is configured to:
 
-1. Accept requests from any origin (CORS)
-2. Not require JWT authentication
-3. Use the Resend API key stored as a secret
+1. Accept requests from allowed origins (CORS)
+2. Validate Supabase JWT tokens for authentication
+3. Use the Resend API key stored as a Supabase secret
 4. Support different email templates (signature request, confirmation, test)
 
 ## Updating the Edge Function

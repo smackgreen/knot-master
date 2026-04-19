@@ -7,7 +7,7 @@ supabase functions deploy resend-email --project-ref zkrtaixltensetceanmv --no-v
 
 echo.
 echo Step 2: Ensuring the Resend API key is set
-supabase secrets set RESEND_API_KEY=re_RrTyet8W_894eJUvcj5r5yohQeSkD7Ezc --project-ref zkrtaixltensetceanmv
+supabase secrets set RESEND_API_KEY=%RESEND_API_KEY% --project-ref zkrtaixltensetceanmv
 
 echo.
 echo Update complete!

@@ -4,50 +4,52 @@ This document explains how to set up and use the email integration in the Knot T
 
 ## Overview
 
-The application uses a multi-layered approach to send emails:
+The application sends emails through a **Supabase Edge Function** that uses the Resend API. The Resend API key is stored securely as a Supabase secret and is **never exposed to the frontend**.
 
-1. **Primary Method**: Supabase Edge Function
-2. **Fallback Method**: Direct Resend API
-3. **Last Resort**: Simulated emails (console logs)
+## Architecture
 
-This approach ensures maximum reliability while maintaining flexibility.
+```
+Frontend (emailService.ts)
+  → supabase.functions.invoke('resend-email')
+    → Supabase Edge Function (Deno)
+      → Resend API (server-side, API key in secrets)
+        → Email Delivery
+```
 
 ## Setup Instructions
 
-### 1. Resend API Key
+### 1. Resend API Key (Server-Side Only)
 
-You need to set up a Resend account and get an API key:
+The Resend API key must be set as a **Supabase Edge Function secret**. It is NOT stored in the frontend `.env` file.
 
 1. Sign up at [Resend.com](https://resend.com)
 2. Create an API key in your dashboard
-3. Add the API key to your environment variables:
+3. Set it as a Supabase secret:
 
-Create a `.env.local` file in your project root with:
+```bash
+supabase secrets set RESEND_API_KEY=your_resend_api_key --project-ref your-project-ref
 ```
-VITE_RESEND_API_KEY=your_resend_api_key
+
+### 2. Deploy the Edge Function
+
+```bash
+# Deploy the Edge Function
+supabase functions deploy resend-email --project-ref your-project-ref --no-verify-jwt
 ```
 
-### 2. Supabase Edge Function (Optional)
+Or use the deployment script (reads `RESEND_API_KEY` from your system environment):
 
-If you want to use the Supabase Edge Function as the primary method:
-
-1. Deploy the Edge Function:
-   ```
-   supabase functions deploy resend-email
-   ```
-
-2. Set the Resend API key as a secret:
-   ```
-   supabase secrets set RESEND_API_KEY=your_resend_api_key
-   ```
+```bash
+deploy-resend-function.bat
+```
 
 ## Usage
 
 The email service provides three main functions:
 
-1. `sendSignatureRequestEmail` - Sends an email to request a signature
-2. `sendSignatureConfirmationEmail` - Sends a confirmation email after documents are signed
-3. `sendTestEmail` - Sends a test email to verify the email system is working
+1. `sendSignatureRequestEmail` — Sends an email to request a signature
+2. `sendSignatureConfirmationEmail` — Sends a confirmation email after documents are signed
+3. `sendTestEmail` — Sends a test email to verify the email system is working
 
 ### Example Usage
 
@@ -65,50 +67,33 @@ if (success) {
 }
 ```
 
-## How It Works
+## Email Templates
 
-### Multi-layered Approach
+All HTML email templates are rendered **server-side** in the Edge Function (`supabase/functions/resend-email/index.ts`). The supported template types are:
 
-1. **First Attempt**: The system tries to send the email using the Supabase Edge Function.
-2. **First Fallback**: If the Edge Function fails, it tries to send the email directly using the Resend API.
-3. **Second Fallback**: If both methods fail, it simulates sending the email by logging the details to the console.
+| Template Type | Description |
+|---------------|-------------|
+| `signature_request` | Email requesting a document signature |
+| `signature_confirmation` | Confirmation that documents were signed |
+| `test` | Test email to verify configuration |
 
-This approach ensures that the application can continue to function even if there are issues with the email service.
+## Security
 
-### Direct Resend API
-
-The direct Resend API integration uses the following endpoint:
-```
-https://api.resend.com/emails
-```
-
-The API requires the following headers:
-```
-Authorization: Bearer your_resend_api_key
-Content-Type: application/json
-```
-
-And the following body structure:
-```json
-{
-  "from": "Knot To It <signatures@knottoit.com>",
-  "to": ["recipient@example.com"],
-  "subject": "Email Subject",
-  "html": "<html>Email content</html>"
-}
-```
+- **No API keys in the frontend**: The `VITE_RESEND_API_KEY` variable has been removed from `.env`. The Resend API key exists only as a Supabase Edge Function secret.
+- **JWT Authentication**: The Edge Function validates the Supabase JWT token from the request.
+- **CORS Protection**: The Edge Function validates request origins.
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Missing API Key**: Make sure you've set the `VITE_RESEND_API_KEY` environment variable.
-2. **CORS Issues**: If you're using the Supabase Edge Function and encountering CORS issues, the system will automatically fall back to using the direct Resend API.
-3. **Rate Limiting**: Resend has rate limits. If you exceed them, the system will fall back to simulated emails.
+1. **"Email service is not configured"**: Ensure `RESEND_API_KEY` is set as a Supabase secret (`supabase secrets list`).
+2. **"Unauthorized"**: The user must be authenticated. The Edge Function validates the Supabase JWT.
+3. **Emails only sent to verified email**: When using Resend's default sender (`onboarding@resend.dev`), emails can only be sent to your account's verified email. To send to any address, verify a custom domain at [resend.com/domains](https://resend.com/domains).
 
 ### Checking Email Status
 
-You can check the status of your emails in the Resend dashboard. This is especially useful for debugging issues with email delivery.
+You can check the status of your emails in the [Resend dashboard](https://resend.com/emails).
 
 ## Development
 
@@ -120,5 +105,3 @@ import { sendTestEmail } from '@/services/emailService';
 // Send a test email to yourself
 await sendTestEmail('your-email@example.com', 'Your Name');
 ```
-
-This will attempt to send a test email using all available methods and will log the results to the console.
