@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Document, ElectronicSignature, SignatureRequest, SignatureEvent, DocumentStatus, SignerRole, SignatureRequestStatus, SignatureEventType } from '@/types';
 import { uploadFile, getSignedUrl, downloadFile, deleteFile } from './storageService';
+import { sendSignatureRequestEmail, sendSignatureConfirmationEmail } from './emailService';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
@@ -905,6 +906,25 @@ export const createSignatureRequest = async (
     // Create a 'created' event
     await createSignatureEvent(documentId, 'created', recipientEmail, recipientRole);
 
+    // Send signature request email notification
+    try {
+      const emailSent = await sendSignatureRequestEmail(
+        data.id,
+        recipientEmail,
+        recipientName,
+        data.token
+      );
+
+      if (emailSent) {
+        console.log(`Signature request email sent to ${recipientEmail}`);
+      } else {
+        console.warn(`Failed to send signature request email to ${recipientEmail}`);
+      }
+    } catch (emailError) {
+      console.error('Error sending signature request email:', emailError);
+      // Continue with the process even if email sending fails
+    }
+
     // Map the database record to our SignatureRequest type
     const signatureRequest: SignatureRequest = {
       id: data.id,
@@ -1015,6 +1035,25 @@ export const createElectronicSignature = async (
       if (allRolesSigned) {
         await updateDocumentStatus(documentId, 'signed');
       }
+    }
+
+    // Send signature confirmation email notification
+    try {
+      const documentName = document?.name || 'Document';
+      const emailSent = await sendSignatureConfirmationEmail(
+        signerEmail,
+        signerName,
+        [documentName]
+      );
+
+      if (emailSent) {
+        console.log(`Signature confirmation email sent to ${signerEmail}`);
+      } else {
+        console.warn(`Failed to send signature confirmation email to ${signerEmail}`);
+      }
+    } catch (emailError) {
+      console.error('Error sending signature confirmation email:', emailError);
+      // Continue with the process even if email sending fails
     }
 
     // Map the database record to our ElectronicSignature type
