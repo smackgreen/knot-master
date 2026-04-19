@@ -39,7 +39,14 @@
     "phoneNumber": "Numéro de téléphone",
     "phoneNumberPlaceholder": "+33 6 12 34 56 78",
     "phoneNumberOptional": "Optionnel, mais recommandé pour la communication avec les clients",
-    "createAccountForPlan": "Créer un compte pour l'offre {{plan}}"
+    "createAccountForPlan": "Créer un compte pour l'offre {{plan}}",
+    "continueWithGoogle": "Continuer avec Google",
+    "googleSigninFailed": "Échec de la connexion Google",
+    "googleSigninFailedDescription": "Un problème est survenu lors de la connexion avec Google. Veuillez réessayer.",
+    "accountAlreadyExists": "Compte déjà existant",
+    "accountAlreadyExistsDescription": "Connectez-vous avec votre email et mot de passe, puis associez Google depuis vos paramètres.",
+    "or": "ou",
+    "signinLinkExpired": "Ce lien de connexion a expiré. Veuillez réessayer de vous connecter."
   },
   "nav": {
     "dashboard": "Tableau de bord",

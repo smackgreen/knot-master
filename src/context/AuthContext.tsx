@@ -13,6 +13,7 @@ interface AuthContextType {
   isAuthenticating: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, metadata?: { [key: string]: any }) => Promise<void>;
+  signInWithGoogle: (options?: { plan?: string }) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updatePassword: (token: string, newPassword: string) => Promise<void>;
@@ -172,6 +173,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // subscription row already exists for the user.
   const ensureProSubscription = async (userId: string) => {
     try {
+      // Get current user to check confirmation status
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) return;
+
+      // Skip if email not confirmed and not an OAuth provider.
+      // Google OAuth users are auto-confirmed by the provider.
+      const isOAuth = authUser.app_metadata?.provider === 'google';
+      const emailConfirmed = !!authUser.email_confirmed_at;
+
+      if (!emailConfirmed && !isOAuth) {
+        console.log('Skipping subscription provisioning — email not yet confirmed');
+        return;
+      }
+
+      // Check existence (idempotent — safe to call multiple times)
       const { data: existing, error: checkError } = await supabase
         .from('subscriptions')
         .select('id')
@@ -256,6 +272,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               // clicks the verification link and the session becomes active).
               if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
                 void ensureProSubscription(currentSession.user.id);
+              }
+
+              // Recover OAuth plan + return path after session is fully established.
+              // Only runs when post_oauth_flow flag is set (set by signInWithGoogle).
+              // This prevents email/password logins from reading stale redirect state.
+              // Uses window.location.href instead of navigate() because AuthProvider
+              // wraps the router and useNavigate() is not available here.
+              if (event === 'SIGNED_IN') {
+                const isOAuthFlow = sessionStorage.getItem('post_oauth_flow');
+
+                if (isOAuthFlow) {
+                  sessionStorage.removeItem('post_oauth_flow');
+
+                  const savedPlan = sessionStorage.getItem('post_oauth_plan');
+                  const savedReturn = sessionStorage.getItem('post_oauth_return');
+
+                  // Same-origin check — only allow relative paths starting with '/'.
+                  // Prevents open redirect if sessionStorage is tampered with via XSS.
+                  const isSafeReturn = savedReturn?.startsWith('/');
+
+                  if (savedPlan) {
+                    sessionStorage.removeItem('post_oauth_plan');
+                    sessionStorage.removeItem('post_oauth_return');
+                    window.location.href = `${window.location.origin}/account/subscription?plan=${savedPlan}`;
+                  } else if (savedReturn && isSafeReturn && savedReturn !== '/app/dashboard') {
+                    sessionStorage.removeItem('post_oauth_return');
+                    window.location.href = `${window.location.origin}${savedReturn}`;
+                  }
+                }
               }
 
               // We no longer handle redirects here - components will handle their own redirects
@@ -469,6 +514,74 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Demo login method removed
 
+  // Sign in with Google OAuth
+  const signInWithGoogle = async (options?: { plan?: string }) => {
+    // Prevent double-click — calling signInWithOAuth twice generates two
+    // PKCE code verifiers; the first redirect will fail with verifier mismatch.
+    if (isAuthenticating) return;
+
+    setIsAuthenticating(true);
+
+    // Clear any stale OAuth state from previous abandoned attempts.
+    // Without this, a user who abandons the Google consent screen and later
+    // clicks Google again from a different page would be sent to the old page.
+    sessionStorage.removeItem('post_oauth_return');
+    sessionStorage.removeItem('post_oauth_plan');
+
+    // Set OAuth flow flag — distinguishes from email/password logins
+    // so onAuthStateChange only reads post_oauth_return for OAuth flows
+    sessionStorage.setItem('post_oauth_flow', 'true');
+
+    // Persist selected plan across OAuth redirect
+    if (options?.plan) {
+      sessionStorage.setItem('post_oauth_plan', options.plan);
+    }
+
+    // NOTE: post_oauth_return is already set by ProtectedRoute when the user
+    // was redirected to /login. We don't need to set it here.
+
+    // Safety timeout — if redirect fails or is blocked, stop the spinner.
+    // NOTE: We intentionally do NOT clearTimeout on success. On success,
+    // the page navigates away to Google and the timeout fires harmlessly
+    // in the old page context. Adding clearTimeout on success would cause
+    // the spinner to disappear before the redirect completes (jarring UX).
+    const timeout = setTimeout(() => setIsAuthenticating(false), 10_000);
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        }
+      });
+
+      if (error) {
+        clearTimeout(timeout);
+
+        // Handle account linking conflict
+        if (error.message.includes('provider_email_exists')) {
+          toast({
+            title: "Account already exists",
+            description: "Sign in with your email and password, then link Google from your account settings.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Google sign-in failed",
+            description: error.message || "There was a problem signing in with Google. Please try again.",
+            variant: "destructive",
+          });
+        }
+        setIsAuthenticating(false);
+      }
+      // On success: page redirects to Google. isAuthenticating resets on new page load.
+      // The timeout fires harmlessly in the old page context — this is intentional.
+    } catch (err) {
+      clearTimeout(timeout);
+      setIsAuthenticating(false);
+    }
+  };
+
   const signOut = async () => {
     setIsLoading(true);
     try {
@@ -669,6 +782,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       isAuthenticating,
       signIn,
       signUp,
+      signInWithGoogle,
       signOut,
       resetPassword,
       updatePassword,

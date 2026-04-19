@@ -37,6 +37,10 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   // Redirect to login if not authenticated (need both user and session)
   if (!user || !session) {
     console.log("User not fully authenticated, redirecting to login");
+    // Save the intended destination for post-OAuth redirect.
+    // This is read by AuthContext.onAuthStateChange after a successful
+    // Google OAuth flow to redirect the user back to where they were going.
+    sessionStorage.setItem('post_oauth_return', location.pathname + location.search);
     // Save the current location they were trying to access
     return <Navigate to="/login" state={{ from: location }} replace />;
   }

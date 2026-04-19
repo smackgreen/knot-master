@@ -57,7 +57,14 @@
     "phoneNumber": "Phone Number",
     "phoneNumberPlaceholder": "+1 (555) 123-4567",
     "phoneNumberOptional": "Optional, but recommended for client communications",
-    "createAccountForPlan": "Create an account for the {{plan}} plan"
+    "createAccountForPlan": "Create an account for the {{plan}} plan",
+    "continueWithGoogle": "Continue with Google",
+    "googleSigninFailed": "Google sign-in failed",
+    "googleSigninFailedDescription": "There was a problem signing in with Google. Please try again.",
+    "accountAlreadyExists": "Account already exists",
+    "accountAlreadyExistsDescription": "Sign in with your email and password, then link Google from your account settings.",
+    "or": "or",
+    "signinLinkExpired": "This sign-in link has expired. Please try signing in again."
   },
   "dashboard": {
     "welcome": "Welcome",

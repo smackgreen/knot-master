@@ -22,6 +22,6 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     persistSession: true,
     detectSessionInUrl: true,
     // Increase the refresh margin to reduce frequency of refreshes
-    flowType: 'implicit',
+    flowType: 'pkce',
   },
 });

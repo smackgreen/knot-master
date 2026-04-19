@@ -10,6 +10,7 @@ import { Mail, Lock, AlertCircle } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useTranslation } from "react-i18next";
+import GoogleAuthButton from "@/components/auth/GoogleAuthButton";
 
 interface EmailAuthFormProps {
   defaultTab?: "login" | "signup";
@@ -120,6 +121,21 @@ export const EmailAuthForm = ({ defaultTab = "login", selectedPlan = null }: Ema
           <TabsTrigger value="login">{t('auth.login')}</TabsTrigger>
           <TabsTrigger value="signup">{t('auth.signup')}</TabsTrigger>
         </TabsList>
+
+        {/* Google OAuth Button — shown above both login and signup tabs */}
+        <div className="px-6 pt-6 pb-2">
+          <GoogleAuthButton selectedPlan={selectedPlan} />
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">
+                {t('auth.or')}
+              </span>
+            </div>
+          </div>
+        </div>
 
         <TabsContent value="login">
           <form onSubmit={handleLogin}>
