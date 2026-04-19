@@ -219,7 +219,23 @@
     "loginToUpdate": "You must be logged in to update a vendor.",
     "updateError": "Failed to update vendor. Please try again.",
     "loginToDelete": "You must be logged in to delete a vendor.",
-    "deleteError": "Failed to delete vendor. Please try again."
+    "deleteError": "Failed to delete vendor. Please try again.",
+    "categories": {
+      "venue": "Venue",
+      "catering": "Catering",
+      "photography": "Photography",
+      "videography": "Videography",
+      "florist": "Florist",
+      "music": "Music",
+      "cake": "Cake",
+      "attire": "Attire",
+      "hairMakeup": "Hair & Makeup",
+      "transportation": "Transportation",
+      "rentals": "Rentals",
+      "stationery": "Stationery",
+      "gifts": "Gifts",
+      "other": "Other"
+    }
   },
   "tasks": {
     "title": "Tasks",
@@ -266,6 +282,10 @@
     "for": "For",
     "noTasksCreated": "No tasks created yet. Add your first task to get started.",
     "moreTasks": "+{{count}} more",
+    "overdueTasks": "Overdue Tasks",
+    "noOverdueTasks": "No overdue tasks.",
+    "noTasksDisplay": "No tasks to display.",
+    "noCompletedTasks": "No completed tasks.",
     "loginToAdd": "You must be logged in to add a task.",
     "addError": "Failed to add task. Please try again.",
     "loginToUpdate": "You must be logged in to update a task.",

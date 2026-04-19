@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import TaskCard from "@/components/TaskCard";
 import { Client, Task } from "@/types";
 import { useApp } from "@/context/AppContext";
+import { useTranslation } from "react-i18next";
 
 interface TaskListViewProps {
   groupedTasks: {
@@ -20,6 +21,8 @@ interface TaskListViewProps {
 }
 
 const TaskListView = ({ groupedTasks, clients, onDragEnd, onEditTask }: TaskListViewProps) => {
+  const { t } = useTranslation();
+
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -28,7 +31,7 @@ const TaskListView = ({ groupedTasks, clients, onDragEnd, onEditTask }: TaskList
           <CardHeader className="bg-red-50 border-b border-red-200">
             <CardTitle className="text-red-800 flex items-center gap-2">
               <Badge variant="destructive" className="h-2 w-2 rounded-full p-0" />
-              Overdue Tasks
+              {t('tasks.overdueTasks')}
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
@@ -64,7 +67,7 @@ const TaskListView = ({ groupedTasks, clients, onDragEnd, onEditTask }: TaskList
                       </Draggable>
                     ))
                   ) : (
-                    <p className="text-center py-4 text-muted-foreground">No overdue tasks.</p>
+                    <p className="text-center py-4 text-muted-foreground">{t('tasks.noOverdueTasks')}</p>
                   )}
                   {provided.placeholder}
                 </div>
@@ -78,7 +81,7 @@ const TaskListView = ({ groupedTasks, clients, onDragEnd, onEditTask }: TaskList
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Badge variant="outline" className="h-2 w-2 rounded-full p-0" />
-              Not Started
+              {t('tasks.notStarted')}
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
@@ -114,7 +117,7 @@ const TaskListView = ({ groupedTasks, clients, onDragEnd, onEditTask }: TaskList
                       </Draggable>
                     ))
                   ) : (
-                    <p className="text-center py-4 text-muted-foreground">No tasks to display.</p>
+                    <p className="text-center py-4 text-muted-foreground">{t('tasks.noTasksDisplay')}</p>
                   )}
                   {provided.placeholder}
                 </div>
@@ -128,7 +131,7 @@ const TaskListView = ({ groupedTasks, clients, onDragEnd, onEditTask }: TaskList
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Badge variant="secondary" className="h-2 w-2 rounded-full p-0" />
-              In Progress
+              {t('tasks.inProgress')}
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
@@ -164,7 +167,7 @@ const TaskListView = ({ groupedTasks, clients, onDragEnd, onEditTask }: TaskList
                       </Draggable>
                     ))
                   ) : (
-                    <p className="text-center py-4 text-muted-foreground">No tasks to display.</p>
+                    <p className="text-center py-4 text-muted-foreground">{t('tasks.noTasksDisplay')}</p>
                   )}
                   {provided.placeholder}
                 </div>
@@ -178,7 +181,7 @@ const TaskListView = ({ groupedTasks, clients, onDragEnd, onEditTask }: TaskList
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Badge className="bg-green-500 h-2 w-2 rounded-full p-0" />
-              Completed
+              {t('tasks.completed')}
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
@@ -214,7 +217,7 @@ const TaskListView = ({ groupedTasks, clients, onDragEnd, onEditTask }: TaskList
                       </Draggable>
                     ))
                   ) : (
-                    <p className="text-center py-4 text-muted-foreground">No completed tasks.</p>
+                    <p className="text-center py-4 text-muted-foreground">{t('tasks.noCompletedTasks')}</p>
                   )}
                   {provided.placeholder}
                 </div>

@@ -313,7 +313,23 @@
     "loginToUpdate": "Vous devez être connecté pour modifier un fournisseur.",
     "updateError": "Échec de la mise à jour du fournisseur. Veuillez réessayer.",
     "loginToDelete": "Vous devez être connecté pour supprimer un fournisseur.",
-    "deleteError": "Échec de la suppression du fournisseur. Veuillez réessayer."
+    "deleteError": "Échec de la suppression du fournisseur. Veuillez réessayer.",
+    "categories": {
+      "venue": "Lieu",
+      "catering": "Traiteur",
+      "photography": "Photographie",
+      "videography": "Vidéographie",
+      "florist": "Fleuriste",
+      "music": "Musique",
+      "cake": "Gâteau",
+      "attire": "Tenue",
+      "hairMakeup": "Coiffure & Maquillage",
+      "transportation": "Transport",
+      "rentals": "Location",
+      "stationery": "Papeterie",
+      "gifts": "Cadeaux",
+      "other": "Autre"
+    }
   },
   "tasks": {
     "title": "Tâches",
@@ -360,6 +376,10 @@
     "for": "Pour",
     "noTasksCreated": "Aucune tâche créée pour l'instant. Ajoutez votre première tâche pour commencer.",
     "moreTasks": "+{{count}} autres",
+    "overdueTasks": "Tâches en retard",
+    "noOverdueTasks": "Aucune tâche en retard.",
+    "noTasksDisplay": "Aucune tâche à afficher.",
+    "noCompletedTasks": "Aucune tâche terminée.",
     "loginToAdd": "Vous devez être connecté pour ajouter une tâche.",
     "addError": "Échec de l'ajout de la tâche. Veuillez réessayer.",
     "loginToUpdate": "Vous devez être connecté pour modifier une tâche.",
