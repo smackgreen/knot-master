@@ -26,6 +26,7 @@ import Profile from './pages/Profile';
 import Analytics from './pages/Analytics';
 import Resources from './pages/Resources';
 import GoogleCalendarCallback from './pages/auth/GoogleCalendarCallback';
+import AuthCallback from './pages/AuthCallback';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { PublicRoute } from './components/PublicRoute';
 
@@ -123,6 +124,10 @@ const router = createBrowserRouter([
             <GoogleCalendarCallback />
           </ProtectedRoute>
         ),
+      },
+      {
+        path: '/auth/callback',
+        element: <AuthCallback />,
       },
 
       // Electronic signature routes (public)
