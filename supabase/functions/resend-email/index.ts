@@ -2,20 +2,39 @@ import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { Resend } from 'resend';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
-// CORS headers — restrict to known origins
+// CORS headers — dynamically validate origins including Vercel preview URLs
 const ALLOWED_ORIGINS = [
   'http://localhost:8080',
   'http://localhost:8081',
   'http://localhost:5173',
+  'https://knot-master.vercel.app',
   Deno.env.get('VITE_APP_URL') || '',
 ].filter(Boolean);
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': ALLOWED_ORIGINS.join(', '),
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Max-Age': '86400',
-};
+// Regex pattern for Vercel preview deployment URLs:
+// Matches any subdomain of .vercel.app (e.g., knot-master-abc123-smackgreens-projects.vercel.app)
+const VERCEL_PREVIEW_PATTERN = /^https:\/\/[a-z0-9-]+\.vercel\.app$/;
+
+function isOriginAllowed(origin: string): boolean {
+  if (!origin) return false;
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+  if (VERCEL_PREVIEW_PATTERN.test(origin)) return true;
+  return false;
+}
+
+function getCorsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get('Origin') || '';
+  const allowedOrigin = isOriginAllowed(origin)
+    ? origin
+    : 'https://knot-master.vercel.app'; // safe fallback: production URL
+
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Max-Age': '86400',
+  };
+}
 
 // Initialize Resend with API key from environment variable
 const resendApiKey = Deno.env.get('RESEND_API_KEY');
@@ -44,13 +63,8 @@ interface EmailRequest {
 }
 
 serve(async (req) => {
-  // Determine the appropriate CORS origin
-  const origin = req.headers.get('Origin') || '';
-  const corsOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
-  const responseHeaders = {
-    ...corsHeaders,
-    'Access-Control-Allow-Origin': corsOrigin,
-  };
+  // Determine the appropriate CORS origin dynamically
+  const responseHeaders = getCorsHeaders(req);
 
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {

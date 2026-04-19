@@ -15,7 +15,7 @@ const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-// Allowed origins for CORS
+// Allowed origins for CORS (static list for known environments)
 const ALLOWED_ORIGINS = [
   'http://localhost:8080',
   'http://localhost:8081',
@@ -23,9 +23,22 @@ const ALLOWED_ORIGINS = [
   'https://knot-master.vercel.app',
 ];
 
+// Regex pattern for Vercel preview deployment URLs:
+// Matches any subdomain of .vercel.app (e.g., knot-master-abc123-smackgreens-projects.vercel.app)
+const VERCEL_PREVIEW_PATTERN = /^https:\/\/[a-z0-9-]+\.vercel\.app$/;
+
+function isOriginAllowed(origin: string): boolean {
+  if (!origin) return false;
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+  if (VERCEL_PREVIEW_PATTERN.test(origin)) return true;
+  return false;
+}
+
 function getCorsHeaders(req: Request): Record<string, string> {
   const origin = req.headers.get("Origin") || "";
-  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  const allowedOrigin = isOriginAllowed(origin)
+    ? origin
+    : "https://knot-master.vercel.app"; // safe fallback: production URL
 
   return {
     "Access-Control-Allow-Origin": allowedOrigin,
