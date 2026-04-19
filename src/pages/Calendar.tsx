@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format, parseISO } from "date-fns";
+import { enUS, fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import {
   CalendarIcon,
@@ -126,6 +127,65 @@ const Calendar = () => {
     description: '',
     clientId: '',
   });
+
+  // Track the current displayed date for the persistent header
+  const [currentDisplayDate, setCurrentDisplayDate] = useState<Date>(new Date());
+
+  // Get the date-fns locale based on current i18n language
+  const getDateLocale = () => {
+    const lng = typeof window !== 'undefined' ? localStorage.getItem('i18nextLng') : 'en';
+    return lng === 'fr' ? fr : enUS;
+  };
+
+  // Format the header date based on the current view
+  const getFormattedDateHeader = (): string => {
+    const locale = getDateLocale();
+    const date = currentDisplayDate;
+
+    switch (currentView) {
+      case 'dayGridMonth':
+        return format(date, 'MMMM yyyy', { locale });
+      case 'timeGridDay':
+        return format(date, 'EEEE, MMMM d, yyyy', { locale });
+      case 'timeGridWeek': {
+        const startOfWeek = new Date(date);
+        startOfWeek.setDate(date.getDate() - date.getDay() + 1); // Monday
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6); // Sunday
+        const startFmt = format(startOfWeek, 'MMM d', { locale });
+        const endFmt = format(endOfWeek, 'MMM d, yyyy', { locale });
+        return `${startFmt} – ${endFmt}`;
+      }
+      case 'listWeek': {
+        const startOfWeek = new Date(date);
+        startOfWeek.setDate(date.getDate() - date.getDay() + 1);
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        const startFmt = format(startOfWeek, 'MMM d', { locale });
+        const endFmt = format(endOfWeek, 'MMM d, yyyy', { locale });
+        return `${startFmt} – ${endFmt}`;
+      }
+      default:
+        return format(date, 'MMMM yyyy', { locale });
+    }
+  };
+
+  // Handle dates change from FullCalendar (fires on navigation and view changes)
+  const handleDatesSet = (dateInfo: any) => {
+    // Sync the current view type from the calendar API
+    setCurrentView(dateInfo.view.type);
+
+    if (dateInfo.view.type === 'dayGridMonth') {
+      // For month view, use the midpoint of the visible range to determine the actual month
+      const start = new Date(dateInfo.start);
+      const end = new Date(dateInfo.end);
+      const midTime = start.getTime() + (end.getTime() - start.getTime()) / 2;
+      setCurrentDisplayDate(new Date(midTime));
+    } else {
+      // For day and week views, use the start of the visible range
+      setCurrentDisplayDate(new Date(dateInfo.start));
+    }
+  };
 
   // Get events from clients (wedding dates)
   const weddingEvents: CalendarEvent[] = clients.map(client => ({
@@ -452,6 +512,13 @@ const Calendar = () => {
               </Button>
             </div>
 
+            {/* Persistent Date Header */}
+            <div className="flex-1 text-center px-4">
+              <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground tracking-tight">
+                {getFormattedDateHeader()}
+              </h2>
+            </div>
+
             <Select value={currentView} onValueChange={handleViewChange}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder={t('calendar.selectView')} />
@@ -472,6 +539,7 @@ const Calendar = () => {
               plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin, googleCalendarPlugin]}
               initialView="dayGridMonth"
               headerToolbar={false} // We're using our custom header
+              datesSet={handleDatesSet}
               eventClick={handleEventClick}
               dateClick={handleDateClick}
               eventColor="#3b82f6" // Default color
@@ -507,7 +575,6 @@ const Calendar = () => {
               weekends={true}
               showNonCurrentDates={true}
               fixedWeekCount={false}
-              dayMaxEvents={true}
               eventContent={(arg) => {
                 const type = arg.event.extendedProps?.type as keyof typeof EVENT_TYPES;
                 return (
