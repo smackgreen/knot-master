@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "@/components/ui/use-toast";
@@ -13,14 +13,26 @@ const GoogleCalendarCallback = () => {
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(true);
 
+  // Guard to prevent duplicate OAuth callback execution.
+  // Google auth codes are single-use; if the useEffect re-runs (e.g. when
+  // `user` transitions from null → authenticated), the same code would be
+  // sent again, causing Google to return invalid_grant.
+  const hasExchanged = useRef(false);
+
   useEffect(() => {
+    // Skip if we've already attempted the code exchange
+    if (hasExchanged.current) return;
+
     const handleCallback = async () => {
       try {
         if (!user) {
-          setError(t('calendar.auth.notLoggedIn'));
-          setIsProcessing(false);
+          // Don't set error or stop processing — wait for user to load.
+          // The effect will re-run when `user` changes.
           return;
         }
+
+        // Mark as exchanged BEFORE the async call to prevent duplicates
+        hasExchanged.current = true;
 
         // Get the code and state from URL parameters
         const urlParams = new URLSearchParams(window.location.search);
