@@ -1556,6 +1556,7 @@
     "signatureSuccess": "Signature réussie",
     "documentSigned": "Le document a été signé avec succès",
     "signatureError": "Erreur de signature",
+    "noDocumentsFound": "Aucun document n'a été trouvé pour cette demande de signature. Le lien peut être invalide ou les documents ont été supprimés.",
     "signatureSuccessMessage": "Merci ! Votre signature a été enregistrée avec succès. Une copie du document signé sera envoyée à votre adresse e-mail.",
     "requestSignatureDescription": "Envoyez une demande de signature électronique par e-mail",
     "recipientName": "Nom du destinataire",

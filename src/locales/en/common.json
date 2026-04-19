@@ -1505,6 +1505,7 @@
     "signatureSuccess": "Signature Success",
     "documentSigned": "The document has been signed successfully",
     "signatureError": "Signature Error",
+    "noDocumentsFound": "No documents were found for this signature request. The link may be invalid or the documents may have been removed.",
     "signatureSuccessMessage": "Thank you! Your signature has been successfully recorded. A copy of the signed document will be sent to your email address.",
     "requestSignatureDescription": "Send an electronic signature request via email",
     "recipientName": "Recipient Name",

@@ -115,6 +115,11 @@ const SignDocument: React.FC = () => {
     }
 
     if (!documents.length || !signatureRequest) {
+      toast({
+        title: t('signatures.signatureError'),
+        description: t('signatures.noDocumentsFound'),
+        variant: 'destructive',
+      });
       return;
     }
 
