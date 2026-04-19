@@ -533,8 +533,41 @@ export const verifySignatureRequest = async (token: string): Promise<SignatureRe
       .eq('token', token)
       .single();
 
+    console.log('[DEBUG verifySignatureRequest] raw error:', error);
+    console.log('[DEBUG verifySignatureRequest] raw data (no documents):', data ? {
+      id: data.id,
+      status: data.status,
+      token: data.token,
+      expires_at: data.expires_at,
+      recipient_email: data.recipient_email,
+      documents_count: data.documents?.length,
+      documents_raw: JSON.stringify(data.documents),
+    } : null);
+
     if (error) {
       throw error;
+    }
+
+    // Also try a separate direct query to signature_request_documents
+    // to see if the junction table has any rows
+    if (data && (!data.documents || data.documents.length === 0)) {
+      console.log('[DEBUG] No documents in join. Checking junction table directly...');
+      const { data: junctionData, error: junctionError } = await supabase
+        .from('signature_request_documents')
+        .select('id, document_id, signature_request_id')
+        .eq('signature_request_id', data.id);
+      console.log('[DEBUG] Junction table query result:', { junctionData, junctionError });
+
+      // Also check if we can read documents directly
+      if (junctionData && junctionData.length > 0) {
+        const docIds = junctionData.map((j: any) => j.document_id);
+        console.log('[DEBUG] Document IDs from junction:', docIds);
+        const { data: docsData, error: docsError } = await supabase
+          .from('documents')
+          .select('*')
+          .in('id', docIds);
+        console.log('[DEBUG] Direct documents query result:', { docsData, docsError });
+      }
     }
 
     // Check if the request has expired

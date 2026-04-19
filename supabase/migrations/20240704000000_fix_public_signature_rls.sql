@@ -19,6 +19,93 @@
 -- =============================================================
 
 -- =============================================================
+-- 0. Create the 'documents' storage bucket if it doesn't exist
+-- =============================================================
+-- The signing flow needs this bucket to serve PDF files via signed URLs.
+-- =============================================================
+
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'documents',
+  'documents',
+  false,  -- Private bucket: signed URLs required for access
+  52428800,  -- 50 MB limit
+  ARRAY[
+    'application/pdf',
+    'image/png',
+    'image/jpeg',
+    'image/webp',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'text/plain',
+    'text/csv'
+  ]
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- =============================================================
+-- HELPER: SECURITY DEFINER functions to break RLS recursion
+-- =============================================================
+-- The existing policies on signature_request_documents reference
+-- documents (checking d.user_id = auth.uid()), and our new
+-- documents policy references signature_request_documents.
+-- This creates infinite recursion.
+--
+-- Solution: Use SECURITY DEFINER functions that run with elevated
+-- privileges and bypass RLS, breaking the circular dependency.
+-- =============================================================
+
+-- Check if a document is part of a pending, non-expired signature request
+CREATE OR REPLACE FUNCTION is_document_in_pending_signature_request(doc_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM signature_request_documents srd
+    JOIN signature_requests sr ON sr.id = srd.signature_request_id
+    WHERE srd.document_id = doc_id
+    AND sr.status = 'pending'
+    AND sr.expires_at > now()
+  );
+$$;
+
+-- Check if a signature request is pending and not expired
+CREATE OR REPLACE FUNCTION is_signature_request_pending(req_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM signature_requests
+    WHERE id = req_id
+    AND status = 'pending'
+    AND expires_at > now()
+  );
+$$;
+
+-- Check if a storage object path belongs to a document in a pending signature request
+CREATE OR REPLACE FUNCTION is_storage_object_in_pending_signature_request(obj_name TEXT)
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM documents d
+    JOIN signature_request_documents srd ON srd.document_id = d.id
+    JOIN signature_requests sr ON sr.id = srd.signature_request_id
+    WHERE d.file_path = obj_name
+    AND sr.status = 'pending'
+    AND sr.expires_at > now()
+  );
+$$;
+
+-- =============================================================
 -- 1. signature_requests: Allow public SELECT by token
 -- =============================================================
 -- External signers need to read the signature request to see
@@ -41,6 +128,7 @@ CREATE POLICY "Public can view pending signature requests by token"
 -- =============================================================
 -- External signers need to read the junction table to find
 -- which documents are attached to the signature request.
+-- Uses the SECURITY DEFINER function to avoid recursion.
 -- =============================================================
 
 DROP POLICY IF EXISTS "Public can view signature request documents for pending requests" ON signature_request_documents;
@@ -48,12 +136,7 @@ DROP POLICY IF EXISTS "Public can view signature request documents for pending r
 CREATE POLICY "Public can view signature request documents for pending requests"
   ON signature_request_documents FOR SELECT
   USING (
-    EXISTS (
-      SELECT 1 FROM signature_requests sr
-      WHERE sr.id = signature_request_documents.signature_request_id
-      AND sr.status = 'pending'
-      AND sr.expires_at > now()
-    )
+    is_signature_request_pending(signature_request_documents.signature_request_id)
   );
 
 -- =============================================================
@@ -62,7 +145,7 @@ CREATE POLICY "Public can view signature request documents for pending requests"
 -- =============================================================
 -- External signers need to read document metadata (name, file_path)
 -- to display the document info and generate signed URLs for the
--- PDF viewer.
+-- PDF viewer. Uses the SECURITY DEFINER function to avoid recursion.
 -- =============================================================
 
 DROP POLICY IF EXISTS "Public can view documents for pending signature requests" ON documents;
@@ -70,13 +153,7 @@ DROP POLICY IF EXISTS "Public can view documents for pending signature requests"
 CREATE POLICY "Public can view documents for pending signature requests"
   ON documents FOR SELECT
   USING (
-    EXISTS (
-      SELECT 1 FROM signature_request_documents srd
-      JOIN signature_requests sr ON sr.id = srd.signature_request_id
-      WHERE srd.document_id = documents.id
-      AND sr.status = 'pending'
-      AND sr.expires_at > now()
-    )
+    is_document_in_pending_signature_request(documents.id)
   );
 
 -- =============================================================
@@ -84,8 +161,7 @@ CREATE POLICY "Public can view documents for pending signature requests"
 --    linked to pending signature requests
 -- =============================================================
 -- External signers need to INSERT their signature data.
--- We scope this to only allow inserts where the document is
--- part of a pending, non-expired signature request.
+-- Uses the SECURITY DEFINER function to avoid recursion.
 -- =============================================================
 
 DROP POLICY IF EXISTS "Public can insert signatures for pending signature requests" ON electronic_signatures;
@@ -93,13 +169,7 @@ DROP POLICY IF EXISTS "Public can insert signatures for pending signature reques
 CREATE POLICY "Public can insert signatures for pending signature requests"
   ON electronic_signatures FOR INSERT
   WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM signature_request_documents srd
-      JOIN signature_requests sr ON sr.id = srd.signature_request_id
-      WHERE srd.document_id = electronic_signatures.document_id
-      AND sr.status = 'pending'
-      AND sr.expires_at > now()
-    )
+    is_document_in_pending_signature_request(electronic_signatures.document_id)
   );
 
 -- Allow public to read signatures for documents they're signing
@@ -110,13 +180,7 @@ DROP POLICY IF EXISTS "Public can view signatures for pending signature requests
 CREATE POLICY "Public can view signatures for pending signature requests"
   ON electronic_signatures FOR SELECT
   USING (
-    EXISTS (
-      SELECT 1 FROM signature_request_documents srd
-      JOIN signature_requests sr ON sr.id = srd.signature_request_id
-      WHERE srd.document_id = electronic_signatures.document_id
-      AND sr.status = 'pending'
-      AND sr.expires_at > now()
-    )
+    is_document_in_pending_signature_request(electronic_signatures.document_id)
   );
 
 -- =============================================================
@@ -124,6 +188,7 @@ CREATE POLICY "Public can view signatures for pending signature requests"
 -- =============================================================
 -- When a document is signed, a 'signed' event is created.
 -- External signers need to INSERT these events.
+-- Uses the SECURITY DEFINER function to avoid recursion.
 -- =============================================================
 
 DROP POLICY IF EXISTS "Public can insert signature events for pending signature requests" ON signature_events;
@@ -131,13 +196,7 @@ DROP POLICY IF EXISTS "Public can insert signature events for pending signature 
 CREATE POLICY "Public can insert signature events for pending signature requests"
   ON signature_events FOR INSERT
   WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM signature_request_documents srd
-      JOIN signature_requests sr ON sr.id = srd.signature_request_id
-      WHERE srd.document_id = signature_events.document_id
-      AND sr.status = 'pending'
-      AND sr.expires_at > now()
-    )
+    is_document_in_pending_signature_request(signature_events.document_id)
   );
 
 -- =============================================================
@@ -166,13 +225,7 @@ CREATE POLICY "Public can update pending signature requests"
 --    signature requests (for signed URLs / PDF viewer)
 -- =============================================================
 -- The PDF viewer needs a signed URL to display the document.
--- This policy allows the storage layer to serve files for
--- documents that are part of a pending signature request.
---
--- NOTE: This uses a separate approach - the getSignedUrl
--- function in the app uses the Supabase client which checks
--- storage RLS. We need to allow reading files where the path
--- matches a document in a pending signature request.
+-- Uses the SECURITY DEFINER function to avoid recursion.
 -- =============================================================
 
 DROP POLICY IF EXISTS "documents_public_select_for_signing" ON storage.objects;
@@ -181,14 +234,7 @@ CREATE POLICY "documents_public_select_for_signing" ON storage.objects
   FOR SELECT
   USING (
     bucket_id = 'documents'
-    AND EXISTS (
-      SELECT 1 FROM documents d
-      JOIN signature_request_documents srd ON srd.document_id = d.id
-      JOIN signature_requests sr ON sr.id = srd.signature_request_id
-      WHERE d.file_path = name
-      AND sr.status = 'pending'
-      AND sr.expires_at > now()
-    )
+    AND is_storage_object_in_pending_signature_request(name)
   );
 
 -- =============================================================
