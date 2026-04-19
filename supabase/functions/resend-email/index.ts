@@ -40,11 +40,14 @@ function getCorsHeaders(req: Request): Record<string, string> {
 const resendApiKey = Deno.env.get('RESEND_API_KEY');
 const resend = new Resend(resendApiKey);
 
+// Diagnostic: Check if required environment variables are available
+const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+console.log('[DIAG] SUPABASE_URL available:', !!supabaseUrl, '| SUPABASE_SERVICE_ROLE_KEY available:', !!supabaseServiceRoleKey, '(length:', supabaseServiceRoleKey.length, ')');
+console.log('[DIAG] RESEND_API_KEY available:', !!resendApiKey);
+
 // Initialize Supabase admin client for JWT verification
-const supabaseAdmin = createClient(
-  Deno.env.get('SUPABASE_URL') || '',
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
-);
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
 
 // Default sender email - using Resend's default sender
 const DEFAULT_FROM_EMAIL = 'onboarding@resend.dev';
@@ -76,7 +79,9 @@ serve(async (req) => {
 
   // Verify authentication — require a valid Supabase JWT
   const authHeader = req.headers.get('Authorization');
+  console.log('[DIAG] Authorization header present:', !!authHeader, '| Header (first 30 chars):', authHeader ? authHeader.substring(0, 30) + '...' : 'null');
   if (!authHeader) {
+    console.error('[DIAG] REJECT: Missing authorization header. Available headers:', Object.fromEntries(req.headers.entries()));
     return new Response(
       JSON.stringify({ error: 'Missing authorization header' }),
       { status: 401, headers: { ...responseHeaders, 'Content-Type': 'application/json' } }
@@ -84,16 +89,17 @@ serve(async (req) => {
   }
 
   const token = authHeader.replace('Bearer ', '');
+  console.log('[DIAG] Attempting getUser() with token (first 20 chars):', token.substring(0, 20) + '...');
   const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
   if (authError || !user) {
-    console.error('Authentication failed:', authError);
+    console.error('[DIAG] REJECT: Authentication failed. Error:', JSON.stringify(authError), '| User:', !!user);
     return new Response(
-      JSON.stringify({ error: 'Unauthorized' }),
+      JSON.stringify({ error: 'Unauthorized', details: authError?.message || 'No user returned' }),
       { status: 401, headers: { ...responseHeaders, 'Content-Type': 'application/json' } }
     );
   }
 
-  console.log(`Authenticated request from user: ${user.id}`);
+  console.log(`[DIAG] OK: Authenticated request from user: ${user.id}`);
 
   try {
     // Parse request body

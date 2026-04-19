@@ -21,6 +21,17 @@ export const sendSignatureRequestEmail = async (
     const signatureUrl = `${appUrl}/sign/${token}`;
     console.log('Sending signature request email to:', recipientEmail);
 
+    // Diagnostic: Check session state before invoking Edge Function
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError) {
+      console.error('[DIAG] Error getting session:', sessionError);
+    }
+    if (!session) {
+      console.error('[DIAG] No active session — user is not authenticated. The Edge Function will reject this request with 401.');
+      return false;
+    }
+    console.log('[DIAG] Session available. User ID:', session.user.id, '| Access token (first 20 chars):', session.access_token.substring(0, 20) + '...');
+
     const { data, error } = await supabase.functions.invoke('resend-email', {
       body: {
         to: recipientEmail,
@@ -32,7 +43,12 @@ export const sendSignatureRequestEmail = async (
     });
 
     if (error) {
-      console.error('Error calling Edge Function via Supabase client:', error);
+      console.error('[DIAG] Edge Function error:', JSON.stringify({
+        name: error.name,
+        message: error.message,
+        status: (error as any).status || (error as any).context?.status,
+        details: (error as any).context || (error as any).details,
+      }, null, 2));
       return false;
     }
 
