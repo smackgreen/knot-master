@@ -1065,18 +1065,13 @@ export const createElectronicSignature = async (
     // Create a 'signed' event
     await createSignatureEvent(documentId, 'signed', signerEmail, signerRole, ipAddress);
 
-    // Update the document status if all required signatures are present
-    const document = await getDocumentById(documentId);
-    if (document) {
-      const signatures = document.signatures || [];
-      const allRolesSigned = ['client', 'vendor', 'planner'].every(role =>
-        signatures.some(sig => sig.signerRole === role)
-      );
+    // Update the document status to 'signed' since at least one signature exists
+    // Previously this required all 3 roles (client, vendor, planner) which was too strict
+    await updateDocumentStatus(documentId, 'signed');
+    console.log(`[createElectronicSignature] Document ${documentId} status updated to 'signed'`);
 
-      if (allRolesSigned) {
-        await updateDocumentStatus(documentId, 'signed');
-      }
-    }
+    // Get document for email notification
+    const document = await getDocumentById(documentId);
 
     // Send signature confirmation email notification
     try {

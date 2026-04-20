@@ -607,7 +607,22 @@ export const verifySignatureRequest = async (token: string): Promise<SignatureRe
       console.warn('[verifySignatureRequest] No junction entries found for signature request:', requestData.id);
     }
 
-    // STEP 4: Map to SignatureRequest type
+    // STEP 4: Map documents from snake_case to camelCase Document type
+    const mappedDocuments: Document[] = documents.map((doc: any) => ({
+      id: doc.id,
+      contractId: doc.contract_id,
+      quotationId: doc.quotation_id,
+      invoiceId: doc.invoice_id,
+      name: doc.name,
+      filePath: doc.file_path,
+      fileType: doc.file_type,
+      fileSize: doc.file_size,
+      status: doc.status,
+      createdAt: doc.created_at,
+      updatedAt: doc.updated_at,
+    }));
+
+    // STEP 5: Map to SignatureRequest type
     const request: SignatureRequest = {
       id: requestData.id,
       recipientName: requestData.recipient_name,
@@ -619,7 +634,7 @@ export const verifySignatureRequest = async (token: string): Promise<SignatureRe
       expiresAt: requestData.expires_at,
       createdAt: requestData.created_at,
       updatedAt: requestData.updated_at,
-      documents: documents,
+      documents: mappedDocuments,
       metadata: requestData.metadata || {},
     };
 

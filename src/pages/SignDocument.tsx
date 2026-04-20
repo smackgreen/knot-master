@@ -6,6 +6,7 @@ import { getSignatureRequestByToken, getDocumentById } from '@/services/document
 import { getSignedUrl } from '@/services/storageService';
 import { useToast } from '@/components/ui/use-toast';
 import { verifySignatureRequest } from '@/services/signatureService';
+import { supabase } from '@/integrations/supabase/client';
 
 import { Button } from '@/components/ui/button';
 import PDFViewer from '@/components/documents/PDFViewer';
@@ -61,6 +62,7 @@ const SignDocument: React.FC = () => {
       setDocuments(request.documents);
 
       // Get signed URLs for all documents
+      console.log('[fetchSignatureRequest] Document file paths:', request.documents.map(doc => ({ id: doc.id, name: doc.name, filePath: doc.filePath })));
       const urls = await Promise.all(
         request.documents.map(doc => getSignedUrl(doc.filePath))
       );
@@ -156,7 +158,22 @@ const SignDocument: React.FC = () => {
             description: t('signatures.continueWithNextDocument'),
           });
         } else {
-          // All documents signed
+          // All documents signed — update signature request status to 'completed'
+          try {
+            const { error: updateError } = await supabase
+              .from('signature_requests')
+              .update({ status: 'completed', updated_at: new Date().toISOString() })
+              .eq('id', signatureRequest.id);
+
+            if (updateError) {
+              console.error('[handleSign] Failed to update signature request status:', updateError);
+            } else {
+              console.log('[handleSign] Signature request status updated to completed');
+            }
+          } catch (err) {
+            console.error('[handleSign] Error updating signature request status:', err);
+          }
+
           toast({
             title: t('signatures.allDocumentsSigned'),
             description: t('signatures.signatureSuccessMessage'),
