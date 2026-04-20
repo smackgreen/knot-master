@@ -522,102 +522,98 @@ export const createSignatureEvent = async (
  */
 export const verifySignatureRequest = async (token: string): Promise<SignatureRequest | null> => {
   try {
-    const { data, error } = await supabase
+    // STEP 1: Fetch the signature request by token
+    const { data: requestData, error: requestError } = await supabase
       .from('signature_requests')
-      .select(`
-        *,
-        documents:signature_request_documents(
-          document:documents(*)
-        )
-      `)
+      .select('*')
       .eq('token', token)
       .single();
 
-    console.log('[DEBUG verifySignatureRequest] raw error:', error);
-    console.log('[DEBUG verifySignatureRequest] raw data (no documents):', data ? {
-      id: data.id,
-      status: data.status,
-      token: data.token,
-      expires_at: data.expires_at,
-      recipient_email: data.recipient_email,
-      documents_count: data.documents?.length,
-      documents_raw: JSON.stringify(data.documents),
-    } : null);
+    console.log('[verifySignatureRequest] Step 1 - signature_requests:', {
+      error: requestError?.message,
+      found: !!requestData,
+      status: requestData?.status,
+      expires_at: requestData?.expires_at,
+    });
 
-    if (error) {
-      throw error;
-    }
-
-    // Also try a separate direct query to signature_request_documents
-    // to see if the junction table has any rows
-    if (data && (!data.documents || data.documents.length === 0)) {
-      console.log('[DEBUG] No documents in join. Checking junction table directly...');
-      const { data: junctionData, error: junctionError } = await supabase
-        .from('signature_request_documents')
-        .select('id, document_id, signature_request_id')
-        .eq('signature_request_id', data.id);
-      console.log('[DEBUG] Junction table query result:', { junctionData, junctionError });
-
-      // Also check if we can read documents directly
-      if (junctionData && junctionData.length > 0) {
-        const docIds = junctionData.map((j: any) => j.document_id);
-        console.log('[DEBUG] Document IDs from junction:', docIds);
-        const { data: docsData, error: docsError } = await supabase
-          .from('documents')
-          .select('*')
-          .in('id', docIds);
-        console.log('[DEBUG] Direct documents query result:', { docsData, docsError });
-      }
+    if (requestError || !requestData) {
+      console.error('[verifySignatureRequest] Failed to fetch signature request:', requestError);
+      return null;
     }
 
     // Check if the request has expired
-    const expiresAt = new Date(data.expires_at);
+    const expiresAt = new Date(requestData.expires_at);
     if (expiresAt < new Date()) {
-      // Update the status to expired
       await supabase
         .from('signature_requests')
         .update({ status: 'expired' })
-        .eq('id', data.id);
-
-      // Create 'expired' events for each document
-      if (data.documents && data.documents.length > 0) {
-        for (const doc of data.documents) {
-          if (doc.document_id) {
-            await createSignatureEvent(
-              doc.document_id,
-              'expired',
-              null,
-              null
-            );
-          }
-        }
-      }
-
+        .eq('id', requestData.id);
       return null;
     }
 
     // Check if the request has already been completed
-    if (data.status === 'completed') {
+    if (requestData.status === 'completed') {
       return null;
     }
 
-    // Map the database record to our SignatureRequest type
+    // STEP 2: Fetch junction entries (signature_request_documents)
+    const { data: junctionData, error: junctionError } = await supabase
+      .from('signature_request_documents')
+      .select('id, document_id, signature_request_id')
+      .eq('signature_request_id', requestData.id);
+
+    console.log('[verifySignatureRequest] Step 2 - junction entries:', {
+      error: junctionError?.message,
+      count: junctionData?.length,
+      entries: junctionData,
+    });
+
+    // STEP 3: Fetch documents separately (if junction entries exist)
+    let documents: any[] = [];
+    if (junctionData && junctionData.length > 0) {
+      const documentIds = junctionData.map((j: any) => j.document_id);
+      const { data: docsData, error: docsError } = await supabase
+        .from('documents')
+        .select('*')
+        .in('id', documentIds);
+
+      console.log('[verifySignatureRequest] Step 3 - documents:', {
+        error: docsError?.message,
+        requestedIds: documentIds,
+        count: docsData?.length,
+        documents: docsData,
+      });
+
+      if (docsError) {
+        console.error('[verifySignatureRequest] Failed to fetch documents:', docsError);
+      } else if (docsData) {
+        documents = docsData;
+      }
+    } else {
+      console.warn('[verifySignatureRequest] No junction entries found for signature request:', requestData.id);
+    }
+
+    // STEP 4: Map to SignatureRequest type
     const request: SignatureRequest = {
-      id: data.id,
-      recipientName: data.recipient_name,
-      recipientEmail: data.recipient_email,
-      recipientPhone: data.recipient_phone || null,
-      recipientRole: data.recipient_role,
-      status: data.status,
-      token: data.token,
-      expiresAt: data.expires_at,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
-      documents: data.documents && data.documents.length > 0
-        ? data.documents.map((doc: any) => doc.document).filter(Boolean)
-        : [],
-      metadata: data.metadata || {},
+      id: requestData.id,
+      recipientName: requestData.recipient_name,
+      recipientEmail: requestData.recipient_email,
+      recipientPhone: requestData.recipient_phone || null,
+      recipientRole: requestData.recipient_role,
+      status: requestData.status,
+      token: requestData.token,
+      expiresAt: requestData.expires_at,
+      createdAt: requestData.created_at,
+      updatedAt: requestData.updated_at,
+      documents: documents,
+      metadata: requestData.metadata || {},
     };
+
+    console.log('[verifySignatureRequest] Final result:', {
+      id: request.id,
+      status: request.status,
+      documentsCount: request.documents.length,
+    });
 
     return request;
   } catch (error) {
