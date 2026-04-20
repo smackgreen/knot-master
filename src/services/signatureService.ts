@@ -309,6 +309,15 @@ const processSignatureRequestCreation = async (
     // Remove any duplicate document IDs
     allDocumentIds = [...new Set(allDocumentIds)];
 
+    console.log('[processSignatureRequestCreation] Document IDs collected:', {
+      fromParams: params.documentIds,
+      invoiceId: params.invoiceId,
+      quotationId: params.quotationId,
+      contractId: params.contractId,
+      totalUniqueIds: allDocumentIds.length,
+      ids: allDocumentIds,
+    });
+
     // Only process document IDs if there are any
     if (allDocumentIds.length > 0) {
       // Create the signature request documents
@@ -322,22 +331,27 @@ const processSignatureRequestCreation = async (
         .insert(requestDocuments);
 
       if (docsError) {
+        console.error('[processSignatureRequestCreation] Failed to insert junction entries:', docsError);
         throw docsError;
       }
+
+      console.log(`[processSignatureRequestCreation] Successfully linked ${allDocumentIds.length} documents to signature request ${data.id}`);
 
       // Create 'created' events for each document
       for (const documentId of allDocumentIds) {
         await createSignatureEvent(documentId, 'created', params.recipientEmail, params.recipientRole);
       }
-    } else if (params.invoiceId || params.quotationId || params.contractId) {
-      // If we have an invoice, quotation, or contract but no documents, we still want to create the signature request
-      console.log('No documents found, but creating signature request with invoice/quotation/contract reference');
-
-      // This is a valid use case - the invoice/quotation/contract itself is the document
-      // We'll just continue with the process
     } else {
-      console.warn('No documents provided for signature request');
-      // This is still valid - we might just be sending a custom message without documents
+      // No documents found — this signature request cannot be used for signing
+      // Delete the created signature request since it has no documents
+      console.error('[processSignatureRequestCreation] No documents found for signature request. Cannot create a signing request without documents.');
+      
+      await supabase
+        .from('signature_requests')
+        .delete()
+        .eq('id', data.id);
+
+      return false;
     }
 
     // Send email notification using Resend
