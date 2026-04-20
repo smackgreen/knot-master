@@ -1065,10 +1065,30 @@ export const createElectronicSignature = async (
     // Create a 'signed' event
     await createSignatureEvent(documentId, 'signed', signerEmail, signerRole, ipAddress);
 
-    // Update the document status to 'signed' since at least one signature exists
-    // Previously this required all 3 roles (client, vendor, planner) which was too strict
-    await updateDocumentStatus(documentId, 'signed');
-    console.log(`[createElectronicSignature] Document ${documentId} status updated to 'signed'`);
+    // Determine whether to update the document status to 'signed'.
+    // The document should only transition to 'signed' when BOTH of the following are true:
+    //   1. The planner has signed (via the action button on the document page)
+    //   2. At least one recipient (client/vendor) has signed (via a signature request)
+    // Individual signature events that don't satisfy both conditions should NOT change the status.
+    try {
+      const { data: allSigs } = await supabase
+        .from('electronic_signatures')
+        .select('signer_role')
+        .eq('document_id', documentId);
+
+      const roles = (allSigs || []).map((s: any) => s.signer_role as string);
+      const hasPlannerSig = roles.includes('planner');
+      const hasRecipientSig = roles.some(r => r === 'client' || r === 'vendor');
+
+      if (hasPlannerSig && hasRecipientSig) {
+        await updateDocumentStatus(documentId, 'signed');
+        console.log(`[createElectronicSignature] Document ${documentId} status updated to 'signed' (planner + at least one recipient have signed)`);
+      } else {
+        console.log(`[createElectronicSignature] Document ${documentId} stays 'pending' — planner signed: ${hasPlannerSig}, recipient signed: ${hasRecipientSig}`);
+      }
+    } catch (statusCheckError) {
+      console.error('[createElectronicSignature] Error checking signature completeness:', statusCheckError);
+    }
 
     // Get document for email notification
     const document = await getDocumentById(documentId);

@@ -200,16 +200,25 @@ const DocumentsList: React.FC<DocumentsListProps> = ({ documents, onDocumentUpda
                         <Download className="h-4 w-4 mr-2" />
                         {t('documents.download')}
                       </DropdownMenuItem>
-                      {document.status !== 'signed' && (
+                      {(() => {
+                        const hasPlannerSig = document.signatures?.some(s => s.signerRole === 'planner');
+                        const sigCount = document.signatures?.length || 0;
+                        const allRecipientsSigned = sigCount >= 3;
+                        return (!hasPlannerSig || !allRecipientsSigned);
+                      })() && (
                         <>
-                          <DropdownMenuItem onClick={() => handleSignDocument(document)}>
-                            <FileSignature className="h-4 w-4 mr-2" />
-                            {t('documents.sign')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleRequestSignature(document)}>
-                            <Send className="h-4 w-4 mr-2" />
-                            {t('documents.requestSignature')}
-                          </DropdownMenuItem>
+                          {!document.signatures?.some(s => s.signerRole === 'planner') && (
+                            <DropdownMenuItem onClick={() => handleSignDocument(document)}>
+                              <FileSignature className="h-4 w-4 mr-2" />
+                              {t('documents.sign')}
+                            </DropdownMenuItem>
+                          )}
+                          {(document.signatureRequests?.length || 0) < 3 && (
+                            <DropdownMenuItem onClick={() => handleRequestSignature(document)}>
+                              <Send className="h-4 w-4 mr-2" />
+                              {t('documents.requestSignature')}
+                            </DropdownMenuItem>
+                          )}
                         </>
                       )}
                       <DropdownMenuItem

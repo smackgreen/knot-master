@@ -346,17 +346,17 @@ const DocumentDetails: React.FC = () => {
             <Download className="h-4 w-4 mr-2" />
             {t('documents.download')}
           </Button>
-          {document.status !== 'signed' && (
-            <>
-              <Button variant="outline" size="sm" onClick={() => setIsRequestDialogOpen(true)}>
-                <Send className="h-4 w-4 mr-2" />
-                {t('documents.requestSignature')}
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => setIsSignDialogOpen(true)}>
-                <FileSignature className="h-4 w-4 mr-2" />
-                {t('documents.sign')}
-              </Button>
-            </>
+          {!document.signatures?.some(s => s.signerRole === 'planner') && (
+            <Button variant="outline" size="sm" onClick={() => setIsSignDialogOpen(true)}>
+              <FileSignature className="h-4 w-4 mr-2" />
+              {t('documents.sign')}
+            </Button>
+          )}
+          {(document.signatureRequests?.length || 0) < 3 && (
+            <Button variant="outline" size="sm" onClick={() => setIsRequestDialogOpen(true)}>
+              <Send className="h-4 w-4 mr-2" />
+              {t('documents.requestSignature')}
+            </Button>
           )}
           <Button
             variant="outline"
@@ -460,7 +460,7 @@ const DocumentDetails: React.FC = () => {
                 <p className="text-sm text-muted-foreground mb-4">
                   {t('documentDetails.noRecipientsDescription')}
                 </p>
-                {document.status !== 'signed' && (
+                {(document.signatureRequests?.length || 0) < 3 && (
                   <Button onClick={() => setIsRequestDialogOpen(true)}>
                     <Send className="h-4 w-4 mr-2" />
                     {t('documents.requestSignature')}
