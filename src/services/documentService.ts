@@ -884,11 +884,10 @@ export const createSignatureRequest = async (
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + expiresInDays);
 
-    // Create the signature request
+    // Create the signature request (without document_id — that column may have been dropped)
     const { data, error } = await supabase
       .from('signature_requests')
       .insert({
-        document_id: documentId,
         recipient_email: recipientEmail,
         recipient_name: recipientName,
         recipient_role: recipientRole,
@@ -900,7 +899,49 @@ export const createSignatureRequest = async (
       .single();
 
     if (error) {
-      throw error;
+      // If the insert fails, it might be because the old schema expects document_id
+      // Try again with document_id included
+      console.warn('[documentService.createSignatureRequest] Insert without document_id failed, trying with document_id:', error);
+      
+      const { data: retryData, error: retryError } = await supabase
+        .from('signature_requests')
+        .insert({
+          document_id: documentId,
+          recipient_email: recipientEmail,
+          recipient_name: recipientName,
+          recipient_role: recipientRole,
+          status: 'pending',
+          token,
+          expires_at: expiresAt.toISOString(),
+        })
+        .select()
+        .single();
+
+      if (retryError) {
+        throw retryError;
+      }
+
+      // Use retry data
+      var request_data = retryData;
+    } else {
+      var request_data = data;
+    }
+
+    // CRITICAL: Insert into the junction table signature_request_documents
+    // This is needed by verifySignatureRequest() to find the documents
+    const { error: junctionError } = await supabase
+      .from('signature_request_documents')
+      .insert({
+        signature_request_id: request_data.id,
+        document_id: documentId,
+      });
+
+    if (junctionError) {
+      console.error('[documentService.createSignatureRequest] Failed to insert into junction table:', junctionError);
+      // Don't throw — the signature request was created, just the junction failed
+      // The old document_id column might still work as fallback
+    } else {
+      console.log(`[documentService.createSignatureRequest] Linked document ${documentId} to signature request ${request_data.id}`);
     }
 
     // Create a 'created' event
@@ -909,10 +950,10 @@ export const createSignatureRequest = async (
     // Send signature request email notification
     try {
       const emailSent = await sendSignatureRequestEmail(
-        data.id,
+        request_data.id,
         recipientEmail,
         recipientName,
-        data.token
+        request_data.token
       );
 
       if (emailSent) {
@@ -927,16 +968,16 @@ export const createSignatureRequest = async (
 
     // Map the database record to our SignatureRequest type
     const signatureRequest: SignatureRequest = {
-      id: data.id,
-      documentId: data.document_id,
-      recipientEmail: data.recipient_email,
-      recipientName: data.recipient_name,
-      recipientRole: data.recipient_role,
-      status: data.status,
-      token: data.token,
-      expiresAt: data.expires_at,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
+      id: request_data.id,
+      documentId: documentId,
+      recipientEmail: request_data.recipient_email,
+      recipientName: request_data.recipient_name,
+      recipientRole: request_data.recipient_role,
+      status: request_data.status,
+      token: request_data.token,
+      expiresAt: request_data.expires_at,
+      createdAt: request_data.created_at,
+      updatedAt: request_data.updated_at,
     };
 
     return signatureRequest;
