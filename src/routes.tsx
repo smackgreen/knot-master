@@ -19,6 +19,7 @@ import Contracts from './pages/Contracts';
 import ContractDetails from './pages/ContractDetails';
 import ContractTemplates from './pages/ContractTemplates';
 import Documents from './pages/Documents';
+import DocumentDetails from './pages/DocumentDetails';
 import Signatures from './pages/Signatures';
 import SignDocument from './pages/SignDocument';
 import SignatureSuccess from './pages/SignatureSuccess';
@@ -222,6 +223,10 @@ const router = createBrowserRouter([
           {
             path: 'documents',
             element: <Documents />,
+          },
+          {
+            path: 'documents/:id',
+            element: <DocumentDetails />,
           },
           {
             path: 'signatures',

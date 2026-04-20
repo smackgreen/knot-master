@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { Document, DocumentStatus } from '@/types';
 import { format } from 'date-fns';
 import { fr, enUS } from 'date-fns/locale';
@@ -52,6 +53,7 @@ interface DocumentsListProps {
 const DocumentsList: React.FC<DocumentsListProps> = ({ documents, onDocumentUpdated }) => {
   const { t, i18n } = useTranslation();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
   const [isSignDialogOpen, setIsSignDialogOpen] = useState<boolean>(false);
@@ -80,38 +82,20 @@ const DocumentsList: React.FC<DocumentsListProps> = ({ documents, onDocumentUpda
     }
   };
 
-  const handleViewDocument = async (document: Document) => {
-    try {
-      const url = await getSignedUrl(document.filePath);
-      if (url) {
-        window.open(url, '_blank');
-      } else {
-        toast({
-          title: t('documents.errorLoadingDocument'),
-          description: t('documents.tryAgainLater'),
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
-      console.error('Error viewing document:', error);
-      toast({
-        title: t('documents.errorLoadingDocument'),
-        description: t('documents.tryAgainLater'),
-        variant: 'destructive',
-      });
-    }
+  const handleViewDocument = (document: Document) => {
+    navigate(`/app/documents/${document.id}`);
   };
 
-  const handleDownloadDocument = async (document: Document) => {
+  const handleDownloadDocument = async (doc: Document) => {
     try {
-      const url = await getSignedUrl(document.filePath);
+      const url = await getSignedUrl(doc.filePath);
       if (url) {
-        const link = document.createElement('a');
+        const link = window.document.createElement('a');
         link.href = url;
-        link.download = document.name;
-        document.body.appendChild(link);
+        link.download = doc.name;
+        window.document.body.appendChild(link);
         link.click();
-        document.body.removeChild(link);
+        window.document.body.removeChild(link);
       } else {
         toast({
           title: t('documents.errorDownloadingDocument'),
