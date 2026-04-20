@@ -14,8 +14,10 @@ import SignaturePad from '@/components/documents/SignatureCanvas';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, FileText, CheckCircle2 } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Loader2, FileText, CheckCircle2, Calendar, User, Mail, Shield, Clock } from 'lucide-react';
 import { createElectronicSignature } from '@/services/documentService';
 import SMSVerification from '@/components/signatures/SMSVerification';
 
@@ -195,6 +197,45 @@ const SignDocument: React.FC = () => {
     }
   };
 
+  // Format the expiration date for display
+  const formatExpirationDate = (dateStr: string): string => {
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return dateStr;
+    }
+  };
+
+  // Check if the request is expired
+  const isExpired = signatureRequest ? new Date(signatureRequest.expiresAt) < new Date() : false;
+
+  // Get role display label
+  const getRoleLabel = (role: string): string => {
+    const roleMap: Record<string, string> = {
+      client: t('documents.roles.client'),
+      vendor: t('documents.roles.vendor'),
+      planner: t('documents.roles.planner'),
+    };
+    return roleMap[role] || role;
+  };
+
+  // Get role badge variant
+  const getRoleBadgeVariant = (role: string): 'default' | 'secondary' | 'outline' => {
+    const variantMap: Record<string, 'default' | 'secondary' | 'outline'> = {
+      client: 'default',
+      vendor: 'secondary',
+      planner: 'outline',
+    };
+    return variantMap[role] || 'default';
+  };
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4">
@@ -267,6 +308,57 @@ const SignDocument: React.FC = () => {
           {currentDocument?.name} ({currentDocumentIndex + 1}/{documents.length})
         </p>
       </div>
+
+      {/* Recipient Information Card — shown in both review and sign steps */}
+      {signatureRequest && (
+        <Card className="mb-6">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <User className="h-5 w-5" />
+              {t('signatures.recipientInformation')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="flex items-start gap-3">
+                <User className="h-4 w-4 mt-1 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">{t('signatures.fullName')}</p>
+                  <p className="text-sm font-semibold">{signatureRequest.recipientName}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <Mail className="h-4 w-4 mt-1 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">{t('signatures.email')}</p>
+                  <p className="text-sm font-semibold break-all">{signatureRequest.recipientEmail}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <Shield className="h-4 w-4 mt-1 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">{t('signatures.role')}</p>
+                  <Badge variant={getRoleBadgeVariant(signatureRequest.recipientRole)} className="mt-0.5">
+                    {getRoleLabel(signatureRequest.recipientRole)}
+                  </Badge>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <Clock className="h-4 w-4 mt-1 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">{t('signatures.expiresAt')}</p>
+                  <p className={`text-sm font-semibold ${isExpired ? 'text-red-600' : ''}`}>
+                    {formatExpirationDate(signatureRequest.expiresAt)}
+                  </p>
+                  {isExpired && (
+                    <p className="text-xs text-red-500">{t('signatures.expired')}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {step === 'review' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
