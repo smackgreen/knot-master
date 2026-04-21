@@ -44,11 +44,6 @@ const SignatureDisplay: React.FC<SignatureDisplayProps> = ({ signature, classNam
           <p className="text-sm text-gray-500">
             {t('documents.signedOn')}: {formatDate(signature.consentTimestamp)}
           </p>
-          {signature.ipAddress && (
-            <p className="text-xs text-gray-400">
-              IP: {signature.ipAddress}
-            </p>
-          )}
         </div>
       </div>
       <div className="mt-4 flex justify-center">
