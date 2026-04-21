@@ -56,7 +56,13 @@ function setCorsHeaders(req: VercelRequest, res: VercelResponse) {
 }
 
 /**
- * Validate the Supabase JWT authentication token
+ * Validate the Supabase JWT authentication token.
+ *
+ * Accepts two auth modes:
+ * 1. User JWT — verified via Supabase auth, returns userId
+ * 2. Anon key — for public signers (unauthenticated users accessing via email link)
+ *    The anon key is validated against the project's VITE_SUPABASE_ANON_KEY env var.
+ *    Input validation (documentId, signatures, etc.) provides request-level protection.
  */
 async function validateAuthToken(req: VercelRequest): Promise<{ valid: boolean; userId?: string; error?: string }> {
   const authHeader = req.headers['authorization'];
@@ -73,7 +79,14 @@ async function validateAuthToken(req: VercelRequest): Promise<{ valid: boolean; 
     return { valid: false, error: 'Server configuration error' };
   }
 
-  // Create a Supabase client with the service role key to verify the JWT
+  // Check if this is the anon key (public signer without a session)
+  const anonKey = process.env.SUPABASE_ANON_KEY;
+  if (anonKey && token === anonKey) {
+    console.log('[validateAuthToken] Authenticated via anon key (public signer)');
+    return { valid: true, userId: undefined };
+  }
+
+  // Otherwise, verify as a user JWT
   const supabase = createClient(supabaseUrl, supabaseKey);
   const { data: { user }, error } = await supabase.auth.getUser(token);
 

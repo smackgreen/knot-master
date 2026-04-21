@@ -179,8 +179,8 @@ const SignDocumentDialog: React.FC<SignDocumentDialogProps> = ({
           description: t('documents.documentSigned'),
         });
         
-        // Trigger PDF finalization in the background
-        triggerPdfFinalization(document.id);
+        // Trigger PDF finalization and wait for it to complete
+        await triggerPdfFinalization(document.id);
         
         if (onSignSuccess) {
           onSignSuccess();

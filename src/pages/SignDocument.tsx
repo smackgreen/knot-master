@@ -126,23 +126,28 @@ const SignDocument: React.FC = () => {
    * the dual-layer PDF finalization pipeline.
    */
   const triggerPdfFinalization = async (documentId: string) => {
+    console.log('[triggerPdfFinalization] STARTED for document:', documentId);
     try {
-      const { ready } = await isDocumentReadyForFinalization(documentId);
+      const { ready, missingRoles } = await isDocumentReadyForFinalization(documentId);
+      console.log('[triggerPdfFinalization] Ready check:', { ready, missingRoles });
       
       if (ready) {
         setIsFinalizing(true);
         const result = await finalizePdfDocument(documentId);
         
         if (result.success) {
-          console.log(`[triggerPdfFinalization] Document ${documentId} finalized successfully`);
+          console.log(`[triggerPdfFinalization] Document ${documentId} finalized successfully. Path: ${result.finalPdfPath}`);
         } else {
           console.warn('[triggerPdfFinalization] Finalization failed:', result.error);
         }
+      } else {
+        console.warn('[triggerPdfFinalization] Document not ready. Missing roles:', missingRoles);
       }
     } catch (error) {
-      console.error('Error during PDF finalization:', error);
+      console.error('[triggerPdfFinalization] Error during PDF finalization:', error);
     } finally {
       setIsFinalizing(false);
+      console.log('[triggerPdfFinalization] COMPLETED for document:', documentId);
     }
   };
 
@@ -188,8 +193,10 @@ const SignDocument: React.FC = () => {
         // Add document to signed documents
         setSignedDocuments(prev => [...prev, currentDocument.id]);
 
-        // Trigger PDF finalization in the background
-        triggerPdfFinalization(currentDocument.id);
+        // Trigger PDF finalization and wait for it to complete
+        // before navigating to the success page
+        console.log('[handleSign] Awaiting PDF finalization...');
+        await triggerPdfFinalization(currentDocument.id);
 
         // Check if there are more documents to sign
         if (currentDocumentIndex < documents.length - 1) {

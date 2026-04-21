@@ -121,11 +121,14 @@ VITE_API_BASE_URL=                          # Empty for same-origin
 ```
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+SUPABASE_ANON_KEY=your-anon-key
 CERTIFICATE_PEM=<base64-encoded certificate>
 KEY_PEM=<base64-encoded private key>
 ```
 
-> **Note:** Authentication is handled via Supabase JWT tokens. The client sends the user's Supabase access token in the `Authorization: Bearer <token>` header. No separate API key is needed.
+> **Note:** Authentication supports two modes:
+> - **Authenticated users** (organizers): Supabase JWT token sent in `Authorization: Bearer <token>` header
+> - **Public signers** (clients via email link): The Supabase anon key is used when no session exists. `SUPABASE_ANON_KEY` must be set in Vercel env vars to enable this.
 
 To encode certificates for environment variables:
 ```bash

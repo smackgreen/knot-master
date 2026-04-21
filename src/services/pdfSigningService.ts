@@ -185,18 +185,25 @@ async function callFinalizeApi(params: FinalizeApiParams): Promise<PdfSigningRes
   const apiUrl = `${API_BASE_URL}/api/finalize-document`;
 
   // Get the current user's session token for authentication
+  // Fall back to the anon key for public signers (unauthenticated users
+  // accessing the signing page via email link)
   const { data: { session } } = await supabase.auth.getSession();
-  if (!session) {
+  const authToken = session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+  if (!authToken) {
+    console.error('[callFinalizeApi] No auth token available (no session and no anon key)');
     return { success: false, error: 'Authentication required' };
   }
 
-  console.log(`[pdfSigningService] Calling API: ${apiUrl}`);
+  console.log(`[pdfSigningService] Calling API: ${apiUrl}`, {
+    authMode: session ? 'jwt' : 'anon-key',
+  });
 
   const response = await fetch(apiUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${session.access_token}`,
+      'Authorization': `Bearer ${authToken}`,
     },
     body: JSON.stringify(params),
   });
