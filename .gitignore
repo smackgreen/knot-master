@@ -18,6 +18,10 @@ dist-ssr
 .env.*.local
 email-server/.env
 
+# PDF Signing certificates (NEVER commit private keys)
+certs/*.pem
+certs/*.p12
+
 # Supabase temp files (contain project refs and connection strings)
 supabase/.temp/
 

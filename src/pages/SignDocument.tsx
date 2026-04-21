@@ -1,3 +1,15 @@
+/**
+ * Public Sign Document Page
+ * 
+ * Accessed via secure unique email link (/sign/:token).
+ * Allows clients to review and sign documents with:
+ * - Draw signature (mouse + touch)
+ * - Type-to-sign (cursive font)
+ * 
+ * After signing, triggers the dual-layer PDF finalization pipeline
+ * when all required parties have signed.
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -7,15 +19,16 @@ import { getSignedUrl } from '@/services/storageService';
 import { useToast } from '@/components/ui/use-toast';
 import { verifySignatureRequest } from '@/services/signatureService';
 import { supabase } from '@/integrations/supabase/client';
+import { finalizePdfDocument, isDocumentReadyForFinalization } from '@/services/pdfSigningService';
 
 import { Button } from '@/components/ui/button';
 import PDFViewer from '@/components/documents/PDFViewer';
-import SignaturePad from '@/components/documents/SignatureCanvas';
+import EnhancedSignatureCanvas from '@/components/documents/EnhancedSignatureCanvas';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, FileText, CheckCircle2 } from 'lucide-react';
+import { Loader2, FileText, CheckCircle2, Shield, Lock } from 'lucide-react';
 import { createElectronicSignature } from '@/services/documentService';
 import SMSVerification from '@/components/signatures/SMSVerification';
 
@@ -26,6 +39,7 @@ const SignDocument: React.FC = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isFinalizing, setIsFinalizing] = useState<boolean>(false);
   const [signatureRequest, setSignatureRequest] = useState<SignatureRequest | null>(null);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [currentDocumentIndex, setCurrentDocumentIndex] = useState<number>(0);
@@ -106,6 +120,31 @@ const SignDocument: React.FC = () => {
     setStep('sign');
   };
 
+  /**
+   * After signing, check if all parties have signed and trigger
+   * the dual-layer PDF finalization pipeline.
+   */
+  const triggerPdfFinalization = async (documentId: string) => {
+    try {
+      const { ready } = await isDocumentReadyForFinalization(documentId);
+      
+      if (ready) {
+        setIsFinalizing(true);
+        const result = await finalizePdfDocument(documentId);
+        
+        if (result.success) {
+          console.log(`[triggerPdfFinalization] Document ${documentId} finalized successfully`);
+        } else {
+          console.warn('[triggerPdfFinalization] Finalization failed:', result.error);
+        }
+      }
+    } catch (error) {
+      console.error('Error during PDF finalization:', error);
+    } finally {
+      setIsFinalizing(false);
+    }
+  };
+
   const handleSign = async () => {
     if (!signatureData) {
       toast({
@@ -128,7 +167,7 @@ const SignDocument: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // Get IP address (in a real app, you might want to use a service for this)
+      // Get IP address
       const ipResponse = await fetch('https://api.ipify.org?format=json');
       const ipData = await ipResponse.json();
       const ipAddress = ipData.ip;
@@ -148,6 +187,9 @@ const SignDocument: React.FC = () => {
         // Add document to signed documents
         setSignedDocuments(prev => [...prev, currentDocument.id]);
 
+        // Trigger PDF finalization in the background
+        triggerPdfFinalization(currentDocument.id);
+
         // Check if there are more documents to sign
         if (currentDocumentIndex < documents.length - 1) {
           // Move to the next document
@@ -161,8 +203,8 @@ const SignDocument: React.FC = () => {
           // All documents signed — update signature request status to 'completed'
           try {
             const { error: updateError } = await supabase
-              .from('signature_requests')
-              .update({ status: 'completed', updated_at: new Date().toISOString() })
+              .from('signature_requests' as any)
+              .update({ status: 'completed', updated_at: new Date().toISOString() } as any)
               .eq('id', signatureRequest.id);
 
             if (updateError) {
@@ -259,6 +301,12 @@ const SignDocument: React.FC = () => {
 
   return (
     <div className="container mx-auto py-6 px-4 max-w-5xl">
+      {/* Security Badge */}
+      <div className="flex items-center justify-center gap-2 mb-4 text-sm text-muted-foreground">
+        <Lock className="h-4 w-4" />
+        <span>{t('signatures.secureSigningSession', 'Secure signing session — your signature is encrypted')}</span>
+      </div>
+
       <div className="mb-6">
         <h1 className="text-3xl font-bold tracking-tight mb-2">
           {step === 'review' ? t('signatures.reviewDocument') : t('signatures.signDocument')}
@@ -334,20 +382,28 @@ const SignDocument: React.FC = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <SignaturePad onSave={handleSignatureSave} />
+                <EnhancedSignatureCanvas
+                  onSave={handleSignatureSave}
+                  defaultName={name}
+                />
               </CardContent>
               <CardFooter className="flex justify-between">
                 <Button variant="outline" onClick={() => setStep('review')}>
                   {t('signatures.back')}
                 </Button>
-                <Button onClick={handleSign} disabled={!signatureData || isSubmitting}>
-                  {isSubmitting ? (
+                <Button onClick={handleSign} disabled={!signatureData || isSubmitting || isFinalizing}>
+                  {isSubmitting || isFinalizing ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {t('common.loading')}
+                      {isFinalizing 
+                        ? t('documents.finalizingPdf', 'Finalizing PDF...')
+                        : t('common.loading')}
                     </>
                   ) : (
-                    t('signatures.sign')
+                    <>
+                      <Shield className="mr-2 h-4 w-4" />
+                      {t('signatures.sign')}
+                    </>
                   )}
                 </Button>
               </CardFooter>

@@ -1,3 +1,10 @@
+/**
+ * Sign Document Dialog (Enhanced)
+ * 
+ * Updated to use the EnhancedSignatureCanvas with draw + type-to-sign support.
+ * After signing, triggers the dual-layer PDF finalization pipeline.
+ */
+
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
@@ -6,6 +13,7 @@ import * as z from 'zod';
 import { Document, SignerRole } from '@/types';
 import { getSignedUrl } from '@/services/storageService';
 import { createElectronicSignature } from '@/services/documentService';
+import { finalizePdfDocument, isDocumentReadyForFinalization } from '@/services/pdfSigningService';
 import { useToast } from '@/components/ui/use-toast';
 
 import {
@@ -27,7 +35,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import PDFViewer from './PDFViewer';
-import SignaturePad from './SignatureCanvas';
+import EnhancedSignatureCanvas from './EnhancedSignatureCanvas';
 
 interface SignDocumentDialogProps {
   document: Document;
@@ -49,6 +57,7 @@ const SignDocumentDialog: React.FC<SignDocumentDialogProps> = ({
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [signatureData, setSignatureData] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isFinalizing, setIsFinalizing] = useState<boolean>(false);
   const [step, setStep] = useState<'review' | 'sign'>('review');
 
   // Form schema
@@ -96,6 +105,42 @@ const SignDocumentDialog: React.FC<SignDocumentDialogProps> = ({
     setSignatureData(data);
   };
 
+  /**
+   * After signing, check if all parties have signed and trigger
+   * the dual-layer PDF finalization pipeline if ready.
+   */
+  const triggerPdfFinalization = async (documentId: string) => {
+    try {
+      const { ready, missingRoles } = await isDocumentReadyForFinalization(documentId);
+      
+      if (ready) {
+        setIsFinalizing(true);
+        toast({
+          title: t('documents.finalizingPdf', 'Finalizing signed PDF...'),
+          description: t('documents.finalizingDescription', 'Applying visual and cryptographic signatures to your document.'),
+        });
+
+        const result = await finalizePdfDocument(documentId);
+        
+        if (result.success) {
+          toast({
+            title: t('documents.pdfFinalized', 'PDF finalized successfully'),
+            description: t('documents.pdfFinalizedDescription', 'Your document has been signed and secured with a cryptographic signature.'),
+          });
+        } else {
+          console.warn('PDF finalization failed:', result.error);
+          // Don't show error to user - their signature was still recorded
+        }
+      } else {
+        console.log(`Document not yet ready for finalization. Missing: ${missingRoles.join(', ')}`);
+      }
+    } catch (error) {
+      console.error('Error during PDF finalization:', error);
+    } finally {
+      setIsFinalizing(false);
+    }
+  };
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (step === 'review') {
       setStep('sign');
@@ -114,7 +159,7 @@ const SignDocumentDialog: React.FC<SignDocumentDialogProps> = ({
     setIsLoading(true);
 
     try {
-      // Get IP address (in a real app, you might want to use a service for this)
+      // Get IP address
       const ipResponse = await fetch('https://api.ipify.org?format=json');
       const ipData = await ipResponse.json();
       const ipAddress = ipData.ip;
@@ -133,6 +178,9 @@ const SignDocumentDialog: React.FC<SignDocumentDialogProps> = ({
           title: t('documents.signatureSuccess'),
           description: t('documents.documentSigned'),
         });
+        
+        // Trigger PDF finalization in the background
+        triggerPdfFinalization(document.id);
         
         if (onSignSuccess) {
           onSignSuccess();
@@ -237,7 +285,11 @@ const SignDocumentDialog: React.FC<SignDocumentDialogProps> = ({
           </>
         ) : (
           <>
-            <SignaturePad onSave={handleSignatureSave} className="my-4" />
+            <EnhancedSignatureCanvas
+              onSave={handleSignatureSave}
+              className="my-4"
+              defaultName={form.getValues('name')}
+            />
 
             <div className="flex justify-between mt-4">
               <Button variant="outline" onClick={() => setStep('review')}>
@@ -245,11 +297,18 @@ const SignDocumentDialog: React.FC<SignDocumentDialogProps> = ({
               </Button>
               <Button
                 onClick={form.handleSubmit(onSubmit)}
-                disabled={isLoading || !signatureData}
+                disabled={isLoading || isFinalizing || !signatureData}
               >
-                {isLoading ? t('common.loading') : t('documents.signDocument')}
+                {isLoading || isFinalizing
+                  ? t('common.loading')
+                  : t('documents.signDocument')}
               </Button>
             </div>
+            {isFinalizing && (
+              <p className="text-sm text-muted-foreground text-center mt-2">
+                {t('documents.finalizingPdf', 'Finalizing PDF with cryptographic signature...')}
+              </p>
+            )}
           </>
         )}
       </DialogContent>

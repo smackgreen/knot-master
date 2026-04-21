@@ -306,7 +306,7 @@ export interface Signature {
 }
 
 export type DocumentStatus = 'pending' | 'signed' | 'expired' | 'cancelled';
-export type SignerRole = 'client' | 'vendor' | 'planner';
+export type SignerRole = 'client' | 'vendor' | 'planner' | 'organizer';
 export type SignatureRequestStatus = 'pending' | 'completed' | 'expired' | 'cancelled';
 export type SignatureEventType = 'created' | 'viewed' | 'signed' | 'expired' | 'cancelled';
 
@@ -324,6 +324,12 @@ export interface Document {
   updatedAt: string;
   signatures?: ElectronicSignature[];
   signatureRequests?: SignatureRequest[];
+  /** Path to the finalized PDF with visual + cryptographic signatures applied */
+  finalPdfUrl?: string;
+  /** SHA-256 hash of the finalized PDF for integrity verification */
+  documentHash?: string;
+  /** Timestamp when the cryptographic digital signature was applied */
+  cryptoSignedAt?: string;
 }
 
 export interface ElectronicSignature {
