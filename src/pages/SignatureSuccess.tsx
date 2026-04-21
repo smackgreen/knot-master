@@ -17,7 +17,7 @@ const SignatureSuccess: React.FC = () => {
         <h1 className="text-2xl font-bold mb-4">{t('documents.signatureSuccess')}</h1>
         <p className="mb-6">{t('documents.signatureSuccessMessage')}</p>
         <Button onClick={() => navigate('/')}>
-          {t('common.backToHome')}
+          {t('common.returnToHome')}
         </Button>
       </div>
     </div>

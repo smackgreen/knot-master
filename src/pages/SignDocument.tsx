@@ -24,6 +24,7 @@ import { finalizePdfDocument, isDocumentReadyForFinalization } from '@/services/
 import { Button } from '@/components/ui/button';
 import PDFViewer from '@/components/documents/PDFViewer';
 import EnhancedSignatureCanvas from '@/components/documents/EnhancedSignatureCanvas';
+import SignatureDisplay from '@/components/documents/SignatureDisplay';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -256,9 +257,9 @@ const SignDocument: React.FC = () => {
               <CardDescription>{error}</CardDescription>
             </CardHeader>
             <CardFooter>
-              <Button onClick={() => navigate('/')} className="w-full">
-                {t('common.backToHome')}
-              </Button>
+                <Button onClick={() => navigate('/')} className="w-full">
+                  {t('common.returnToHome')}
+                </Button>
             </CardFooter>
           </Card>
         </div>
@@ -323,7 +324,7 @@ const SignDocument: React.FC = () => {
               <CardHeader>
                 <CardTitle>{t('signatures.reviewInformation')}</CardTitle>
                 <CardDescription>
-                  {t('signatures.reviewDocumentDescription')}
+                  {t('documents.reviewDocumentDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -354,6 +355,18 @@ const SignDocument: React.FC = () => {
                     {t('signatures.consentText')}
                   </Label>
                 </div>
+
+                {/* Display existing signatures (e.g., organizer's signature) */}
+                {currentDocument?.signatures && currentDocument.signatures.length > 0 && (
+                  <div className="space-y-3 pt-4">
+                    <h4 className="text-sm font-medium text-muted-foreground">
+                      {t('documents.existingSignatures', 'Existing Signatures')}
+                    </h4>
+                    {currentDocument.signatures.map((sig) => (
+                      <SignatureDisplay key={sig.id} signature={sig} />
+                    ))}
+                  </div>
+                )}
               </CardContent>
               <CardFooter className="flex justify-between">
                 <Button variant="outline" onClick={() => navigate('/')}>
@@ -386,6 +399,18 @@ const SignDocument: React.FC = () => {
                   onSave={handleSignatureSave}
                   defaultName={name}
                 />
+
+                {/* Display existing signatures (e.g., organizer's signature) */}
+                {currentDocument?.signatures && currentDocument.signatures.length > 0 && (
+                  <div className="space-y-3 mt-6 pt-4 border-t">
+                    <h4 className="text-sm font-medium text-muted-foreground">
+                      {t('documents.existingSignatures', 'Existing Signatures')}
+                    </h4>
+                    {currentDocument.signatures.map((sig) => (
+                      <SignatureDisplay key={sig.id} signature={sig} />
+                    ))}
+                  </div>
+                )}
               </CardContent>
               <CardFooter className="flex justify-between">
                 <Button variant="outline" onClick={() => setStep('review')}>

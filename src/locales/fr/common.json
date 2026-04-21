@@ -1520,6 +1520,7 @@
     },
     "createdAt": "Créé le",
     "signatures": "Signatures",
+    "existingSignatures": "Signatures existantes",
     "view": "Voir",
     "download": "Télécharger",
     "sign": "Signer",

@@ -1469,6 +1469,7 @@
     },
     "createdAt": "Created At",
     "signatures": "Signatures",
+    "existingSignatures": "Existing Signatures",
     "view": "View",
     "download": "Download",
     "sign": "Sign",

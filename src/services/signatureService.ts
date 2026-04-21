@@ -588,7 +588,7 @@ export const verifySignatureRequest = async (token: string): Promise<SignatureRe
       const documentIds = junctionData.map((j: any) => j.document_id);
       const { data: docsData, error: docsError } = await supabase
         .from('documents')
-        .select('*')
+        .select('*, electronic_signatures (*)')
         .in('id', documentIds);
 
       console.log('[verifySignatureRequest] Step 3 - documents:', {
@@ -620,6 +620,17 @@ export const verifySignatureRequest = async (token: string): Promise<SignatureRe
       status: doc.status,
       createdAt: doc.created_at,
       updatedAt: doc.updated_at,
+      signatures: (doc.electronic_signatures || []).map((sig: any) => ({
+        id: sig.id,
+        documentId: sig.document_id,
+        signerName: sig.signer_name,
+        signerEmail: sig.signer_email,
+        signerRole: sig.signer_role,
+        signatureImage: sig.signature_image,
+        ipAddress: sig.ip_address,
+        consentTimestamp: sig.consent_timestamp,
+        createdAt: sig.created_at,
+      })),
     }));
 
     // STEP 5: Map to SignatureRequest type
