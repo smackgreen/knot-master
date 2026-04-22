@@ -61,16 +61,53 @@ export interface BudgetCategory {
   spent: number;
 }
 
+export type TaskPriority = 'low' | 'medium' | 'high' | 'critical';
+export type TaskStatus = 'not_started' | 'in_progress' | 'completed' | 'overdue';
+
 export interface Task {
   id: string;
   clientId: string;
   title: string;
   description?: string;
   dueDate: Date | string;
-  status: 'not_started' | 'in_progress' | 'completed' | 'overdue';
-  priority: 'low' | 'medium' | 'high';
+  startDate?: Date | string;
+  status: TaskStatus;
+  priority: TaskPriority;
   createdAt: Date | string;
   category?: VendorCategory;
+  templateCategory?: string;
+  isFromTemplate?: boolean;
+  sortOrder?: number;
+  subtasks?: TaskSubtask[];
+}
+
+export interface TaskSubtask {
+  id: string;
+  taskId: string;
+  title: string;
+  description?: string;
+  isCompleted: boolean;
+  sortOrder: number;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+}
+
+export interface WeddingTaskTemplate {
+  id: string;
+  category: string;
+  title: string;
+  description?: string;
+  priority: TaskPriority;
+  startDateOffsetDays: number;
+  endDateOffsetDays: number;
+  sortOrder: number;
+  subtasks: WeddingTaskTemplateSubtask[];
+  icon?: string;
+}
+
+export interface WeddingTaskTemplateSubtask {
+  title: string;
+  description?: string;
 }
 
 export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue';

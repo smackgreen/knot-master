@@ -5,6 +5,7 @@ import Clients from './pages/Clients';
 import ClientDetails from './pages/ClientDetails';
 import AddClient from './pages/AddClient';
 import Tasks from './pages/Tasks';
+import WeddingTasks from './pages/WeddingTasks';
 import Calendar from './pages/Calendar';
 import Settings from './pages/Settings';
 import Login from './pages/auth/Login';
@@ -199,6 +200,10 @@ const router = createBrowserRouter([
           {
             path: 'tasks',
             element: <Tasks />,
+          },
+          {
+            path: 'tasks/wedding/:clientId',
+            element: <WeddingTasks />,
           },
           {
             path: 'calendar',
