@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency, formatDate, formatVendorCategory, getPriorityBadge, getTaskStatusInfo, calculateDueAmount } from "@/utils/formatters";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Calendar, ChevronLeft, Contact, CreditCard, Edit, FileText, Trash2, Users, DollarSign, UserPlus, LayoutGrid, Palette, Utensils, FileSignature, Plus, ChevronDown, Loader2, Clock } from "lucide-react";
+import { Calendar, ChevronLeft, Contact, CreditCard, Edit, FileText, Trash2, Users, DollarSign, UserPlus, LayoutGrid, Palette, Utensils, FileSignature, Plus, ChevronDown, Loader2, Clock, Sparkles } from "lucide-react";
 import GuestList from "@/components/guests/GuestList";
 import SeatingChartDesigner from "@/components/seating/SeatingChartDesigner";
 import MealPlanningTool from "@/components/meal-planning/MealPlanningTool";
@@ -770,10 +770,16 @@ const ClientDetails = () => {
                 <CardTitle>{t('tasks.title')}</CardTitle>
                 <CardDescription>{t('tasks.manageTasks')}</CardDescription>
               </div>
-              <Button onClick={handleOpenAddTask}>
-                <Calendar className="mr-2 h-4 w-4" />
-                {t('tasks.addTask')}
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => navigate(`/app/tasks/wedding/${client.id}`)}>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  {t('tasks.weddingPlanner', 'Wedding Planner')}
+                </Button>
+                <Button onClick={handleOpenAddTask}>
+                  <Calendar className="mr-2 h-4 w-4" />
+                  {t('tasks.addTask')}
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {client.tasks && client.tasks.length > 0 ? (
