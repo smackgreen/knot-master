@@ -382,6 +382,128 @@
     "due": "Échéance",
     "for": "Pour",
     "noTasksCreated": "Aucune tâche créée pour l'instant. Ajoutez votre première tâche pour commencer.",
+    "taskTemplates": {
+      "venue_location": {
+        "title": "Lieu & Emplacement",
+        "description": "Trouvez et réservez les lieux parfaits pour votre cérémonie et réception",
+        "subtasks": {
+          "find_and_book_ceremony_venue": "Trouver et réserver le lieu de cérémonie",
+          "find_and_book_reception_venue": "Trouver et réserver le lieu de réception",
+          "confirm_venue_availability_and_capacity": "Confirmer la disponibilité et la capacité du lieu"
+        }
+      },
+      "guest_list": {
+        "title": "Liste d'invités & Invitations",
+        "description": "Gérez votre liste d'invités et envoyez les invitations",
+        "subtasks": {
+          "draft_complete_guest_list": "Rédiger la liste complète des invités",
+          "organize_guest_addresses_and_contact_info": "Organiser les adresses et coordonnées des invités",
+          "design_and_send_save_the_dates": "Concevoir et envoyer les save-the-dates",
+          "send_formal_invitations_and_track_rsvps": "Envoyer les invitations formelles et suivre les RSVP"
+        }
+      },
+      "budget": {
+        "title": "Planification du budget",
+        "description": "Établissez et gérez votre budget de mariage",
+        "subtasks": {
+          "establish_total_wedding_budget": "Établir le budget total du mariage",
+          "allocate_budget_percentages_per_category": "Répartir le budget par catégorie",
+          "track_deposits_and_payments_ongoing": "Suivre les dépôts et paiements en continu"
+        }
+      },
+      "venue_selection": {
+        "title": "Sélection du lieu",
+        "description": "Recherchez, comparez et finalisez votre lieu",
+        "subtasks": {
+          "research_and_compare_venues": "Rechercher et comparer les lieux",
+          "schedule_venue_tours": "Planifier des visites de lieux",
+          "review_and_sign_venue_contracts": "Réviser et signer les contrats du lieu"
+        }
+      },
+      "photography": {
+        "title": "Photographie & Vidéographie",
+        "description": "Capturez chaque moment avec les bons professionnels",
+        "subtasks": {
+          "research_photographers_and_videographers": "Rechercher des photographes et vidéastes",
+          "review_portfolios_and_packages": "Réviser les portfolios et forfaits",
+          "book_preferred_photographer": "Réserver le photographe préféré",
+          "schedule_engagement_photo_session": "Planifier une séance photo de fiançailles"
+        }
+      },
+      "catering": {
+        "title": "Traiteur & Restauration",
+        "description": "Planifiez le menu parfait pour votre célébration",
+        "subtasks": {
+          "determine_dining_style_and_menu_preferences": "Déterminer le style de repas et les préférences",
+          "schedule_catering_tastings": "Planifier des dégustations chez le traiteur",
+          "finalize_menu_selections_and_dietary_accommodations": "Finaliser le menu et les adaptations alimentaires",
+          "confirm_headcount_with_caterer": "Confirmer le nombre d'invités au traiteur"
+        }
+      },
+      "floral": {
+        "title": "Design floral",
+        "description": "Concevez de magnifiques arrangements floraux",
+        "subtasks": {
+          "research_and_contact_florists": "Rechercher et contacter des fleuristes",
+          "discuss_floral_arrangements_and_color_palette": "Discuter des arrangements et de la palette de couleurs",
+          "confirm_bouquet_and_centerpiece_designs": "Confirmer les bouquets et les centres de table"
+        }
+      },
+      "hair_makeup": {
+        "title": "Coiffure & Maquillage",
+        "description": "Apparaissez sous votre meilleur jour avec des professionnels",
+        "subtasks": {
+          "research_beauty_professionals": "Rechercher des professionnels de la beauté",
+          "schedule_hair_and_makeup_trial_runs": "Planifier des essais coiffure et maquillage",
+          "book_beauty_team_for_wedding_day": "Réserver l'équipe beauté pour le jour J"
+        }
+      },
+      "entertainment": {
+        "title": "Animation",
+        "description": "Planifiez la musique et l'animation de votre réception",
+        "subtasks": {
+          "research_djs_and_live_bands": "Rechercher des DJ et groupes musicaux",
+          "review_song_preferences_and_do_not_play_lists": "Réviser les préférences musicales",
+          "book_entertainment_and_confirm_setup_requirements": "Réserver l'animation et confirmer la logistique"
+        }
+      },
+      "cake": {
+        "title": "Gâteau de mariage",
+        "description": "Concevez et commandez le gâteau de vos rêves",
+        "subtasks": {
+          "research_bakeries_and_cake_designers": "Rechercher des pâtisseries et designers de gâteaux",
+          "schedule_cake_tasting_appointments": "Planifier des dégustations de gâteaux",
+          "finalize_cake_design_and_flavors": "Finaliser le design et les saveurs du gâteau"
+        }
+      },
+      "transportation": {
+        "title": "Transport",
+        "description": "Organisez le transport pour le jour du mariage",
+        "subtasks": {
+          "arrange_transportation_for_wedding_party": "Organiser le transport du cortège",
+          "book_guest_shuttle_services_if_needed": "Réserver un service de navette si nécessaire",
+          "confirm_pickup_and_dropoff_logistics": "Confirmer la logistique des trajets"
+        }
+      },
+      "attire": {
+        "title": "Tenue de mariage",
+        "description": "Trouvez la tenue parfaite pour le mariage",
+        "subtasks": {
+          "shop_for_wedding_dress_and_accessories": "Faire les boutiques pour la robe et les accessoires",
+          "schedule_dress_fittings_and_alterations": "Planifier les essayages et retouches",
+          "coordinate_wedding_party_attire": "Coordonner les tenues du cortège"
+        }
+      },
+      "rings": {
+        "title": "Bagues & Bijoux",
+        "description": "Choisissez et personnalisez vos alliances",
+        "subtasks": {
+          "research_wedding_band_styles": "Rechercher les styles d'alliances",
+          "shop_for_and_purchase_wedding_rings": "Acheter les alliances",
+          "engrave_rings_if_desired": "Faire graver les bagues si souhaité"
+        }
+      }
+    },
     "weddingTasks": "Tâches du mariage",
     "weddingPlanner": "Planificateur de tâches",
     "weddingPlannerDescription": "Gérez et suivez toutes vos tâches de planification de mariage",

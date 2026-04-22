@@ -10,10 +10,69 @@
  * - Add/delete tasks and subtasks
  * - Completion tracking with visual feedback
  * - Responsive design
+ * - i18n support for task/subtask titles
  */
 
 import React, { useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+
+// ============================================================================
+// Translation Helpers
+// ============================================================================
+
+/**
+ * Convert a task title to a translation key.
+ * e.g., "Find and book ceremony venue" → "find_and_book_ceremony_venue"
+ */
+function titleToKey(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, '')
+    .replace(/\s+/g, '_')
+    .trim();
+}
+
+/**
+ * Get the translated title for a task based on its template category.
+ * Falls back to the original title if no translation is found.
+ */
+function getTaskTitle(t: (key: string, fallback?: string) => string, task: { title: string; templateCategory?: string }): string {
+  if (task.templateCategory) {
+    const key = `tasks.taskTemplates.${task.templateCategory}.title`;
+    const translated = t(key, task.title);
+    // If the translation returns the key itself, use the original title
+    return translated === key ? task.title : translated;
+  }
+  return task.title;
+}
+
+/**
+ * Get the translated description for a task based on its template category.
+ */
+function getTaskDescription(t: (key: string, fallback?: string) => string, task: { description?: string; templateCategory?: string }): string | undefined {
+  if (task.templateCategory) {
+    const key = `tasks.taskTemplates.${task.templateCategory}.description`;
+    const translated = t(key, task.description || '');
+    return translated === key ? task.description : translated;
+  }
+  return task.description;
+}
+
+/**
+ * Get the translated title for a subtask based on its parent task's template category.
+ */
+function getSubtaskTitle(
+  t: (key: string, fallback?: string) => string,
+  subtaskTitle: string,
+  templateCategory?: string
+): string {
+  if (templateCategory) {
+    const key = `tasks.taskTemplates.${templateCategory}.subtasks.${titleToKey(subtaskTitle)}`;
+    const translated = t(key, subtaskTitle);
+    return translated === key ? subtaskTitle : translated;
+  }
+  return subtaskTitle;
+}
 import {
   DndContext,
   closestCenter,
@@ -424,10 +483,10 @@ const WeddingTaskBoard: React.FC<WeddingTaskBoardProps> = ({
             {groupByCategory && (
               <div className="flex items-center gap-2 pt-4 pb-1">
                 <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                  {category.replace(/_/g, ' ')}
+                  {t(`tasks.taskTemplates.${category}.title`, category.replace(/_/g, ' '))}
                 </h4>
                 <Badge variant="secondary" className="text-xs">
-                  {categoryTasks.length}
+                  {categoryTasks.reduce((sum, task) => sum + (task.subtasks?.length || 0), 0)} {t('tasks.subtasks', 'subtasks')}
                 </Badge>
               </div>
             )}
@@ -436,10 +495,12 @@ const WeddingTaskBoard: React.FC<WeddingTaskBoardProps> = ({
               items={categoryTasks.map((t) => t.id)}
               strategy={verticalListSortingStrategy}
             >
-              {categoryTasks.map((task) => (
+              {categoryTasks.map((task, taskIndex) => (
                 <SortableTaskItem
                   key={task.id}
                   task={task}
+                  taskIndex={taskIndex}
+                  totalInGroup={categoryTasks.length}
                   isEditing={editingTaskId === task.id}
                   editingValues={editingValues}
                   isExpanded={expandedTasks.has(task.id)}
@@ -536,6 +597,8 @@ const WeddingTaskBoard: React.FC<WeddingTaskBoardProps> = ({
 
 interface SortableTaskItemProps {
   task: Task;
+  taskIndex: number;
+  totalInGroup: number;
   isEditing: boolean;
   editingValues: Partial<Task>;
   isExpanded: boolean;
@@ -557,6 +620,8 @@ interface SortableTaskItemProps {
 
 const SortableTaskItem: React.FC<SortableTaskItemProps> = ({
   task,
+  taskIndex,
+  totalInGroup,
   isEditing,
   editingValues,
   isExpanded,
@@ -691,7 +756,7 @@ const SortableTaskItem: React.FC<SortableTaskItemProps> = ({
                         isCompleted ? 'line-through text-muted-foreground' : ''
                       }`}
                     >
-                      {task.title}
+                      {getTaskTitle(t, task)}
                     </span>
                     <Badge
                       variant="outline"
@@ -709,9 +774,9 @@ const SortableTaskItem: React.FC<SortableTaskItemProps> = ({
                       {statusConfig.label}
                     </Badge>
                   </div>
-                  {task.description && (
+                  {getTaskDescription(t, task) && (
                     <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
-                      {task.description}
+                      {getTaskDescription(t, task)}
                     </p>
                   )}
                   <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
@@ -800,7 +865,7 @@ const SortableTaskItem: React.FC<SortableTaskItemProps> = ({
                       subtask.isCompleted ? 'line-through text-muted-foreground' : ''
                     }`}
                   >
-                    {subtask.title}
+                    {getSubtaskTitle(t, subtask.title, task.templateCategory)}
                   </span>
                   <Button
                     variant="ghost"

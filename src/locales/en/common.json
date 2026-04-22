@@ -317,6 +317,128 @@
     "errorLoading": "Error loading tasks",
     "overdueTasks": "Overdue Tasks",
     "moreTasks": "+{{count}} more",
+    "taskTemplates": {
+      "venue_location": {
+        "title": "Venue & Location",
+        "description": "Secure the perfect venues for your ceremony and reception",
+        "subtasks": {
+          "find_and_book_ceremony_venue": "Find and book ceremony venue",
+          "find_and_book_reception_venue": "Find and book reception venue",
+          "confirm_venue_availability_and_capacity": "Confirm venue availability and capacity"
+        }
+      },
+      "guest_list": {
+        "title": "Guest List & Invitations",
+        "description": "Manage your guest list and send invitations",
+        "subtasks": {
+          "draft_complete_guest_list": "Draft complete guest list",
+          "organize_guest_addresses_and_contact_info": "Organize guest addresses and contact info",
+          "design_and_send_save_the_dates": "Design and send save-the-dates",
+          "send_formal_invitations_and_track_rsvps": "Send formal invitations and track RSVPs"
+        }
+      },
+      "budget": {
+        "title": "Budget Planning",
+        "description": "Establish and manage your wedding budget",
+        "subtasks": {
+          "establish_total_wedding_budget": "Establish total wedding budget",
+          "allocate_budget_percentages_per_category": "Allocate budget percentages per category",
+          "track_deposits_and_payments_ongoing": "Track deposits and payments ongoing"
+        }
+      },
+      "venue_selection": {
+        "title": "Venue Selection",
+        "description": "Research, compare, and finalize your venue",
+        "subtasks": {
+          "research_and_compare_venues": "Research and compare venues",
+          "schedule_venue_tours": "Schedule venue tours",
+          "review_and_sign_venue_contracts": "Review and sign venue contracts"
+        }
+      },
+      "photography": {
+        "title": "Photography & Videography",
+        "description": "Capture every moment with the right professionals",
+        "subtasks": {
+          "research_photographers_and_videographers": "Research photographers and videographers",
+          "review_portfolios_and_packages": "Review portfolios and packages",
+          "book_preferred_photographer": "Book preferred photographer",
+          "schedule_engagement_photo_session": "Schedule engagement photo session"
+        }
+      },
+      "catering": {
+        "title": "Catering & Food",
+        "description": "Plan the perfect menu for your celebration",
+        "subtasks": {
+          "determine_dining_style_and_menu_preferences": "Determine dining style and menu preferences",
+          "schedule_catering_tastings": "Schedule catering tastings",
+          "finalize_menu_selections_and_dietary_accommodations": "Finalize menu selections and dietary accommodations",
+          "confirm_headcount_with_caterer": "Confirm headcount with caterer"
+        }
+      },
+      "floral": {
+        "title": "Floral Design",
+        "description": "Design beautiful floral arrangements for your day",
+        "subtasks": {
+          "research_and_contact_florists": "Research and contact florists",
+          "discuss_floral_arrangements_and_color_palette": "Discuss floral arrangements and color palette",
+          "confirm_bouquet_and_centerpiece_designs": "Confirm bouquet and centerpiece designs"
+        }
+      },
+      "hair_makeup": {
+        "title": "Hair & Makeup",
+        "description": "Look your best with professional beauty services",
+        "subtasks": {
+          "research_beauty_professionals": "Research beauty professionals",
+          "schedule_hair_and_makeup_trial_runs": "Schedule hair and makeup trial runs",
+          "book_beauty_team_for_wedding_day": "Book beauty team for wedding day"
+        }
+      },
+      "entertainment": {
+        "title": "Entertainment",
+        "description": "Plan music and entertainment for your reception",
+        "subtasks": {
+          "research_djs_and_live_bands": "Research DJs and live bands",
+          "review_song_preferences_and_do_not_play_lists": "Review song preferences and do-not-play lists",
+          "book_entertainment_and_confirm_setup_requirements": "Book entertainment and confirm setup requirements"
+        }
+      },
+      "cake": {
+        "title": "Wedding Cake",
+        "description": "Design and order your dream wedding cake",
+        "subtasks": {
+          "research_bakeries_and_cake_designers": "Research bakeries and cake designers",
+          "schedule_cake_tasting_appointments": "Schedule cake tasting appointments",
+          "finalize_cake_design_and_flavors": "Finalize cake design and flavors"
+        }
+      },
+      "transportation": {
+        "title": "Transportation",
+        "description": "Arrange transportation for the wedding day",
+        "subtasks": {
+          "arrange_transportation_for_wedding_party": "Arrange transportation for wedding party",
+          "book_guest_shuttle_services_if_needed": "Book guest shuttle services if needed",
+          "confirm_pickup_and_dropoff_logistics": "Confirm pickup and dropoff logistics"
+        }
+      },
+      "attire": {
+        "title": "Wedding Attire",
+        "description": "Find the perfect wedding outfits",
+        "subtasks": {
+          "shop_for_wedding_dress_and_accessories": "Shop for wedding dress and accessories",
+          "schedule_dress_fittings_and_alterations": "Schedule dress fittings and alterations",
+          "coordinate_wedding_party_attire": "Coordinate wedding party attire"
+        }
+      },
+      "rings": {
+        "title": "Rings & Jewelry",
+        "description": "Select and personalize your wedding bands",
+        "subtasks": {
+          "research_wedding_band_styles": "Research wedding band styles",
+          "shop_for_and_purchase_wedding_rings": "Shop for and purchase wedding rings",
+          "engrave_rings_if_desired": "Engrave rings if desired"
+        }
+      }
+    },
     "overdueTasks": "Overdue Tasks",
     "noOverdueTasks": "No overdue tasks.",
     "noTasksDisplay": "No tasks to display.",
