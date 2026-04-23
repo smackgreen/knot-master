@@ -11,7 +11,7 @@ import { formatCurrency, formatDate, formatVendorCategory, getPriorityBadge, get
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Calendar, ChevronLeft, Contact, CreditCard, Edit, FileText, Trash2, Users, DollarSign, UserPlus, LayoutGrid, Palette, Utensils, FileSignature, Plus, ChevronDown, Loader2, Clock, Sparkles } from "lucide-react";
 import GuestList from "@/components/guests/GuestList";
-import SeatingChartDesigner from "@/components/seating/SeatingChartDesigner";
+import SeatingChartManager from "@/components/seating/SeatingChartManager";
 import MealPlanningTool from "@/components/meal-planning/MealPlanningTool";
 import WeddingDayTimeline from "@/components/timeline/WeddingDayTimeline";
 import WeddingBudgetManager from "@/components/budget/WeddingBudgetManager";
@@ -598,7 +598,7 @@ const ClientDetails = () => {
         </TabsContent>
 
         <TabsContent value="seating">
-          <SeatingChartDesigner clientId={client.id} />
+          <SeatingChartManager clientId={client.id} />
         </TabsContent>
 
         <TabsContent value="meal-planning">
