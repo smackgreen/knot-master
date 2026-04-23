@@ -1,58 +1,22 @@
 /**
  * WeddingBudgetManager
  *
- * A stunning, premium budget management component for the wedding planning app.
- * Features Framer Motion animations, romantic color palette, donut chart,
- * animated progress bars, and a beautiful vertical category timeline.
+ * Premium budget management with inline editing, collapsible subcategories,
+ * CRUD operations, and a compact romantic design.
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Tooltip as RechartsTooltip,
+  PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip,
 } from 'recharts';
 import {
-  DollarSign,
-  CreditCard,
-  TrendingUp,
-  TrendingDown,
-  Wallet,
-  Plus,
-  Pencil,
-  Trash2,
-  ChevronDown,
-  ChevronUp,
-  Check,
-  X,
-  Sparkles,
-  Heart,
-  ArrowUpRight,
-  ArrowDownRight,
-  Receipt,
-  Gem,
-  Music,
-  Camera,
-  Utensils,
-  Car,
-  Flower2,
-  Shirt,
-  Gift,
-  Building,
-  Palette,
-  FileText,
-  Truck,
-  PartyPopper,
-  MoreHorizontal,
-  Film,
-  Crown,
-  Star,
-  Scissors,
-  Wine,
-  Cake,
+  DollarSign, CreditCard, TrendingUp, TrendingDown, Wallet,
+  Plus, Pencil, Trash2, ChevronDown, ChevronRight, Check, X,
+  Sparkles, Heart, Receipt, Gem, Music, Camera, Utensils,
+  Car, Flower2, Shirt, Gift, Building, Palette, FileText,
+  Truck, PartyPopper, MoreHorizontal, Film, Crown, Cake,
+  Save, RotateCcw, Settings2,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -61,101 +25,79 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
+  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from '@/components/ui/tooltip';
 
 import { Budget, BudgetCategory, Client, VendorCategory } from '@/types';
-import { formatCurrency, formatVendorCategory } from '@/utils/formatters';
+import { formatCurrency } from '@/utils/formatters';
 
 // ============================================================================
-// Constants
+// Types
 // ============================================================================
 
-const CATEGORY_ICONS: Record<string, React.ElementType> = {
-  venue: Building,
-  catering: Utensils,
-  photography: Camera,
-  videography: Camera,
-  florist: Flower2,
-  music: Music,
-  cake: PartyPopper,
-  attire: Shirt,
-  hair_makeup: Sparkles,
-  transportation: Car,
-  rentals: Truck,
-  stationery: FileText,
-  gifts: Gift,
-  other: MoreHorizontal,
-};
+interface BudgetSubcategory {
+  id: string;
+  name: string;
+  allocated: number;
+}
 
-const CATEGORY_COLORS: Record<string, string> = {
-  venue: '#e11d48',       // rose-600
-  catering: '#f59e0b',    // amber-500
-  photography: '#8b5cf6', // violet-500
-  videography: '#6366f1', // indigo-500
-  florist: '#ec4899',     // pink-500
-  music: '#a855f7',       // purple-500
-  cake: '#f472b6',        // pink-400
-  attire: '#3b82f6',      // blue-500
-  hair_makeup: '#d946ef', // fuchsia-500
-  transportation: '#14b8a6', // teal-500
-  rentals: '#64748b',     // slate-500
-  stationery: '#78716c',  // stone-500
-  gifts: '#e879f9',       // fuchsia-400
-  other: '#9ca3af',       // gray-400
-};
-
-const ROMANTIC_COLORS = [
-  '#e11d48', '#f472b6', '#ec4899', '#be185d',
-  '#a855f7', '#8b5cf6', '#d946ef', '#f59e0b',
-  '#fb923c', '#14b8a6', '#3b82f6', '#6366f1',
-  '#78716c', '#64748b',
-];
-
-const VENDOR_CATEGORIES: VendorCategory[] = [
-  'venue', 'catering', 'photography', 'videography', 'florist',
-  'music', 'cake', 'attire', 'hair_makeup', 'transportation',
-  'rentals', 'stationery', 'gifts', 'other',
-];
-
-// ============================================================================
-// Comprehensive Budget Template (19 French Categories)
-// ============================================================================
-
-interface BudgetTemplateItem {
+interface BudgetCategoryFull {
+  id: string;
   key: string;
   label: string;
   icon: React.ElementType;
   color: string;
   vendorCategory: VendorCategory;
+  allocated: number;
+  subcategories: BudgetSubcategory[];
 }
 
-const BUDGET_TEMPLATE: BudgetTemplateItem[] = [
+// ============================================================================
+// Default Subcategories (AI-suggested)
+// ============================================================================
+
+const DEFAULT_SUBCATEGORIES: Record<string, string[]> = {
+  entertainment: ['DJ / Animation', 'Photobooth', 'Jeux & Activités', 'Spectacle'],
+  beauty: ['Coiffure mariée', 'Maquillage mariée', 'Coiffure marié', 'Soins spa'],
+  cake: ['Gâteau principal', 'Pièce montée', 'Candy bar', 'Livraison & installation'],
+  catering: ['Cocktail dînatoire', 'Menu principal', 'Boissons', 'Service à table'],
+  music: ['Musique cérémonie', 'DJ réception', 'Musiciens live', 'Sonorisation'],
+  bride_attire: ['Robe de mariée', 'Voile & accessoires', 'Chaussures', 'Retouches'],
+  groom_attire: ['Costume', 'Chemise & cravate', 'Chaussures', 'Accessoires'],
+  favors: ['Dragées & cadeaux', 'Sac à cadeau', 'Personnalisation', 'Cartes de remerciement'],
+  flowers: ['Bouquet mariée', 'Décoration ceremony', 'Centres de table', 'Arch de fleurs'],
+  invitations: ['Faire-part', 'Menus', 'Marque-places', 'Papeterie divers'],
+  jewelry: ['Alliances', 'Bague de fiançailles', 'Bijoux mariée', 'Montres'],
+  officiant: ['Officiant', 'Témoins', 'Documents officiels', 'Cérémonie laïque'],
+  photography: ['Photographe', 'Album photo', 'Tirages', 'Session engagement'],
+  videography: ['Vidéaste', 'Montage', 'Drone', 'Film teaser'],
+  planning: ['Wedding planner', 'Coordination jour J', 'Décoration', 'Réhéarsal'],
+  rentals: ['Tentes & chapiteaux', 'Tables & chaises', 'Linge de table', 'Éclairage'],
+  transport: ['Voiture mariés', 'Transport invités', 'Bus/navette', 'Parking'],
+  venue: ['Location salle', 'Cérémonie', 'Réception', 'Hébergement'],
+  other: ['Imprévus', 'Assurance', 'Tips & pourboires', 'Divers'],
+};
+
+// ============================================================================
+// Template Definitions
+// ============================================================================
+
+const BUDGET_TEMPLATE: {
+  key: string;
+  label: string;
+  icon: React.ElementType;
+  color: string;
+  vendorCategory: VendorCategory;
+}[] = [
   { key: 'entertainment', label: 'Divertissement', icon: PartyPopper, color: '#e11d48', vendorCategory: 'other' },
   { key: 'beauty', label: 'Beauté et santé', icon: Sparkles, color: '#d946ef', vendorCategory: 'hair_makeup' },
   { key: 'cake', label: 'Gâteau', icon: Cake, color: '#f472b6', vendorCategory: 'cake' },
   { key: 'catering', label: 'Restauration', icon: Utensils, color: '#f59e0b', vendorCategory: 'catering' },
   { key: 'music', label: 'Musique de la cérémonie', icon: Music, color: '#a855f7', vendorCategory: 'music' },
-  { key: 'bride_attire', label: 'Robe et tenue vestimentaire - Mariée', icon: Crown, color: '#ec4899', vendorCategory: 'attire' },
+  { key: 'bride_attire', label: 'Robe et tenue - Mariée', icon: Crown, color: '#ec4899', vendorCategory: 'attire' },
   { key: 'groom_attire', label: 'Costume - Marié', icon: Shirt, color: '#3b82f6', vendorCategory: 'attire' },
   { key: 'favors', label: 'Faveurs et cadeaux', icon: Gift, color: '#e879f9', vendorCategory: 'gifts' },
   { key: 'flowers', label: 'Fleurs', icon: Flower2, color: '#10b981', vendorCategory: 'florist' },
@@ -172,93 +114,28 @@ const BUDGET_TEMPLATE: BudgetTemplateItem[] = [
 ];
 
 // ============================================================================
-// Animation Variants
+// Helpers
 // ============================================================================
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08 },
-  },
-};
+let _nextId = 1000;
+function genId() { return String(_nextId++); }
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { type: 'spring' as const, stiffness: 300, damping: 24 },
-  },
-};
-
-const cardHover = {
-  rest: { scale: 1 },
-  hover: { scale: 1.02, transition: { duration: 0.2 } },
-};
-
-// ============================================================================
-// Helper Components
-// ============================================================================
-
-interface StatCardProps {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  subtitle?: string;
-  trend?: 'up' | 'down' | 'neutral';
-  trendValue?: string;
-  gradient: string;
-  delay?: number;
+function buildDefaultCategories(): BudgetCategoryFull[] {
+  return BUDGET_TEMPLATE.map((t) => ({
+    id: genId(),
+    key: t.key,
+    label: t.label,
+    icon: t.icon,
+    color: t.color,
+    vendorCategory: t.vendorCategory,
+    allocated: 0,
+    subcategories: (DEFAULT_SUBCATEGORIES[t.key] || []).map((name) => ({
+      id: genId(),
+      name,
+      allocated: 0,
+    })),
+  }));
 }
-
-const StatCard: React.FC<StatCardProps> = ({
-  icon,
-  label,
-  value,
-  subtitle,
-  trend,
-  trendValue,
-  gradient,
-  delay = 0,
-}) => (
-  <motion.div
-    variants={itemVariants}
-    initial="hidden"
-    animate="visible"
-    transition={{ delay }}
-    whileHover={{ y: -2, boxShadow: '0 8px 30px rgba(225, 29, 72, 0.12)' }}
-    className="relative overflow-hidden rounded-2xl border border-rose-100 bg-white p-5 shadow-sm"
-  >
-    <div className={`absolute top-0 right-0 w-24 h-24 rounded-bl-[60px] opacity-10 ${gradient}`} />
-    <div className="flex items-start justify-between">
-      <div>
-        <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">{label}</p>
-        <p className="text-2xl font-bold text-gray-800 mt-1">{value}</p>
-        {subtitle && (
-          <p className="text-xs text-gray-400 mt-1">{subtitle}</p>
-        )}
-      </div>
-      <div className={`w-10 h-10 rounded-xl ${gradient} flex items-center justify-center text-white`}>
-        {icon}
-      </div>
-    </div>
-    {trend && trendValue && (
-      <div className="flex items-center gap-1 mt-2">
-        {trend === 'up' ? (
-          <ArrowUpRight className="h-3 w-3 text-emerald-500" />
-        ) : trend === 'down' ? (
-          <ArrowDownRight className="h-3 w-3 text-red-500" />
-        ) : null}
-        <span className={`text-xs font-medium ${
-          trend === 'up' ? 'text-emerald-500' : trend === 'down' ? 'text-red-500' : 'text-gray-400'
-        }`}>
-          {trendValue}
-        </span>
-      </div>
-    )}
-  </motion.div>
-);
 
 // ============================================================================
 // Main Component
@@ -275,146 +152,189 @@ const WeddingBudgetManager: React.FC<WeddingBudgetManagerProps> = ({
   onUpdateBudget,
   onCreateBudget,
 }) => {
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
-  const [editBudget, setEditBudget] = useState<{
-    totalBudget: number;
-    categories: BudgetCategory[];
-  } | null>(null);
-
   const budget = client.budget;
   const vendors = client.vendors || [];
 
-  // Computed values
-  const totalSpent = useMemo(
-    () => vendors.reduce((sum, v) => sum + (v.cost || 0), 0),
-    [vendors]
-  );
+  // Local state for categories (fully editable)
+  const [categories, setCategories] = useState<BudgetCategoryFull[]>(() => buildDefaultCategories());
+  const [totalBudget, setTotalBudget] = useState(budget?.totalBudget || 0);
+  const [expandedCats, setExpandedCats] = useState<Set<string>>(new Set());
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editField, setEditField] = useState<string>('');
+  const [editValue, setEditValue] = useState('');
+  const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
+  const [newCatName, setNewCatName] = useState('');
 
-  const totalPaid = useMemo(
-    () => vendors.filter((v) => v.isPaid).reduce((sum, v) => sum + (v.cost || 0), 0),
-    [vendors]
-  );
-
-  const totalAllocated = useMemo(
-    () => budget?.categories.reduce((sum, c) => sum + c.allocated, 0) || 0,
-    [budget]
-  );
-
-  const remaining = budget ? budget.totalBudget - totalSpent : 0;
-  const spentPercent = budget && budget.totalBudget > 0
-    ? Math.min(100, Math.round((totalSpent / budget.totalBudget) * 100))
-    : 0;
-
-  // Category-level data
-  const categoryData = useMemo(() => {
-    if (!budget) return [];
-    return budget.categories.map((cat) => {
-      const catVendors = vendors.filter((v) => v.category === cat.category);
-      const actual = catVendors.reduce((sum, v) => sum + (v.cost || 0), 0);
-      const paid = catVendors.filter((v) => v.isPaid).reduce((sum, v) => sum + (v.cost || 0), 0);
-      const difference = cat.allocated - actual;
-      const percentUsed = cat.allocated > 0 ? Math.min(100, Math.round((actual / cat.allocated) * 100)) : 0;
-
-      return {
-        ...cat,
-        actual,
-        paid,
-        difference,
-        remainderToPay: actual - paid,
-        percentUsed,
-        vendors: catVendors,
-        color: CATEGORY_COLORS[cat.category] || ROMANTIC_COLORS[0],
-        icon: CATEGORY_ICONS[cat.category] || MoreHorizontal,
-      };
-    });
-  }, [budget, vendors]);
+  // Computed
+  const totalSpent = useMemo(() => vendors.reduce((s, v) => s + (v.cost || 0), 0), [vendors]);
+  const totalAllocated = useMemo(() => categories.reduce((s, c) => s + c.allocated, 0), [categories]);
+  const remaining = totalBudget - totalSpent;
+  const spentPercent = totalBudget > 0 ? Math.min(100, Math.round((totalSpent / totalBudget) * 100)) : 0;
 
   // Pie chart data
   const pieData = useMemo(
-    () => categoryData.map((cat) => ({
-      name: formatVendorCategory(cat.category),
-      value: cat.allocated,
-      color: cat.color,
+    () => categories.filter((c) => c.allocated > 0).map((c) => ({
+      name: c.label,
+      value: c.allocated,
+      color: c.color,
     })),
-    [categoryData]
+    [categories]
   );
 
-  // Comprehensive template data (19 categories with budget data)
-  const templateData = useMemo(() => {
-    return BUDGET_TEMPLATE.map((item) => {
-      const budgetCat = budget?.categories.find((c) => c.category === item.vendorCategory);
-      const catVendors = vendors.filter((v) => v.category === item.vendorCategory);
-      const allocated = budgetCat?.allocated || 0;
-      const spent = catVendors.reduce((sum, v) => sum + (v.cost || 0), 0);
-      const remaining = allocated - spent;
-      const percentUsed = allocated > 0 ? Math.min(100, Math.round((spent / allocated) * 100)) : 0;
-      return { ...item, allocated, spent, remaining, percentUsed };
-    });
-  }, [budget, vendors]);
-
-  // Handlers
-  const handleOpenEdit = () => {
-    if (budget) {
-      const updatedCategories = budget.categories.map((cat) => {
-        const catVendors = vendors.filter((v) => v.category === cat.category);
-        const actual = catVendors.reduce((sum, v) => sum + (v.cost || 0), 0);
-        return { ...cat, spent: actual };
-      });
-      setEditBudget({ totalBudget: budget.totalBudget, categories: updatedCategories });
-    } else {
-      setEditBudget({ totalBudget: 0, categories: [] });
-    }
-    setIsEditDialogOpen(true);
-  };
-
-  const handleSaveBudget = () => {
-    if (!editBudget) return;
-    if (budget) {
-      onUpdateBudget(editBudget);
-    } else {
-      onCreateBudget(editBudget);
-    }
-    setIsEditDialogOpen(false);
-  };
-
-  const toggleCategory = (category: string) => {
-    setExpandedCategories((prev) => {
+  // Toggle category expand
+  const toggleCat = (id: string) => {
+    setExpandedCats((prev) => {
       const next = new Set(prev);
-      if (next.has(category)) next.delete(category);
-      else next.add(category);
+      if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
   };
 
-  const addCategoryToEdit = () => {
-    if (!editBudget) return;
-    const existing = editBudget.categories.map((c) => c.category);
-    const available = VENDOR_CATEGORIES.filter((c) => !existing.includes(c));
-    if (available.length === 0) return;
-    const newCat: BudgetCategory = {
-      category: available[0],
+  // Inline editing
+  const startEdit = (id: string, field: string, value: string | number) => {
+    setEditingId(id);
+    setEditField(field);
+    setEditValue(String(value));
+  };
+
+  const saveEdit = () => {
+    if (!editingId) return;
+    const numVal = parseFloat(editValue) || 0;
+
+    // Check if editing a subcategory allocated
+    const cat = categories.find((c) =>
+      c.subcategories.some((sc) => sc.id === editingId)
+    );
+    if (cat) {
+      const sub = cat.subcategories.find((sc) => sc.id === editingId);
+      if (sub && editField === 'allocated') {
+        const oldSubAllocated = sub.allocated;
+        const diff = numVal - oldSubAllocated;
+        setCategories((prev) =>
+          prev.map((c) =>
+            c.id === cat.id
+              ? {
+                  ...c,
+                  allocated: c.allocated + diff,
+                  subcategories: c.subcategories.map((sc) =>
+                    sc.id === editingId ? { ...sc, allocated: numVal } : sc
+                  ),
+                }
+              : c
+          )
+        );
+      } else if (sub && editField === 'name') {
+        setCategories((prev) =>
+          prev.map((c) =>
+            c.id === cat.id
+              ? { ...c, subcategories: c.subcategories.map((sc) => sc.id === editingId ? { ...sc, name: editValue } : sc) }
+              : c
+          )
+        );
+      }
+    } else {
+      // Editing a category
+      if (editField === 'allocated') {
+        setCategories((prev) =>
+          prev.map((c) => c.id === editingId ? { ...c, allocated: numVal } : c)
+        );
+      } else if (editField === 'label') {
+        setCategories((prev) =>
+          prev.map((c) => c.id === editingId ? { ...c, label: editValue } : c)
+        );
+    }
+    }
+
+    setEditingId(null);
+    setEditField('');
+    setEditValue('');
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditField('');
+    setEditValue('');
+  };
+
+  // CRUD: Add subcategory
+  const addSubcategory = (catId: string) => {
+    setCategories((prev) =>
+      prev.map((c) =>
+        c.id === catId
+          ? {
+              ...c,
+              subcategories: [
+                ...c.subcategories,
+                { id: genId(), name: 'Nouvelle sous-catégorie', allocated: 0 },
+              ],
+            }
+          : c
+      )
+    );
+  };
+
+  // CRUD: Delete subcategory
+  const deleteSubcategory = (catId: string, subId: string) => {
+    setCategories((prev) =>
+      prev.map((c) => {
+        if (c.id !== catId) return c;
+        const sub = c.subcategories.find((s) => s.id === subId);
+        const subAllocated = sub?.allocated || 0;
+        return {
+          ...c,
+          allocated: c.allocated - subAllocated,
+          subcategories: c.subcategories.filter((s) => s.id !== subId),
+        };
+      })
+    );
+  };
+
+  // CRUD: Add new category
+  const addNewCategory = () => {
+    if (!newCatName.trim()) return;
+    const newCat: BudgetCategoryFull = {
+      id: genId(),
+      key: genId(),
+      label: newCatName.trim(),
+      icon: Star,
+      color: ROMANTIC_COLORS[categories.length % ROMANTIC_COLORS.length],
+      vendorCategory: 'other',
       allocated: 0,
-      spent: 0,
+      subcategories: [],
     };
-    setEditBudget({ ...editBudget, categories: [...editBudget.categories, newCat] });
+    setCategories((prev) => [...prev, newCat]);
+    setNewCatName('');
+    setIsAddCategoryOpen(false);
   };
 
-  const removeCategoryFromEdit = (index: number) => {
-    if (!editBudget) return;
-    const cats = [...editBudget.categories];
-    cats.splice(index, 1);
-    setEditBudget({ ...editBudget, categories: cats });
+  // CRUD: Delete category
+  const deleteCategory = (catId: string) => {
+    setCategories((prev) => prev.filter((c) => c.id !== catId));
   };
 
-  const updateEditCategory = (index: number, field: keyof BudgetCategory, value: number | string) => {
-    if (!editBudget) return;
-    const cats = [...editBudget.categories];
-    cats[index] = { ...cats[index], [field]: value };
-    setEditBudget({ ...editBudget, categories: cats });
+  // Save to backend
+  const handleSave = () => {
+    const budgetData = {
+      totalBudget,
+      categories: categories.map((c) => ({
+        category: c.vendorCategory,
+        allocated: c.allocated,
+        spent: 0,
+      })),
+    };
+    if (budget) {
+      onUpdateBudget(budgetData);
+    } else {
+      onCreateBudget(budgetData);
+    }
   };
 
-  // Custom label for donut chart
+  const handleReset = () => {
+    setCategories(buildDefaultCategories());
+    setTotalBudget(budget?.totalBudget || 0);
+  };
+
+  // Custom pie label
   const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
     if (percent < 0.05) return null;
     const RADIAN = Math.PI / 180;
@@ -422,7 +342,7 @@ const WeddingBudgetManager: React.FC<WeddingBudgetManagerProps> = ({
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
     return (
-      <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={11} fontWeight={600}>
+      <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={10} fontWeight={600}>
         {`${(percent * 100).toFixed(0)}%`}
       </text>
     );
@@ -435,45 +355,24 @@ const WeddingBudgetManager: React.FC<WeddingBudgetManagerProps> = ({
   if (!budget) {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="flex flex-col items-center justify-center py-20"
+        className="flex flex-col items-center justify-center py-16"
       >
-        <div className="relative">
-          <div className="w-28 h-28 rounded-full bg-gradient-to-br from-rose-100 to-pink-100 flex items-center justify-center mb-6">
-            <Wallet className="h-12 w-12 text-rose-400" />
-          </div>
-          <div className="absolute -top-1 -right-1 w-8 h-8 rounded-full bg-gradient-to-br from-amber-200 to-amber-300 flex items-center justify-center">
-            <Sparkles className="h-4 w-4 text-amber-600" />
-          </div>
+        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-rose-100 to-pink-100 flex items-center justify-center mb-4">
+          <Wallet className="h-9 w-9 text-rose-400" />
         </div>
-        <h3 className="text-xl font-serif font-bold text-gray-700 mb-2">
-          Votre budget mariage
-        </h3>
-        <p className="text-sm text-gray-400 max-w-md text-center mb-6 leading-relaxed">
-          Commencez à planifier le budget de votre mariage. Ajoutez des catégories,
-          suivez vos dépenses et gardez le contrôle de vos finances.
+        <h3 className="text-lg font-serif font-bold text-gray-700 mb-2">Budget mariage</h3>
+        <p className="text-sm text-gray-400 max-w-sm text-center mb-5">
+          Planifiez le budget de votre mariage avec nos catégories pré-remplies.
         </p>
         <Button
-          onClick={handleOpenEdit}
-          className="bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white shadow-lg shadow-rose-200 px-8"
+          onClick={handleSave}
+          className="bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white shadow-lg shadow-rose-200"
         >
           <Heart className="mr-2 h-4 w-4" />
           Créer mon budget
         </Button>
-
-        {/* Edit Dialog for empty state */}
-        <BudgetEditDialog
-          open={isEditDialogOpen}
-          onOpenChange={setIsEditDialogOpen}
-          editBudget={editBudget}
-          setEditBudget={setEditBudget}
-          onSave={handleSaveBudget}
-          onAddCategory={addCategoryToEdit}
-          onRemoveCategory={removeCategoryFromEdit}
-          onUpdateCategory={updateEditCategory}
-        />
       </motion.div>
     );
   }
@@ -483,825 +382,449 @@ const WeddingBudgetManager: React.FC<WeddingBudgetManagerProps> = ({
   // ========================================================================
 
   return (
-    <div className="space-y-6">
-      {/* Hero Section */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-rose-50 via-pink-50 to-white border border-rose-100 p-6 shadow-sm"
-      >
-        <div className="absolute top-0 right-0 w-64 h-64 rounded-bl-[120px] bg-gradient-to-br from-rose-100/40 to-transparent" />
-        <div className="absolute bottom-0 left-0 w-32 h-32 rounded-tr-[80px] bg-gradient-to-tr from-pink-100/30 to-transparent" />
-
-        <div className="relative flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-pink-500 flex items-center justify-center">
-                <DollarSign className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-serif font-bold text-gray-800">Budget Mariage</h2>
-                <p className="text-xs text-gray-400">Gérez vos finances en toute sérénité</p>
-              </div>
-            </div>
-
-            {/* Overall Progress */}
-            <div className="mt-4 max-w-md">
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-gray-500">Dépensé</span>
-                <span className="font-semibold text-gray-700">
-                  {spentPercent}% du budget
-                </span>
-              </div>
-              <div className="h-3 bg-rose-100 rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${spentPercent}%` }}
-                  transition={{ duration: 1, ease: 'easeOut', delay: 0.3 }}
-                  className={`h-full rounded-full ${
-                    spentPercent > 90
-                      ? 'bg-gradient-to-r from-red-400 to-red-500'
-                      : spentPercent > 75
-                      ? 'bg-gradient-to-r from-amber-400 to-orange-400'
-                      : 'bg-gradient-to-r from-rose-400 to-pink-400'
-                  }`}
-                />
-              </div>
-              <div className="flex justify-between text-xs text-gray-400 mt-1">
-                <span>{formatCurrency(totalSpent)} dépensé</span>
-                <span>{formatCurrency(budget.totalBudget)} budget total</span>
-              </div>
-            </div>
+    <div className="space-y-4">
+      {/* Compact Header */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rose-500 to-pink-500 flex items-center justify-center">
+            <DollarSign className="h-4 w-4 text-white" />
           </div>
-
-          <Button
-            onClick={handleOpenEdit}
-            className="bg-white text-rose-600 border border-rose-200 hover:bg-rose-50 shadow-sm"
-          >
-            <Pencil className="mr-2 h-4 w-4" />
-            Modifier le budget
+          <div>
+            <h2 className="text-lg font-serif font-bold text-gray-800">Budget Mariage</h2>
+            <p className="text-[11px] text-gray-400">{categories.length} catégories</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm" onClick={handleReset} className="h-8 text-xs">
+                  <RotateCcw className="h-3 w-3 mr-1" /> Réinitialiser
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Réinitialiser toutes les catégories</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <Button size="sm" onClick={handleSave} className="h-8 text-xs bg-gradient-to-r from-rose-500 to-pink-500 text-white">
+            <Save className="h-3 w-3 mr-1" /> Enregistrer
           </Button>
         </div>
-      </motion.div>
+      </div>
 
-      {/* Stats Grid */}
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="grid grid-cols-2 lg:grid-cols-4 gap-4"
-      >
-        <StatCard
-          icon={<Wallet className="h-5 w-5" />}
-          label="Budget Total"
-          value={formatCurrency(budget.totalBudget)}
-          subtitle={`${budget.categories.length} catégories`}
-          gradient="bg-gradient-to-br from-rose-500 to-pink-500"
-          delay={0}
-        />
-        <StatCard
-          icon={<CreditCard className="h-5 w-5" />}
-          label="Dépensé"
-          value={formatCurrency(totalSpent)}
-          trend={totalSpent > totalAllocated ? 'up' : 'neutral'}
-          trendValue={spentPercent > 100 ? 'Dépassement !' : `${spentPercent}%`}
-          gradient="bg-gradient-to-br from-violet-500 to-purple-500"
-          delay={0.05}
-        />
-        <StatCard
-          icon={<TrendingUp className="h-5 w-5" />}
-          label="Restant"
-          value={formatCurrency(remaining)}
-          trend={remaining >= 0 ? 'up' : 'down'}
-          trendValue={remaining >= 0 ? 'Sous budget' : 'Dépassement'}
-          gradient="bg-gradient-to-br from-emerald-500 to-teal-500"
-          delay={0.1}
-        />
-        <StatCard
-          icon={<Receipt className="h-5 w-5" />}
-          label="Payé"
-          value={formatCurrency(totalPaid)}
-          subtitle={`Reste ${formatCurrency(totalSpent - totalPaid)}`}
-          gradient="bg-gradient-to-br from-amber-500 to-orange-500"
-          delay={0.15}
-        />
-      </motion.div>
-
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left: Category Timeline */}
-        <div className="lg:col-span-7">
+      {/* Compact Stats Row */}
+      <div className="grid grid-cols-4 gap-3">
+        {[
+          { label: 'Budget', value: formatCurrency(totalBudget), icon: Wallet, bg: 'from-rose-500 to-pink-500' },
+          { label: 'Alloué', value: formatCurrency(totalAllocated), icon: Receipt, bg: 'from-violet-500 to-purple-500' },
+          { label: 'Dépensé', value: formatCurrency(totalSpent), icon: CreditCard, bg: 'from-amber-500 to-orange-500' },
+          { label: 'Restant', value: formatCurrency(remaining), icon: remaining >= 0 ? TrendingUp : TrendingDown, bg: remaining >= 0 ? 'from-emerald-500 to-teal-500' : 'from-red-500 to-red-600' },
+        ].map((stat, i) => (
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            key={stat.label}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.05 }}
+            className="bg-white rounded-xl border border-rose-100 p-3 shadow-sm"
           >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-serif font-bold text-gray-700">
-                Répartition par catégorie
-              </h3>
-              <Badge variant="secondary" className="bg-rose-50 text-rose-600 border-rose-200">
-                {categoryData.length} catégories
-              </Badge>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] text-gray-400 uppercase tracking-wider">{stat.label}</span>
+              <div className={`w-6 h-6 rounded-md bg-gradient-to-br ${stat.bg} flex items-center justify-center`}>
+                <stat.icon className="h-3 w-3 text-white" />
+              </div>
             </div>
-
-            {categoryData.length === 0 ? (
-              <div className="text-center py-12 bg-white rounded-2xl border border-rose-100">
-                <p className="text-gray-400 text-sm">Aucune catégorie de budget</p>
-              </div>
-            ) : (
-              <div className="relative">
-                {/* Timeline line */}
-                <div className="absolute left-[19px] top-0 bottom-0 w-[2px] bg-gradient-to-b from-rose-200 via-pink-200 to-violet-200 opacity-50" />
-
-                <AnimatePresence>
-                  {categoryData.map((cat, index) => {
-                    const Icon = cat.icon;
-                    const isExpanded = expandedCategories.has(cat.category);
-
-                    return (
-                      <motion.div
-                        key={cat.category}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        transition={{ delay: index * 0.05, type: 'spring', stiffness: 300, damping: 24 }}
-                        className="relative mb-3"
-                      >
-                        {/* Timeline Node */}
-                        <div
-                          className="absolute left-[11px] top-[20px] z-10 w-[18px] h-[18px] rounded-full border-[3px] border-white shadow-sm"
-                          style={{ backgroundColor: cat.color }}
-                        />
-
-                        {/* Category Card */}
-                        <motion.div
-                          whileHover={{ x: 4 }}
-                          className="ml-10 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow"
-                        >
-                          {/* Category Header */}
-                          <button
-                            onClick={() => toggleCategory(cat.category)}
-                            className="w-full text-left p-4 flex items-center gap-3 hover:bg-gray-50/50 transition-colors"
-                          >
-                            <div
-                              className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                              style={{ backgroundColor: `${cat.color}15` }}
-                            >
-                              <Icon className="h-4 w-4" style={{ color: cat.color }} />
-                            </div>
-
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between">
-                                <span className="font-medium text-sm text-gray-800">
-                                  {formatVendorCategory(cat.category)}
-                                </span>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs text-gray-400">
-                                    {formatCurrency(cat.actual)} / {formatCurrency(cat.allocated)}
-                                  </span>
-                                  {isExpanded ? (
-                                    <ChevronUp className="h-4 w-4 text-gray-300" />
-                                  ) : (
-                                    <ChevronDown className="h-4 w-4 text-gray-300" />
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* Progress Bar */}
-                              <div className="mt-2 h-2 bg-gray-100 rounded-full overflow-hidden">
-                                <motion.div
-                                  initial={{ width: 0 }}
-                                  animate={{ width: `${cat.percentUsed}%` }}
-                                  transition={{ duration: 0.8, delay: index * 0.05 + 0.3 }}
-                                  className={`h-full rounded-full ${
-                                    cat.percentUsed > 90
-                                      ? 'bg-gradient-to-r from-red-400 to-red-500'
-                                      : cat.percentUsed > 75
-                                      ? 'bg-gradient-to-r from-amber-400 to-orange-400'
-                                      : 'bg-gradient-to-r from-emerald-400 to-teal-400'
-                                  }`}
-                                />
-                              </div>
-
-                              <div className="flex items-center justify-between mt-1">
-                                <span className="text-[10px] text-gray-400">{cat.percentUsed}% utilisé</span>
-                                <span className={`text-[10px] font-medium ${
-                                  cat.difference >= 0 ? 'text-emerald-500' : 'text-red-500'
-                                }`}>
-                                  {cat.difference >= 0 ? '+' : ''}{formatCurrency(cat.difference)}
-                                </span>
-                              </div>
-                            </div>
-                          </button>
-
-                          {/* Expanded Vendor Details */}
-                          <AnimatePresence>
-                            {isExpanded && (
-                              <motion.div
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: 'auto', opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                transition={{ duration: 0.2 }}
-                                className="overflow-hidden"
-                              >
-                                <div className="px-4 pb-4 border-t border-gray-50">
-                                  {cat.vendors.length === 0 ? (
-                                    <p className="text-xs text-gray-400 py-3 text-center">
-                                      Aucun prestataire dans cette catégorie
-                                    </p>
-                                  ) : (
-                                    <div className="space-y-2 pt-3">
-                                      {cat.vendors.map((vendor) => (
-                                        <div
-                                          key={vendor.id}
-                                          className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg"
-                                        >
-                                          <div className="flex items-center gap-2">
-                                            <div className={`w-2 h-2 rounded-full ${vendor.isPaid ? 'bg-emerald-400' : 'bg-amber-400'}`} />
-                                            <span className="text-xs font-medium text-gray-700">{vendor.name}</span>
-                                          </div>
-                                          <div className="flex items-center gap-2">
-                                            <span className="text-xs text-gray-500">
-                                              {formatCurrency(vendor.cost || 0)}
-                                            </span>
-                                            <Badge
-                                              variant={vendor.isPaid ? 'default' : 'secondary'}
-                                              className={`text-[10px] px-1.5 py-0 ${
-                                                vendor.isPaid
-                                                  ? 'bg-emerald-100 text-emerald-700'
-                                                  : 'bg-amber-100 text-amber-700'
-                                              }`}
-                                            >
-                                              {vendor.isPaid ? 'Payé' : 'En attente'}
-                                            </Badge>
-                                          </div>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  )}
-
-                                  {/* Payment Summary */}
-                                  <div className="mt-3 pt-3 border-t border-gray-100 grid grid-cols-3 gap-2">
-                                    <div className="text-center">
-                                      <p className="text-[10px] text-gray-400">Payé</p>
-                                      <p className="text-xs font-semibold text-emerald-600">{formatCurrency(cat.paid)}</p>
-                                    </div>
-                                    <div className="text-center">
-                                      <p className="text-[10px] text-gray-400">Reste</p>
-                                      <p className="text-xs font-semibold text-amber-600">{formatCurrency(cat.remainderToPay)}</p>
-                                    </div>
-                                    <div className="text-center">
-                                      <p className="text-[10px] text-gray-400">Écart</p>
-                                      <p className={`text-xs font-semibold ${cat.difference >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                                        {cat.difference >= 0 ? '+' : ''}{formatCurrency(cat.difference)}
-                                      </p>
-                                    </div>
-                                  </div>
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </motion.div>
-                      </motion.div>
-                    );
-                  })}
-                </AnimatePresence>
-              </div>
+            <p className="text-base font-bold text-gray-800">{stat.value}</p>
+            {/* Editable total budget */}
+            {stat.label === 'Budget' && (
+              <button
+                onClick={() => startEdit('__total__', 'totalBudget', totalBudget)}
+                className="text-[10px] text-rose-400 hover:text-rose-600 mt-0.5"
+              >
+                Modifier
+              </button>
             )}
           </motion.div>
+        ))}
+      </div>
+
+      {/* Inline edit for total budget */}
+      {editingId === '__total__' && editField === 'totalBudget' && (
+        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="flex items-center gap-2">
+          <Input
+            type="number"
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            className="w-40 h-8 text-sm"
+            autoFocus
+            onKeyDown={(e) => { if (e.key === 'Enter') { setTotalBudget(parseFloat(editValue) || 0); cancelEdit(); } if (e.key === 'Escape') cancelEdit(); }}
+          />
+          <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => { setTotalBudget(parseFloat(editValue) || 0); cancelEdit(); }}>
+            <Check className="h-3 w-3 text-emerald-500" />
+          </Button>
+          <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={cancelEdit}>
+            <X className="h-3 w-3 text-red-400" />
+          </Button>
+        </motion.div>
+      )}
+
+      {/* Progress bar */}
+      <div className="bg-white rounded-xl border border-rose-100 p-3 shadow-sm">
+        <div className="flex justify-between text-[11px] mb-1.5">
+          <span className="text-gray-500">{spentPercent}% dépensé</span>
+          <span className="text-gray-400">{formatCurrency(totalSpent)} / {formatCurrency(totalBudget)}</span>
+        </div>
+        <div className="h-2 bg-rose-100 rounded-full overflow-hidden">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${spentPercent}%` }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className={`h-full rounded-full ${
+              spentPercent > 90 ? 'bg-gradient-to-r from-red-400 to-red-500'
+                : spentPercent > 75 ? 'bg-gradient-to-r from-amber-400 to-orange-400'
+                : 'bg-gradient-to-r from-rose-400 to-pink-400'
+            }`}
+          />
+        </div>
+      </div>
+
+      {/* Main Content: Categories + Chart */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        {/* Categories List */}
+        <div className="lg:col-span-8">
+          <div className="bg-white rounded-xl border border-rose-100 shadow-sm overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-rose-50">
+              <h3 className="text-sm font-serif font-bold text-gray-700">Catégories du budget</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsAddCategoryOpen(true)}
+                className="h-7 text-xs text-rose-500 hover:text-rose-700"
+              >
+                <Plus className="h-3 w-3 mr-1" /> Catégorie
+              </Button>
+            </div>
+
+            <div className="divide-y divide-gray-50">
+              <AnimatePresence>
+                {categories.map((cat, index) => {
+                  const Icon = cat.icon;
+                  const isExpanded = expandedCats.has(cat.id);
+                  const subAllocated = cat.subcategories.reduce((s, sc) => s + sc.allocated, 0);
+                  const percentUsed = cat.allocated > 0 ? Math.min(100, Math.round((subAllocated / cat.allocated) * 100)) : 0;
+
+                  return (
+                    <motion.div
+                      key={cat.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ delay: index * 0.02 }}
+                    >
+                      {/* Category Row */}
+                      <div className="group flex items-center gap-2 px-4 py-2.5 hover:bg-rose-50/30 transition-colors">
+                        {/* Expand toggle */}
+                        <button onClick={() => toggleCat(cat.id)} className="flex-shrink-0">
+                          {cat.subcategories.length > 0 ? (
+                            isExpanded ? <ChevronDown className="h-3.5 w-3.5 text-gray-400" /> : <ChevronRight className="h-3.5 w-3.5 text-gray-400" />
+                          ) : (
+                            <div className="w-3.5" />
+                          )}
+                        </button>
+
+                        {/* Icon */}
+                        <div
+                          className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
+                          style={{ backgroundColor: `${cat.color}15` }}
+                        >
+                          <Icon className="h-3.5 w-3.5" style={{ color: cat.color }} />
+                        </div>
+
+                        {/* Label (editable) */}
+                        <div className="flex-1 min-w-0">
+                          {editingId === cat.id && editField === 'label' ? (
+                            <div className="flex items-center gap-1">
+                              <Input
+                                value={editValue}
+                                onChange={(e) => setEditValue(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') cancelEdit(); }}
+                                onBlur={saveEdit}
+                                className="h-6 text-xs"
+                                autoFocus
+                              />
+                            </div>
+                          ) : (
+                            <button
+                              onDoubleClick={() => startEdit(cat.id, 'label', cat.label)}
+                              className="text-xs font-medium text-gray-700 hover:text-rose-600 truncate"
+                            >
+                              {cat.label}
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Allocated (editable) */}
+                        <div className="flex-shrink-0 w-[90px] text-right">
+                          {editingId === cat.id && editField === 'allocated' ? (
+                            <div className="flex items-center justify-end gap-1">
+                              <Input
+                                type="number"
+                                value={editValue}
+                                onChange={(e) => setEditValue(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') cancelEdit(); }}
+                                onBlur={saveEdit}
+                                className="w-[70px] h-6 text-xs text-right"
+                                autoFocus
+                              />
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => startEdit(cat.id, 'allocated', cat.allocated)}
+                              className="text-xs font-semibold text-gray-800 hover:text-rose-600"
+                            >
+                              {formatCurrency(cat.allocated)}
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Mini progress */}
+                        <div className="w-16 flex-shrink-0">
+                          <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all ${
+                                percentUsed > 90 ? 'bg-red-400' : percentUsed > 75 ? 'bg-amber-400' : 'bg-emerald-400'
+                              }`}
+                              style={{ width: `${percentUsed}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex-shrink-0 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  onClick={() => addSubcategory(cat.id)}
+                                  className="p-1 rounded hover:bg-rose-100 text-gray-400 hover:text-rose-500"
+                                >
+                                  <Plus className="h-3 w-3" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent><p>Ajouter sous-catégorie</p></TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          <button
+                            onClick={() => startEdit(cat.id, 'label', cat.label)}
+                            className="p-1 rounded hover:bg-rose-100 text-gray-400 hover:text-rose-500"
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </button>
+                          <button
+                            onClick={() => deleteCategory(cat.id)}
+                            className="p-1 rounded hover:bg-red-100 text-gray-400 hover:text-red-500"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Subcategories */}
+                      <AnimatePresence>
+                        {isExpanded && cat.subcategories.length > 0 && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.15 }}
+                            className="overflow-hidden bg-gray-50/50"
+                          >
+                            {cat.subcategories.map((sub) => (
+                              <div
+                                key={sub.id}
+                                className="group/sub flex items-center gap-2 pl-12 pr-4 py-1.5 hover:bg-white/80 transition-colors"
+                              >
+                                <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color, opacity: 0.5 }} />
+                                
+                                {/* Sub name (editable) */}
+                                <div className="flex-1 min-w-0">
+                                  {editingId === sub.id && editField === 'name' ? (
+                                    <Input
+                                      value={editValue}
+                                      onChange={(e) => setEditValue(e.target.value)}
+                                      onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') cancelEdit(); }}
+                                      onBlur={saveEdit}
+                                      className="h-5 text-[11px]"
+                                      autoFocus
+                                    />
+                                  ) : (
+                                    <button
+                                      onDoubleClick={() => startEdit(sub.id, 'name', sub.name)}
+                                      className="text-[11px] text-gray-600 hover:text-rose-600 truncate"
+                                    >
+                                      {sub.name}
+                                    </button>
+                                  )}
+                                </div>
+
+                                {/* Sub allocated (editable) */}
+                                <div className="flex-shrink-0 w-[80px] text-right">
+                                  {editingId === sub.id && editField === 'allocated' ? (
+                                    <Input
+                                      type="number"
+                                      value={editValue}
+                                      onChange={(e) => setEditValue(e.target.value)}
+                                      onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') cancelEdit(); }}
+                                      onBlur={saveEdit}
+                                      className="w-[70px] h-5 text-[11px] text-right"
+                                      autoFocus
+                                    />
+                                  ) : (
+                                    <button
+                                      onClick={() => startEdit(sub.id, 'allocated', sub.allocated)}
+                                      className="text-[11px] font-medium text-gray-500 hover:text-rose-600"
+                                    >
+                                      {formatCurrency(sub.allocated)}
+                                    </button>
+                                  )}
+                                </div>
+
+                                {/* Sub actions */}
+                                <div className="flex-shrink-0 flex items-center gap-0.5 opacity-0 group-hover/sub:opacity-100 transition-opacity">
+                                  <button
+                                    onClick={() => startEdit(sub.id, 'name', sub.name)}
+                                    className="p-0.5 rounded hover:bg-rose-100 text-gray-300 hover:text-rose-500"
+                                  >
+                                    <Pencil className="h-2.5 w-2.5" />
+                                  </button>
+                                  <button
+                                    onClick={() => deleteSubcategory(cat.id, sub.id)}
+                                    className="p-0.5 rounded hover:bg-red-100 text-gray-300 hover:text-red-500"
+                                  >
+                                    <Trash2 className="h-2.5 w-2.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+
+                            {/* Subcategory total */}
+                            <div className="flex items-center justify-between pl-12 pr-4 py-1.5 border-t border-gray-100">
+                              <span className="text-[10px] text-gray-400 font-medium">Total sous-catégories</span>
+                              <span className="text-[10px] font-semibold text-gray-500">{formatCurrency(subAllocated)}</span>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+            </div>
+
+            {/* Footer total */}
+            <div className="flex items-center justify-between px-4 py-2.5 bg-rose-50/30 border-t border-rose-100">
+              <span className="text-xs font-medium text-gray-600">Total alloué</span>
+              <span className="text-sm font-bold text-gray-800">{formatCurrency(totalAllocated)}</span>
+            </div>
+          </div>
         </div>
 
-        {/* Right: Charts & Summary */}
-        <div className="lg:col-span-5 space-y-6">
+        {/* Right: Chart + Summary */}
+        <div className="lg:col-span-4 space-y-4">
           {/* Donut Chart */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="bg-white rounded-2xl border border-rose-100 p-5 shadow-sm"
-          >
-            <h3 className="text-sm font-serif font-bold text-gray-700 mb-4">
-              Répartition du budget
-            </h3>
+          <div className="bg-white rounded-xl border border-rose-100 p-4 shadow-sm">
+            <h3 className="text-xs font-serif font-bold text-gray-700 mb-3">Répartition</h3>
             {pieData.length > 0 ? (
-              <div className="h-[260px]">
+              <div className="h-[200px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={pieData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={60}
-                      outerRadius={95}
+                      innerRadius={45}
+                      outerRadius={75}
                       dataKey="value"
                       nameKey="name"
                       labelLine={false}
                       label={renderCustomLabel}
-                      animationBegin={300}
-                      animationDuration={800}
+                      animationBegin={200}
+                      animationDuration={600}
                     >
-                      {pieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} stroke="white" strokeWidth={2} />
+                      {pieData.map((entry, i) => (
+                        <Cell key={i} fill={entry.color} stroke="white" strokeWidth={2} />
                       ))}
                     </Pie>
                     <RechartsTooltip
                       formatter={(value: number) => formatCurrency(value)}
-                      contentStyle={{
-                        borderRadius: '12px',
-                        border: '1px solid #fecdd3',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-                        fontSize: '12px',
-                      }}
+                      contentStyle={{ borderRadius: '10px', border: '1px solid #fecdd3', fontSize: '11px' }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="h-[260px] flex items-center justify-center">
-                <p className="text-sm text-gray-400">Aucune donnée</p>
+              <div className="h-[200px] flex items-center justify-center">
+                <p className="text-xs text-gray-400">Allouez des montants pour voir le graphique</p>
               </div>
             )}
+          </div>
 
-            {/* Legend */}
-            {pieData.length > 0 && (
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 mt-4">
-                {pieData.map((entry, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <div
-                      className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: entry.color }}
-                    />
-                    <span className="text-[11px] text-gray-500 truncate">{entry.name}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </motion.div>
-
-          {/* Payment Milestones */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="bg-white rounded-2xl border border-rose-100 p-5 shadow-sm"
-          >
-            <h3 className="text-sm font-serif font-bold text-gray-700 mb-4">
-              Jalons de paiement
-            </h3>
-
-            <div className="space-y-4">
-              {/* Total Budget Milestone */}
-              <div className="relative">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-rose-400 to-pink-400 flex items-center justify-center text-white">
-                    <DollarSign className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs font-medium text-gray-700">Budget Total</p>
-                    <p className="text-lg font-bold text-gray-800">{formatCurrency(budget.totalBudget)}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Spent Milestone */}
-              <div className="relative ml-4 pl-4 border-l-2 border-rose-200">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-400 to-purple-400 flex items-center justify-center text-white">
-                    <CreditCard className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs font-medium text-gray-700">Total Dépensé</p>
-                    <p className="text-lg font-bold text-gray-800">{formatCurrency(totalSpent)}</p>
-                  </div>
-                  <Badge variant="secondary" className="bg-violet-50 text-violet-600 text-[10px]">
-                    {spentPercent}%
-                  </Badge>
-                </div>
-              </div>
-
-              {/* Paid Milestone */}
-              <div className="relative ml-8 pl-4 border-l-2 border-emerald-200">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-teal-400 flex items-center justify-center text-white">
-                    <Check className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs font-medium text-gray-700">Total Payé</p>
-                    <p className="text-lg font-bold text-emerald-600">{formatCurrency(totalPaid)}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Remaining Milestone */}
-              <div className="relative ml-12 pl-4 border-l-2 border-amber-200">
-                <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white ${
-                    remaining >= 0
-                      ? 'bg-gradient-to-br from-amber-400 to-orange-400'
-                      : 'bg-gradient-to-br from-red-400 to-red-500'
-                  }`}>
-                    {remaining >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs font-medium text-gray-700">
-                      {remaining >= 0 ? 'Restant' : 'Dépassement'}
-                    </p>
-                    <p className={`text-lg font-bold ${remaining >= 0 ? 'text-amber-600' : 'text-red-600'}`}>
-                      {formatCurrency(Math.abs(remaining))}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Quick Summary Table */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
-            className="bg-white rounded-2xl border border-rose-100 p-5 shadow-sm"
-          >
-            <h3 className="text-sm font-serif font-bold text-gray-700 mb-4">
-              Résumé financier
-            </h3>
-            <div className="space-y-3">
-              {categoryData.slice(0, 5).map((cat) => {
+          {/* Quick Legend */}
+          <div className="bg-white rounded-xl border border-rose-100 p-4 shadow-sm">
+            <h3 className="text-xs font-serif font-bold text-gray-700 mb-2">Catégories actives</h3>
+            <div className="space-y-1.5 max-h-[200px] overflow-y-auto">
+              {categories.filter((c) => c.allocated > 0).map((cat) => {
                 const Icon = cat.icon;
                 return (
-                  <div key={cat.category} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Icon className="h-3.5 w-3.5" style={{ color: cat.color }} />
-                      <span className="text-xs text-gray-600">{formatVendorCategory(cat.category)}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-gray-800">{formatCurrency(cat.actual)}</span>
-                      <span className="text-[10px] text-gray-400">/ {formatCurrency(cat.allocated)}</span>
-                    </div>
+                  <div key={cat.id} className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} />
+                    <Icon className="h-3 w-3" style={{ color: cat.color }} />
+                    <span className="text-[11px] text-gray-600 truncate flex-1">{cat.label}</span>
+                    <span className="text-[11px] font-medium text-gray-800">{formatCurrency(cat.allocated)}</span>
                   </div>
                 );
               })}
-              {categoryData.length > 5 && (
-                <p className="text-[10px] text-gray-400 text-center">
-                  +{categoryData.length - 5} autres catégories
-                </p>
+              {categories.filter((c) => c.allocated > 0).length === 0 && (
+                <p className="text-[11px] text-gray-400 text-center py-4">Aucune catégorie active</p>
               )}
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
 
-      {/* Comprehensive 19-Category Budget List */}
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.6 }}
-        className="bg-white rounded-2xl border border-rose-100 p-6 shadow-sm"
-      >
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-400 to-pink-400 flex items-center justify-center">
-              <Receipt className="h-4 w-4 text-white" />
-            </div>
-            <div>
-              <h3 className="text-lg font-serif font-bold text-gray-700">
-                Détail des catégories
-              </h3>
-              <p className="text-xs text-gray-400">
-                {templateData.filter((t) => t.allocated > 0).length} catégories actives sur {templateData.length}
-              </p>
-            </div>
+      {/* Add Category Dialog */}
+      <Dialog open={isAddCategoryOpen} onOpenChange={setIsAddCategoryOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="text-base font-serif">Nouvelle catégorie</DialogTitle>
+            <DialogDescription>Ajoutez une nouvelle catégorie de budget personnalisée.</DialogDescription>
+          </DialogHeader>
+          <div className="py-3">
+            <Label className="text-xs">Nom de la catégorie</Label>
+            <Input
+              value={newCatName}
+              onChange={(e) => setNewCatName(e.target.value)}
+              placeholder="Ex: Décoration"
+              className="mt-1 h-9 text-sm"
+              onKeyDown={(e) => { if (e.key === 'Enter') addNewCategory(); }}
+              autoFocus
+            />
           </div>
-          <div className="flex items-center gap-4 text-xs">
-            <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-emerald-400" />
-              <span className="text-gray-400">Alloué</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-violet-400" />
-              <span className="text-gray-400">Dépensé</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-amber-400" />
-              <span className="text-gray-400">Restant</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {templateData.map((item, index) => {
-            const Icon = item.icon;
-            const isOverBudget = item.remaining < 0;
-            const isActive = item.allocated > 0 || item.spent > 0;
-
-            return (
-              <motion.div
-                key={item.key}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7 + index * 0.03, type: 'spring' as const, stiffness: 300, damping: 24 }}
-                className={`group flex items-center gap-3 p-3 rounded-xl border transition-all hover:shadow-sm ${
-                  isActive
-                    ? 'border-rose-100 bg-gradient-to-r from-white to-rose-50/30'
-                    : 'border-gray-50 bg-gray-50/30 opacity-60 hover:opacity-100'
-                }`}
-              >
-                {/* Icon */}
-                <div
-                  className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: `${item.color}15` }}
-                >
-                  <Icon className="h-4 w-4" style={{ color: item.color }} />
-                </div>
-
-                {/* Label & Progress */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-medium text-gray-700 truncate pr-2">
-                      {item.label}
-                    </span>
-                    <span className="text-[10px] text-gray-400 flex-shrink-0">
-                      {item.percentUsed}%
-                    </span>
-                  </div>
-
-                  {/* Mini progress bar */}
-                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${item.percentUsed}%` }}
-                      transition={{ duration: 0.6, delay: 0.8 + index * 0.03 }}
-                      className={`h-full rounded-full ${
-                        item.percentUsed > 90
-                          ? 'bg-gradient-to-r from-red-400 to-red-500'
-                          : item.percentUsed > 75
-                          ? 'bg-gradient-to-r from-amber-400 to-orange-400'
-                          : 'bg-gradient-to-r from-emerald-400 to-teal-400'
-                      }`}
-                    />
-                  </div>
-                </div>
-
-                {/* Amounts */}
-                <div className="flex-shrink-0 text-right min-w-[100px]">
-                  <div className="flex items-center justify-end gap-2">
-                    <span className="text-[10px] text-gray-400">Alloué</span>
-                    <span className="text-xs font-semibold text-gray-700">
-                      {formatCurrency(item.allocated)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-end gap-2">
-                    <span className="text-[10px] text-gray-400">Dépensé</span>
-                    <span className="text-xs font-medium text-violet-600">
-                      {formatCurrency(item.spent)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-end gap-2">
-                    <span className="text-[10px] text-gray-400">Reste</span>
-                    <span className={`text-xs font-bold ${
-                      isOverBudget ? 'text-red-500' : item.remaining > 0 ? 'text-emerald-500' : 'text-gray-400'
-                    }`}>
-                      {isOverBudget ? '' : ''}{formatCurrency(item.remaining)}
-                    </span>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-
-        {/* Template Total */}
-        <div className="mt-4 pt-4 border-t border-rose-100 flex items-center justify-between">
-          <span className="text-sm font-medium text-gray-600">Total toutes catégories</span>
-          <div className="flex items-center gap-6">
-            <div className="text-center">
-              <p className="text-[10px] text-gray-400">Alloué</p>
-              <p className="text-sm font-bold text-gray-700">
-                {formatCurrency(templateData.reduce((s, t) => s + t.allocated, 0))}
-              </p>
-            </div>
-            <div className="text-center">
-              <p className="text-[10px] text-gray-400">Dépensé</p>
-              <p className="text-sm font-bold text-violet-600">
-                {formatCurrency(templateData.reduce((s, t) => s + t.spent, 0))}
-              </p>
-            </div>
-            <div className="text-center">
-              <p className="text-[10px] text-gray-400">Restant</p>
-              <p className={`text-sm font-bold ${
-                templateData.reduce((s, t) => s + t.remaining, 0) >= 0 ? 'text-emerald-600' : 'text-red-600'
-              }`}>
-                {formatCurrency(templateData.reduce((s, t) => s + t.remaining, 0))}
-              </p>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Budget Edit Dialog */}
-      <BudgetEditDialog
-        open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-        editBudget={editBudget}
-        setEditBudget={setEditBudget}
-        onSave={handleSaveBudget}
-        onAddCategory={addCategoryToEdit}
-        onRemoveCategory={removeCategoryFromEdit}
-        onUpdateCategory={updateEditCategory}
-      />
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setIsAddCategoryOpen(false)}>Annuler</Button>
+            <Button size="sm" onClick={addNewCategory} className="bg-gradient-to-r from-rose-500 to-pink-500 text-white">
+              Ajouter
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
-// ============================================================================
-// Budget Edit Dialog
-// ============================================================================
-
-interface BudgetEditDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  editBudget: { totalBudget: number; categories: BudgetCategory[] } | null;
-  setEditBudget: (budget: { totalBudget: number; categories: BudgetCategory[] } | null) => void;
-  onSave: () => void;
-  onAddCategory: () => void;
-  onRemoveCategory: (index: number) => void;
-  onUpdateCategory: (index: number, field: keyof BudgetCategory, value: number | string) => void;
-}
-
-const BudgetEditDialog: React.FC<BudgetEditDialogProps> = ({
-  open,
-  onOpenChange,
-  editBudget,
-  setEditBudget,
-  onSave,
-  onAddCategory,
-  onRemoveCategory,
-  onUpdateCategory,
-}) => {
-  if (!editBudget) return null;
-
-  const totalAllocated = editBudget.categories.reduce((s, c) => s + c.allocated, 0);
-  const totalSpent = editBudget.categories.reduce((s, c) => s + c.spent, 0);
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-serif">
-            💰 Budget : {formatCurrency(editBudget.totalBudget)}
-          </DialogTitle>
-          <DialogDescription>
-            Modifiez le budget total et la répartition par catégorie.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-6 py-4">
-          {/* Total Budget Input */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex-1">
-              <Label htmlFor="totalBudget">Budget Total</Label>
-              <div className="relative mt-1">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
-                <Input
-                  id="totalBudget"
-                  value={editBudget.totalBudget}
-                  onChange={(e) =>
-                    setEditBudget({ ...editBudget, totalBudget: parseFloat(e.target.value) || 0 })
-                  }
-                  type="number"
-                  className="pl-7"
-                />
-              </div>
-            </div>
-            <div>
-              <Label>Total Alloué</Label>
-              <div className="relative mt-1">
-                <Input value={formatCurrency(totalAllocated)} readOnly className="bg-gray-50" />
-              </div>
-            </div>
-          </div>
-
-          {/* Categories Table */}
-          <div className="flex justify-between items-center mb-4">
-            <h4 className="text-lg font-medium">Répartition du budget</h4>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onAddCategory}
-              className="text-rose-600 border-rose-200 hover:bg-rose-50"
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              Ajouter
-            </Button>
-          </div>
-
-          {editBudget.categories.length > 0 ? (
-            <div className="overflow-x-auto border rounded-lg">
-              <Table>
-                <TableHeader className="bg-rose-50/50">
-                  <TableRow>
-                    <TableHead>Catégorie</TableHead>
-                    <TableHead className="text-right">Alloué</TableHead>
-                    <TableHead className="text-right">Dépensé</TableHead>
-                    <TableHead className="text-right">Écart</TableHead>
-                    <TableHead className="w-10"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {editBudget.categories.map((category, index) => {
-                    const diff = category.allocated - category.spent;
-                    return (
-                      <TableRow key={index}>
-                        <TableCell>
-                          <select
-                            value={category.category}
-                            onChange={(e) => onUpdateCategory(index, 'category', e.target.value)}
-                            className="text-sm border rounded px-2 py-1 bg-white"
-                          >
-                            {VENDOR_CATEGORIES.map((vc) => (
-                              <option key={vc} value={vc}>
-                                {formatVendorCategory(vc)}
-                              </option>
-                            ))}
-                          </select>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Input
-                            type="number"
-                            value={category.allocated}
-                            onChange={(e) =>
-                              onUpdateCategory(index, 'allocated', parseFloat(e.target.value) || 0)
-                            }
-                            className="w-[100px] ml-auto text-right h-8"
-                          />
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Input
-                            type="number"
-                            value={category.spent}
-                            onChange={(e) =>
-                              onUpdateCategory(index, 'spent', parseFloat(e.target.value) || 0)
-                            }
-                            className="w-[100px] ml-auto text-right h-8"
-                          />
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <span className={`text-sm font-medium ${diff >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                            {diff >= 0 ? '+' : ''}{formatCurrency(diff)}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-gray-400 hover:text-red-500"
-                            onClick={() => onRemoveCategory(index)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-
-                  {/* Totals Row */}
-                  <TableRow className="font-medium bg-rose-50/30">
-                    <TableCell>Total</TableCell>
-                    <TableCell className="text-right">{formatCurrency(totalAllocated)}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(totalSpent)}</TableCell>
-                    <TableCell className="text-right">
-                      <span className={totalAllocated - totalSpent >= 0 ? 'text-emerald-600' : 'text-red-600'}>
-                        {totalAllocated - totalSpent >= 0 ? '+' : ''}{formatCurrency(totalAllocated - totalSpent)}
-                      </span>
-                    </TableCell>
-                    <TableCell />
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </div>
-          ) : (
-            <div className="border rounded-lg p-6 text-center">
-              <p className="text-gray-400 text-sm">Aucune catégorie ajoutée</p>
-            </div>
-          )}
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Annuler
-          </Button>
-          <Button
-            onClick={onSave}
-            className="bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white"
-          >
-            Enregistrer
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-};
+const ROMANTIC_COLORS = [
+  '#e11d48', '#f472b6', '#ec4899', '#be185d',
+  '#a855f7', '#8b5cf6', '#d946ef', '#f59e0b',
+  '#fb923c', '#14b8a6', '#3b82f6', '#6366f1',
+  '#78716c', '#64748b',
+];
 
 export default WeddingBudgetManager;
