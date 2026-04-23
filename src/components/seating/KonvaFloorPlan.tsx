@@ -541,5 +541,5 @@ const KonvaFloorPlan: React.FC<KonvaFloorPlanProps> = ({
   );
 };
 
-export default KonvaFloorPlan;
+export default React.memo(KonvaFloorPlan);
 export type { ToolType };

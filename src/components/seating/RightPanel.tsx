@@ -440,4 +440,4 @@ const RightPanel: React.FC<RightPanelProps> = ({
   );
 };
 
-export default RightPanel;
+export default React.memo(RightPanel);

@@ -283,4 +283,4 @@ const KonvaTable: React.FC<KonvaTableProps> = ({
   );
 };
 
-export default KonvaTable;
+export default React.memo(KonvaTable);

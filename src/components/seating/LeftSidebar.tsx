@@ -298,5 +298,5 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
   );
 };
 
-export default LeftSidebar;
+export default React.memo(LeftSidebar);
 export type { CanvasElement };

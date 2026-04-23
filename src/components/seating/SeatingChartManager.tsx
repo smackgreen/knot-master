@@ -1,14 +1,14 @@
 /**
  * ============================================================================
- * SEATING CHART MANAGER — Three-Column Layout with Konva.js Canvas
+ * SEATING CHART MANAGER — Performance-Optimized Three-Column Layout
  * ============================================================================
  *
- * Layout: Topbar | LeftSidebar | Canvas | RightPanel
- *
- * Topbar: Breadcrumb + Layout/Guests/Auto tabs + Share + Export
- * LeftSidebar: Element palette + Templates + Layers
- * Canvas: Konva floor plan with tables, decorative elements, minimap
- * RightPanel: Properties tab + Smart Assist tab
+ * Performance optimizations:
+ * 1. Debounced Supabase position updates (only persist after drag ends)
+ * 2. Optimistic local state updates (no re-fetch after every change)
+ * 3. Stable handler references via useRef (no dependency on selectedTable)
+ * 4. React.memo on child components (KonvaFloorPlan, KonvaTable, LeftSidebar, RightPanel)
+ * 5. Separated drag state from data state to prevent unnecessary re-renders
  *
  * ============================================================================
  */
@@ -88,6 +88,20 @@ const SeatingChartManager: React.FC<SeatingChartManagerProps> = ({ clientId }) =
   const stageRef = useRef<any>(null);
   const floorPlanRef = useRef<HTMLDivElement>(null);
 
+  // ---- Stable refs for callbacks ----
+  // These refs hold the latest values without causing handler recreation
+  const selectedTableRef = useRef<Table | null>(selectedTable);
+  selectedTableRef.current = selectedTable;
+
+  const tablesRef = useRef<Table[]>(tables);
+  tablesRef.current = tables;
+
+  const guestsRef = useRef<Guest[]>(guests);
+  guestsRef.current = guests;
+
+  // ---- Debounce timer for position persistence ----
+  const positionSaveTimerRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
+
   // ---- Data Loading ----
   useEffect(() => {
     const loadData = async () => {
@@ -105,13 +119,18 @@ const SeatingChartManager: React.FC<SeatingChartManagerProps> = ({ clientId }) =
       }
     };
     loadData();
-  }, [clientId, getTablesByClientId, getGuestsByClientId, t]);
+  }, [clientId]); // Only depend on clientId — context functions are stable
 
   // ---- Computed ----
   const assignedGuests = useMemo(() => guests.filter((g) => g.tableId), [guests]);
   const unassignedGuests = useMemo(() => guests.filter((g) => !g.tableId), [guests]);
 
-  // ---- Handlers ----
+  // ---- Optimized Handlers ----
+
+  /**
+   * Add a new table — only handler that does a full Supabase re-fetch
+   * because we need the server-generated ID.
+   */
   const handleAddTable = useCallback(async (tableData: Partial<Table>) => {
     try {
       await addTable({
@@ -127,36 +146,54 @@ const SeatingChartManager: React.FC<SeatingChartManagerProps> = ({ clientId }) =
     } catch (error) {
       toast.error(t('seating.addTableError', 'Error adding table.'));
     }
-  }, [clientId, addTable, getTablesByClientId, t]);
+  }, [clientId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleUpdateTable = useCallback(async (id: string, updates: Partial<Table>) => {
-    try {
-      await updateTable(id, updates);
-      const updated = await getTablesByClientId(clientId);
-      setTables(updated || []);
-      if (selectedTable?.id === id) {
-        setSelectedTable({ ...selectedTable, ...updates });
-      }
-    } catch (error) {
-      toast.error(t('seating.updateError', 'Error updating table.'));
+  /**
+   * Update table properties — OPTIMISTIC local update, background Supabase persist.
+   * No re-fetch from server. Local state is updated immediately.
+   */
+  const handleUpdateTable = useCallback((id: string, updates: Partial<Table>) => {
+    // Optimistic local update — instant UI response
+    setTables((prev) => prev.map((t) => (t.id === id ? { ...t, ...updates } : t)));
+
+    // Update selectedTable if this is the selected one
+    if (selectedTableRef.current?.id === id) {
+      setSelectedTable((prev) => (prev ? { ...prev, ...updates } : null));
     }
-  }, [clientId, updateTable, getTablesByClientId, selectedTable, t]);
 
+    // Background persist to Supabase — no await, no blocking
+    updateTable(id, updates).catch((error) => {
+      console.error('Background save failed:', error);
+      toast.error(t('seating.updateError', 'Error saving changes.'));
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /**
+   * Delete table — requires Supabase call, then local state update.
+   */
   const handleDeleteTable = useCallback(async (id: string) => {
     try {
       await deleteTable(id);
-      const updated = await getTablesByClientId(clientId);
-      setTables(updated || []);
-      if (selectedTable?.id === id) setSelectedTable(null);
+      setTables((prev) => prev.filter((t) => t.id !== id));
+      if (selectedTableRef.current?.id === id) setSelectedTable(null);
       toast.success(t('seating.tableDeleted', 'Table deleted.'));
     } catch (error) {
       toast.error(t('seating.deleteError', 'Error deleting table.'));
     }
-  }, [clientId, deleteTable, getTablesByClientId, selectedTable, t]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  /**
+   * Assign guest to table — optimistic update, background persist.
+   */
   const handleAssignGuest = useCallback(async (guestId: string, tableId: string) => {
+    // Optimistic local update
+    setGuests((prev) =>
+      prev.map((g) => (g.id === guestId ? { ...g, tableId } : g))
+    );
+
     try {
       await assignGuestToTable(guestId, tableId);
+      // Single re-fetch to ensure consistency after complex operation
       const [updatedGuests, updatedTables] = await Promise.all([
         getGuestsByClientId(clientId),
         getTablesByClientId(clientId),
@@ -165,11 +202,24 @@ const SeatingChartManager: React.FC<SeatingChartManagerProps> = ({ clientId }) =
       setTables(updatedTables || []);
       toast.success(t('seating.guestAssigned', 'Guest assigned.'));
     } catch (error) {
+      // Rollback on failure
+      setGuests((prev) =>
+        prev.map((g) => (g.id === guestId ? { ...g, tableId: undefined } : g))
+      );
       toast.error(t('seating.assignError', 'Error assigning guest.'));
     }
-  }, [clientId, assignGuestToTable, getGuestsByClientId, getTablesByClientId, t]);
+  }, [clientId]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  /**
+   * Remove guest from table — optimistic update, background persist.
+   */
   const handleRemoveGuest = useCallback(async (guestId: string) => {
+    const previousGuests = guestsRef.current;
+    // Optimistic local update
+    setGuests((prev) =>
+      prev.map((g) => (g.id === guestId ? { ...g, tableId: undefined } : g))
+    );
+
     try {
       await removeGuestFromTable(guestId);
       const [updatedGuests, updatedTables] = await Promise.all([
@@ -180,10 +230,15 @@ const SeatingChartManager: React.FC<SeatingChartManagerProps> = ({ clientId }) =
       setTables(updatedTables || []);
       toast.success(t('seating.guestRemoved', 'Guest removed from table.'));
     } catch (error) {
+      // Rollback
+      setGuests(previousGuests);
       toast.error(t('seating.removeError', 'Error removing guest.'));
     }
-  }, [clientId, removeGuestFromTable, getGuestsByClientId, getTablesByClientId, t]);
+  }, [clientId]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  /**
+   * Auto-assign guests — full operation with re-fetch.
+   */
   const handleAutoAssign = useCallback(async () => {
     try {
       await autoAssignGuests(clientId, autoAssignStrategy);
@@ -197,32 +252,53 @@ const SeatingChartManager: React.FC<SeatingChartManagerProps> = ({ clientId }) =
     } catch (error) {
       toast.error(t('seating.autoAssignError', 'Error during auto-assignment.'));
     }
-  }, [clientId, autoAssignGuests, autoAssignStrategy, getGuestsByClientId, getTablesByClientId, t]);
+  }, [clientId, autoAssignStrategy]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  /**
+   * Select table — lightweight, no Supabase call.
+   */
   const handleSelectTable = useCallback((table: Table | null) => {
     setSelectedTable(table);
     if (table) setRightPanelTab('properties');
   }, []);
 
-  const handleTablePositionChange = useCallback(async (tableId: string, x: number, y: number) => {
-    try {
-      await updateTable(tableId, { positionX: x, positionY: y } as Partial<Table>);
-      setTables((prev) =>
-        prev.map((t) => (t.id === tableId ? { ...t, positionX: x, positionY: y } : t))
-      );
-    } catch (error) {
-      console.error('Error updating table position:', error);
-    }
-  }, [updateTable]);
+  /**
+   * Handle table position change during drag — LOCAL STATE ONLY.
+   * Supabase persist is debounced to once per second per table.
+   * This is the critical performance path.
+   */
+  const handleTablePositionChange = useCallback((tableId: string, x: number, y: number) => {
+    // Immediate local state update — no Supabase call
+    setTables((prev) =>
+      prev.map((t) => (t.id === tableId ? { ...t, positionX: x, positionY: y } : t))
+    );
 
+    // Debounced background persist — max once per second per table
+    const existingTimer = positionSaveTimerRef.current.get(tableId);
+    if (existingTimer) clearTimeout(existingTimer);
+
+    positionSaveTimerRef.current.set(tableId, setTimeout(() => {
+      updateTable(tableId, { positionX: x, positionY: y } as Partial<Table>).catch((err) => {
+        console.error('Position save failed:', err);
+      });
+      positionSaveTimerRef.current.delete(tableId);
+    }, 1000)); // 1 second debounce
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /**
+   * Zoom change — lightweight state update.
+   */
   const handleZoomChange = useCallback((newZoom: number) => {
     setZoom(newZoom);
   }, []);
 
+  /**
+   * Drop element from sidebar — only creates tables via handleAddTable.
+   */
   const handleDropElement = useCallback((elementType: string, x: number, y: number) => {
     if (elementType === 'round' || elementType === 'rect' || elementType === 'square') {
       handleAddTable({
-        name: `Table ${tables.length + 1}`,
+        name: `Table ${tablesRef.current.length + 1}`,
         shape: elementType === 'round' ? 'round' : elementType === 'square' ? 'square' : 'rectangular',
         capacity: elementType === 'round' ? 8 : elementType === 'square' ? 4 : 10,
         positionX: x,
@@ -242,10 +318,17 @@ const SeatingChartManager: React.FC<SeatingChartManagerProps> = ({ clientId }) =
         },
       ]);
     }
-  }, [tables.length, handleAddTable]);
+  }, [handleAddTable]);
 
   const handleAddCanvasElement = useCallback((element: CanvasElement) => {
     setCanvasElements((prev) => [...prev, element]);
+  }, []);
+
+  // Cleanup debounce timers on unmount
+  useEffect(() => {
+    return () => {
+      positionSaveTimerRef.current.forEach((timer) => clearTimeout(timer));
+    };
   }, []);
 
   // ---- Loading State ----
