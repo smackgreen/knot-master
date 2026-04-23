@@ -47,6 +47,12 @@ import {
   Truck,
   PartyPopper,
   MoreHorizontal,
+  Film,
+  Crown,
+  Star,
+  Scissors,
+  Wine,
+  Cake,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -132,6 +138,40 @@ const VENDOR_CATEGORIES: VendorCategory[] = [
 ];
 
 // ============================================================================
+// Comprehensive Budget Template (19 French Categories)
+// ============================================================================
+
+interface BudgetTemplateItem {
+  key: string;
+  label: string;
+  icon: React.ElementType;
+  color: string;
+  vendorCategory: VendorCategory;
+}
+
+const BUDGET_TEMPLATE: BudgetTemplateItem[] = [
+  { key: 'entertainment', label: 'Divertissement', icon: PartyPopper, color: '#e11d48', vendorCategory: 'other' },
+  { key: 'beauty', label: 'Beauté et santé', icon: Sparkles, color: '#d946ef', vendorCategory: 'hair_makeup' },
+  { key: 'cake', label: 'Gâteau', icon: Cake, color: '#f472b6', vendorCategory: 'cake' },
+  { key: 'catering', label: 'Restauration', icon: Utensils, color: '#f59e0b', vendorCategory: 'catering' },
+  { key: 'music', label: 'Musique de la cérémonie', icon: Music, color: '#a855f7', vendorCategory: 'music' },
+  { key: 'bride_attire', label: 'Robe et tenue vestimentaire - Mariée', icon: Crown, color: '#ec4899', vendorCategory: 'attire' },
+  { key: 'groom_attire', label: 'Costume - Marié', icon: Shirt, color: '#3b82f6', vendorCategory: 'attire' },
+  { key: 'favors', label: 'Faveurs et cadeaux', icon: Gift, color: '#e879f9', vendorCategory: 'gifts' },
+  { key: 'flowers', label: 'Fleurs', icon: Flower2, color: '#10b981', vendorCategory: 'florist' },
+  { key: 'invitations', label: 'Invitations', icon: FileText, color: '#78716c', vendorCategory: 'stationery' },
+  { key: 'jewelry', label: 'Bijoux', icon: Gem, color: '#eab308', vendorCategory: 'other' },
+  { key: 'officiant', label: 'Fonctionnaire', icon: Building, color: '#6366f1', vendorCategory: 'venue' },
+  { key: 'photography', label: 'Photographie', icon: Camera, color: '#8b5cf6', vendorCategory: 'photography' },
+  { key: 'videography', label: 'Vidéographie', icon: Film, color: '#0ea5e9', vendorCategory: 'videography' },
+  { key: 'planning', label: 'Planification', icon: Palette, color: '#14b8a6', vendorCategory: 'other' },
+  { key: 'rentals', label: 'Locations', icon: Truck, color: '#64748b', vendorCategory: 'rentals' },
+  { key: 'transport', label: 'Transport', icon: Car, color: '#f97316', vendorCategory: 'transportation' },
+  { key: 'venue', label: 'Lieu', icon: Building, color: '#e11d48', vendorCategory: 'venue' },
+  { key: 'other', label: 'Autres', icon: MoreHorizontal, color: '#9ca3af', vendorCategory: 'other' },
+];
+
+// ============================================================================
 // Animation Variants
 // ============================================================================
 
@@ -148,7 +188,7 @@ const itemVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { type: 'spring', stiffness: 300, damping: 24 },
+    transition: { type: 'spring' as const, stiffness: 300, damping: 24 },
   },
 };
 
@@ -299,6 +339,19 @@ const WeddingBudgetManager: React.FC<WeddingBudgetManagerProps> = ({
     })),
     [categoryData]
   );
+
+  // Comprehensive template data (19 categories with budget data)
+  const templateData = useMemo(() => {
+    return BUDGET_TEMPLATE.map((item) => {
+      const budgetCat = budget?.categories.find((c) => c.category === item.vendorCategory);
+      const catVendors = vendors.filter((v) => v.category === item.vendorCategory);
+      const allocated = budgetCat?.allocated || 0;
+      const spent = catVendors.reduce((sum, v) => sum + (v.cost || 0), 0);
+      const remaining = allocated - spent;
+      const percentUsed = allocated > 0 ? Math.min(100, Math.round((spent / allocated) * 100)) : 0;
+      return { ...item, allocated, spent, remaining, percentUsed };
+    });
+  }, [budget, vendors]);
 
   // Handlers
   const handleOpenEdit = () => {
@@ -899,6 +952,153 @@ const WeddingBudgetManager: React.FC<WeddingBudgetManagerProps> = ({
           </motion.div>
         </div>
       </div>
+
+      {/* Comprehensive 19-Category Budget List */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.6 }}
+        className="bg-white rounded-2xl border border-rose-100 p-6 shadow-sm"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-400 to-pink-400 flex items-center justify-center">
+              <Receipt className="h-4 w-4 text-white" />
+            </div>
+            <div>
+              <h3 className="text-lg font-serif font-bold text-gray-700">
+                Détail des catégories
+              </h3>
+              <p className="text-xs text-gray-400">
+                {templateData.filter((t) => t.allocated > 0).length} catégories actives sur {templateData.length}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4 text-xs">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-emerald-400" />
+              <span className="text-gray-400">Alloué</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-violet-400" />
+              <span className="text-gray-400">Dépensé</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-amber-400" />
+              <span className="text-gray-400">Restant</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {templateData.map((item, index) => {
+            const Icon = item.icon;
+            const isOverBudget = item.remaining < 0;
+            const isActive = item.allocated > 0 || item.spent > 0;
+
+            return (
+              <motion.div
+                key={item.key}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 + index * 0.03, type: 'spring' as const, stiffness: 300, damping: 24 }}
+                className={`group flex items-center gap-3 p-3 rounded-xl border transition-all hover:shadow-sm ${
+                  isActive
+                    ? 'border-rose-100 bg-gradient-to-r from-white to-rose-50/30'
+                    : 'border-gray-50 bg-gray-50/30 opacity-60 hover:opacity-100'
+                }`}
+              >
+                {/* Icon */}
+                <div
+                  className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: `${item.color}15` }}
+                >
+                  <Icon className="h-4 w-4" style={{ color: item.color }} />
+                </div>
+
+                {/* Label & Progress */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-medium text-gray-700 truncate pr-2">
+                      {item.label}
+                    </span>
+                    <span className="text-[10px] text-gray-400 flex-shrink-0">
+                      {item.percentUsed}%
+                    </span>
+                  </div>
+
+                  {/* Mini progress bar */}
+                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${item.percentUsed}%` }}
+                      transition={{ duration: 0.6, delay: 0.8 + index * 0.03 }}
+                      className={`h-full rounded-full ${
+                        item.percentUsed > 90
+                          ? 'bg-gradient-to-r from-red-400 to-red-500'
+                          : item.percentUsed > 75
+                          ? 'bg-gradient-to-r from-amber-400 to-orange-400'
+                          : 'bg-gradient-to-r from-emerald-400 to-teal-400'
+                      }`}
+                    />
+                  </div>
+                </div>
+
+                {/* Amounts */}
+                <div className="flex-shrink-0 text-right min-w-[100px]">
+                  <div className="flex items-center justify-end gap-2">
+                    <span className="text-[10px] text-gray-400">Alloué</span>
+                    <span className="text-xs font-semibold text-gray-700">
+                      {formatCurrency(item.allocated)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-end gap-2">
+                    <span className="text-[10px] text-gray-400">Dépensé</span>
+                    <span className="text-xs font-medium text-violet-600">
+                      {formatCurrency(item.spent)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-end gap-2">
+                    <span className="text-[10px] text-gray-400">Reste</span>
+                    <span className={`text-xs font-bold ${
+                      isOverBudget ? 'text-red-500' : item.remaining > 0 ? 'text-emerald-500' : 'text-gray-400'
+                    }`}>
+                      {isOverBudget ? '' : ''}{formatCurrency(item.remaining)}
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* Template Total */}
+        <div className="mt-4 pt-4 border-t border-rose-100 flex items-center justify-between">
+          <span className="text-sm font-medium text-gray-600">Total toutes catégories</span>
+          <div className="flex items-center gap-6">
+            <div className="text-center">
+              <p className="text-[10px] text-gray-400">Alloué</p>
+              <p className="text-sm font-bold text-gray-700">
+                {formatCurrency(templateData.reduce((s, t) => s + t.allocated, 0))}
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-[10px] text-gray-400">Dépensé</p>
+              <p className="text-sm font-bold text-violet-600">
+                {formatCurrency(templateData.reduce((s, t) => s + t.spent, 0))}
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-[10px] text-gray-400">Restant</p>
+              <p className={`text-sm font-bold ${
+                templateData.reduce((s, t) => s + t.remaining, 0) >= 0 ? 'text-emerald-600' : 'text-red-600'
+              }`}>
+                {formatCurrency(templateData.reduce((s, t) => s + t.remaining, 0))}
+              </p>
+            </div>
+          </div>
+        </div>
+      </motion.div>
 
       {/* Budget Edit Dialog */}
       <BudgetEditDialog
