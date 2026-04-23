@@ -166,11 +166,18 @@ const KonvaFloorPlan: React.FC<KonvaFloorPlanProps> = ({
     [onSelectTable]
   );
 
-  // Get guests for a specific table
-  const getGuestsForTable = useCallback(
-    (tableId: string) => guests.filter((g) => g.tableId === tableId),
-    [guests]
-  );
+  // Memoize guests lookup per table — avoids new array references on every render
+  const guestsByTable = useMemo(() => {
+    const map = new Map<string, Guest[]>();
+    for (const g of guests) {
+      if (g.tableId) {
+        const arr = map.get(g.tableId) || [];
+        arr.push(g);
+        map.set(g.tableId, arr);
+      }
+    }
+    return map;
+  }, [guests]);
 
   // Grid lines
   const gridLines = useMemo(() => {
@@ -471,9 +478,10 @@ const KonvaFloorPlan: React.FC<KonvaFloorPlanProps> = ({
             <KonvaTable
               key={table.id}
               table={table}
-              guests={getGuestsForTable(table.id)}
+              guests={guestsByTable.get(table.id) || []}
               isSelected={selectedTableId === table.id}
               isHovered={hoveredTableId === table.id}
+              isDraggable={selectedTool === 'select'}
               onSelect={onSelectTable}
               onDragEnd={onTablePositionChange}
               onHover={setHoveredTableId}

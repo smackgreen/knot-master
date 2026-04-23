@@ -17,6 +17,7 @@ interface KonvaTableProps {
   guests: Guest[];
   isSelected: boolean;
   isHovered: boolean;
+  isDraggable: boolean;
   onSelect: (table: Table) => void;
   onDragEnd: (tableId: string, x: number, y: number) => void;
   onHover: (tableId: string | null) => void;
@@ -28,6 +29,7 @@ const KonvaTable: React.FC<KonvaTableProps> = ({
   guests,
   isSelected,
   isHovered,
+  isDraggable,
   onSelect,
   onDragEnd,
   onHover,
@@ -184,9 +186,9 @@ const KonvaTable: React.FC<KonvaTableProps> = ({
     <Group
       x={table.positionX}
       y={table.positionY}
-      draggable
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
+      draggable={isDraggable}
+      onDragStart={isDraggable ? handleDragStart : undefined}
+      onDragEnd={isDraggable ? handleDragEnd : undefined}
       onClick={handleClick}
       onTap={handleClick}
       onMouseEnter={handleMouseEnter}

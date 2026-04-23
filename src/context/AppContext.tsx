@@ -73,7 +73,7 @@ interface AppContextType {
   addGuest: (guest: Omit<Guest, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateGuest: (id: string, guest: Partial<Guest>) => Promise<void>;
   deleteGuest: (id: string) => Promise<void>;
-  addTable: (table: Omit<Table, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  addTable: (table: Omit<Table, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Table | undefined>;
   updateTable: (id: string, table: Partial<Table>) => Promise<void>;
   deleteTable: (id: string) => Promise<void>;
   createSeatingChart: (seatingChart: Omit<SeatingChart, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
@@ -1403,11 +1403,11 @@ export const AppProvider = ({ children }: AppProviderProps) => {
     }
   };
 
-  // Add a new table
-  const addTable = async (table: Omit<Table, 'id' | 'createdAt' | 'updatedAt'>) => {
+  // Add a new table — returns the created Table or undefined on failure
+  const addTable = async (table: Omit<Table, 'id' | 'createdAt' | 'updatedAt'>): Promise<Table | undefined> => {
     if (!user) {
       toast.error(i18n.t('seating.loginToAddTable'));
-      return;
+      return undefined;
     }
 
     try {
@@ -1445,11 +1445,12 @@ export const AppProvider = ({ children }: AppProviderProps) => {
         updatedAt: data.updated_at
       };
 
-      setTables([...tables, newTable]);
-      toast.success(i18n.t('seating.tableAdded', 'Table added successfully.'));
+      setTables((prev) => [...prev, newTable]);
+      return newTable;
     } catch (error) {
       console.error('Error adding table:', error);
       toast.error(i18n.t('seating.addTableError'));
+      return undefined;
     }
   };
 

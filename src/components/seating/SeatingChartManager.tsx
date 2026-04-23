@@ -128,21 +128,24 @@ const SeatingChartManager: React.FC<SeatingChartManagerProps> = ({ clientId }) =
   // ---- Optimized Handlers ----
 
   /**
-   * Add a new table — only handler that does a full Supabase re-fetch
-   * because we need the server-generated ID.
+   * Add a new table — uses the returned Table object directly.
+   * No re-fetch needed because addTable returns the server-created row.
    */
   const handleAddTable = useCallback(async (tableData: Partial<Table>) => {
     try {
-      await addTable({
+      const newTable = await addTable({
         ...tableData,
         clientId,
         positionX: tableData.positionX ?? Math.random() * 400 + 100,
         positionY: tableData.positionY ?? Math.random() * 300 + 100,
         rotation: tableData.rotation ?? 0,
-      } as Omit<Table, 'id' | 'createdAt'>);
-      const updated = await getTablesByClientId(clientId);
-      setTables(updated || []);
-      toast.success(t('seating.tableAdded', 'Table added successfully.'));
+      } as Omit<Table, 'id' | 'createdAt' | 'updatedAt'>);
+
+      if (newTable) {
+        // Direct local state update — avoids stale closure from getTablesByClientId
+        setTables((prev) => [...prev, newTable]);
+        toast.success(t('seating.tableAdded', 'Table added successfully.'));
+      }
     } catch (error) {
       toast.error(t('seating.addTableError', 'Error adding table.'));
     }
