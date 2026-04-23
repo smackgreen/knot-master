@@ -27,6 +27,7 @@ import SignatureSuccess from './pages/SignatureSuccess';
 import Profile from './pages/Profile';
 import Analytics from './pages/Analytics';
 import Resources from './pages/Resources';
+import SeatingChart from './pages/SeatingChart';
 import GoogleCalendarCallback from './pages/auth/GoogleCalendarCallback';
 import AuthCallback from './pages/AuthCallback';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -256,6 +257,10 @@ const router = createBrowserRouter([
           {
             path: 'resources',
             element: <Resources />,
+          },
+          {
+            path: 'seating/:id',
+            element: <SeatingChart />,
           },
         ],
       },

@@ -11,7 +11,6 @@ import { formatCurrency, formatDate, formatVendorCategory, getPriorityBadge, get
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Calendar, ChevronLeft, Contact, CreditCard, Edit, FileText, Trash2, Users, DollarSign, UserPlus, LayoutGrid, Palette, Utensils, FileSignature, Plus, ChevronDown, Loader2, Clock, Sparkles } from "lucide-react";
 import GuestList from "@/components/guests/GuestList";
-import SeatingChartManager from "@/components/seating/SeatingChartManager";
 import MealPlanningTool from "@/components/meal-planning/MealPlanningTool";
 import WeddingDayTimeline from "@/components/timeline/WeddingDayTimeline";
 import WeddingBudgetManager from "@/components/budget/WeddingBudgetManager";
@@ -598,7 +597,22 @@ const ClientDetails = () => {
         </TabsContent>
 
         <TabsContent value="seating">
-          <SeatingChartManager clientId={client.id} />
+          <Card className="border-violet-100">
+            <CardContent className="flex items-center justify-center py-16">
+              <div className="text-center">
+                <LayoutGrid className="h-12 w-12 text-violet-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-700 mb-2">Seating Chart</h3>
+                <p className="text-sm text-gray-400 mb-4">Open the full-screen seating chart editor</p>
+                <Button
+                  onClick={() => navigate(`/app/seating/${client.id}`)}
+                  className="bg-violet-600 text-white hover:bg-violet-700"
+                >
+                  <LayoutGrid className="h-4 w-4 mr-2" />
+                  Open Seating Chart
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="meal-planning">

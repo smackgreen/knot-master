@@ -1,0 +1,817 @@
+const {
+  Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
+  HeadingLevel, AlignmentType, BorderStyle, WidthType, ShadingType,
+  LevelFormat, PageOrientation, UnderlineType
+} = require('docx');
+const fs = require('fs');
+
+// ─── COLOR PALETTE ───────────────────────────────────────────────────────────
+const C = {
+  purple:     '6C5CE7',
+  purpleLight:'EDE9FF',
+  purpleMid:  'A29BFE',
+  dark:       '2D3436',
+  mid:        '636E72',
+  light:      'B2BEC3',
+  veryLight:  'F8F7FF',
+  white:      'FFFFFF',
+  green:      '00B894',
+  amber:      'FDCB6E',
+  red:        'E17055',
+  codeBg:     'F0EFFE',
+  codeText:   '5A4FCF',
+  border:     'DDD8FF',
+  rowAlt:     'FAF9FF',
+};
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+const border = (color = C.border) => ({ style: BorderStyle.SINGLE, size: 1, color });
+const borders = (color = C.border) => ({ top: border(color), bottom: border(color), left: border(color), right: border(color) });
+const noBorder = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
+const noBorders = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder };
+
+const cell = (children, { w = 9360, shade, bold, align, fontSize, color, colSpan, vBorders } = {}) =>
+  new TableCell({
+    columnSpan: colSpan,
+    borders: vBorders || borders(),
+    width: { size: w, type: WidthType.DXA },
+    shading: shade ? { fill: shade, type: ShadingType.CLEAR } : undefined,
+    margins: { top: 100, bottom: 100, left: 150, right: 150 },
+    children: Array.isArray(children) ? children : [
+      new Paragraph({
+        alignment: align || AlignmentType.LEFT,
+        children: [new TextRun({
+          text: children,
+          bold: bold || false,
+          font: 'Arial',
+          size: fontSize || 20,
+          color: color || C.dark,
+        })]
+      })
+    ]
+  });
+
+const h1 = (text) => new Paragraph({
+  heading: HeadingLevel.HEADING_1,
+  spacing: { before: 320, after: 160 },
+  children: [new TextRun({ text, font: 'Arial', size: 36, bold: true, color: C.purple })]
+});
+
+const h2 = (text) => new Paragraph({
+  heading: HeadingLevel.HEADING_2,
+  spacing: { before: 280, after: 120 },
+  border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: C.purpleMid, space: 4 } },
+  children: [new TextRun({ text, font: 'Arial', size: 28, bold: true, color: C.dark })]
+});
+
+const h3 = (text) => new Paragraph({
+  heading: HeadingLevel.HEADING_3,
+  spacing: { before: 200, after: 80 },
+  children: [new TextRun({ text, font: 'Arial', size: 24, bold: true, color: C.purple })]
+});
+
+const body = (text, { bold, italic, color, size } = {}) => new Paragraph({
+  spacing: { after: 120 },
+  children: [new TextRun({ text, font: 'Arial', size: size || 22, bold: bold || false, italic: italic || false, color: color || C.dark })]
+});
+
+const note = (text) => new Paragraph({
+  spacing: { after: 140 },
+  indent: { left: 360 },
+  border: { left: { style: BorderStyle.SINGLE, size: 12, color: C.purpleMid, space: 8 } },
+  children: [new TextRun({ text, font: 'Arial', size: 20, italic: true, color: C.mid })]
+});
+
+const code = (text) => new Paragraph({
+  spacing: { after: 60 },
+  shading: { fill: C.codeBg, type: ShadingType.CLEAR },
+  indent: { left: 240, right: 240 },
+  border: { left: { style: BorderStyle.SINGLE, size: 8, color: C.purple, space: 6 } },
+  children: [new TextRun({ text, font: 'Courier New', size: 18, color: C.codeText })]
+});
+
+const bullet = (text, { level = 0, bold, color } = {}) => new Paragraph({
+  numbering: { reference: 'bullets', level },
+  spacing: { after: 80 },
+  children: [new TextRun({ text, font: 'Arial', size: 21, bold: bold || false, color: color || C.dark })]
+});
+
+const numbered = (text, { level = 0 } = {}) => new Paragraph({
+  numbering: { reference: 'numbers', level },
+  spacing: { after: 80 },
+  children: [new TextRun({ text, font: 'Arial', size: 21, color: C.dark })]
+});
+
+const spacer = (lines = 1) => Array.from({ length: lines }, () =>
+  new Paragraph({ spacing: { after: 80 }, children: [new TextRun({ text: '', size: 22 })] })
+);
+
+const divider = () => new Paragraph({
+  spacing: { before: 200, after: 200 },
+  border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: C.border, space: 1 } },
+  children: [new TextRun({ text: '', size: 4 })]
+});
+
+// Badge-style highlighted row header
+const stepHeader = (num, title) => new Table({
+  width: { size: 9360, type: WidthType.DXA },
+  columnWidths: [9360],
+  rows: [new TableRow({ children: [
+    cell([
+      new Paragraph({
+        spacing: { before: 40, after: 40 },
+        children: [
+          new TextRun({ text: `  STEP ${num}  `, font: 'Arial', size: 20, bold: true, color: C.white, shading: { fill: C.purple, type: ShadingType.CLEAR } }),
+          new TextRun({ text: `   ${title}`, font: 'Arial', size: 24, bold: true, color: C.white }),
+        ]
+      })
+    ], { shade: C.purple, w: 9360, vBorders: noBorders })
+  ]})]
+});
+
+// Two-column comparison table
+const twoCol = (rows, headers) => new Table({
+  width: { size: 9360, type: WidthType.DXA },
+  columnWidths: [4680, 4680],
+  rows: [
+    new TableRow({ children: [
+      cell(headers[0], { w: 4680, shade: C.purple, bold: true, color: C.white }),
+      cell(headers[1], { w: 4680, shade: C.purple, bold: true, color: C.white }),
+    ]}),
+    ...rows.map((r, i) => new TableRow({ children: [
+      cell(r[0], { w: 4680, shade: i % 2 === 0 ? C.white : C.rowAlt }),
+      cell(r[1], { w: 4680, shade: i % 2 === 0 ? C.white : C.rowAlt }),
+    ]}))
+  ]
+});
+
+// Single-row callout table
+const callout = (emoji, title, desc, shade = C.purpleLight) => new Table({
+  width: { size: 9360, type: WidthType.DXA },
+  columnWidths: [500, 8860],
+  rows: [new TableRow({ children: [
+    cell(emoji, { w: 500, shade, align: AlignmentType.CENTER, fontSize: 24, vBorders: noBorders }),
+    cell([
+      new Paragraph({ spacing: { after: 40 }, children: [new TextRun({ text: title, font: 'Arial', size: 22, bold: true, color: C.purple })] }),
+      new Paragraph({ spacing: { after: 0 }, children: [new TextRun({ text: desc, font: 'Arial', size: 20, color: C.mid })] }),
+    ], { shade, vBorders: noBorders })
+  ]})]
+});
+
+// ─── FILE STRUCTURE TABLE ────────────────────────────────────────────────────
+const fileStructureTable = () => new Table({
+  width: { size: 9360, type: WidthType.DXA },
+  columnWidths: [3200, 2000, 4160],
+  rows: [
+    new TableRow({ children: [
+      cell('File / Folder', { w: 3200, shade: C.purple, bold: true, color: C.white }),
+      cell('Action', { w: 2000, shade: C.purple, bold: true, color: C.white }),
+      cell('What to Do', { w: 4160, shade: C.purple, bold: true, color: C.white }),
+    ]}),
+    ...[
+      ['SeatingChartManager.tsx', 'REPLACE', 'Full rewrite — use new layout code below'],
+      ['FloorPlan.tsx', 'KEEP + EXTEND', 'Add SVG decorative elements, dance floor, arch'],
+      ['FloorPlan.css', 'CREATE', 'Add new canvas, toolbar and minimap styles'],
+      ['TableList.tsx', 'KEEP', 'No changes needed'],
+      ['GuestList.tsx', 'KEEP', 'No changes needed'],
+      ['AddTableDialog.tsx', 'KEEP', 'No changes needed'],
+      ['EditTableDialog.tsx', 'EXTEND', 'Add Color, Border, Size fields to the form'],
+      ['ExportDialog.tsx', 'KEEP', 'No changes needed'],
+      ['PrintableCards.tsx', 'KEEP', 'No changes needed'],
+    ].map((r, i) => new TableRow({ children: [
+      cell(r[0], { w: 3200, shade: i % 2 === 0 ? C.white : C.rowAlt }),
+      cell(r[1], { w: 2000, shade: i % 2 === 0 ? C.white : C.rowAlt, bold: true,
+        color: r[1] === 'REPLACE' ? C.red : r[1] === 'CREATE' ? C.green : r[1] === 'EXTEND' ? C.amber : C.mid }),
+      cell(r[2], { w: 4160, shade: i % 2 === 0 ? C.white : C.rowAlt }),
+    ]}))
+  ]
+});
+
+// ─── STATE DIFF TABLE ────────────────────────────────────────────────────────
+const stateDiffTable = () => new Table({
+  width: { size: 9360, type: WidthType.DXA },
+  columnWidths: [2800, 1800, 4760],
+  rows: [
+    new TableRow({ children: [
+      cell('State Variable', { w: 2800, shade: C.purple, bold: true, color: C.white }),
+      cell('Status', { w: 1800, shade: C.purple, bold: true, color: C.white }),
+      cell('Purpose', { w: 4760, shade: C.purple, bold: true, color: C.white }),
+    ]}),
+    ...[
+      ['tables', 'KEEP', 'Array of Table objects — unchanged'],
+      ['guests', 'KEEP', 'Array of Guest objects — unchanged'],
+      ['selectedTable', 'KEEP', 'Currently selected table for right panel'],
+      ['zoom', 'KEEP', 'Canvas zoom level (0.25–3.0)'],
+      ['showGrid', 'KEEP', 'Grid overlay toggle'],
+      ['snapToGrid', 'KEEP', 'Snap-to-grid toggle'],
+      ['showMinimap', 'KEEP', 'Minimap visibility'],
+      ['activeTab', 'RENAME', 'Rename to reflect new tab IDs: layout / guests / auto'],
+      ['selectedTool', 'ADD NEW', 'Tracks active canvas tool: select | pan | rect | text | eraser'],
+      ['canvasElements', 'ADD NEW', 'Decorative SVG objects: arch, dance floor, trees, WC, stage'],
+      ['rightPanelTab', 'ADD NEW', 'Tracks which right panel tab is open: properties | smartassist'],
+    ].map((r, i) => new TableRow({ children: [
+      cell(r[0], { w: 2800, shade: i % 2 === 0 ? C.white : C.rowAlt }),
+      cell(r[1], { w: 1800, shade: i % 2 === 0 ? C.white : C.rowAlt, bold: true,
+        color: r[1] === 'ADD NEW' ? C.green : r[1] === 'RENAME' ? C.amber : C.mid }),
+      cell(r[2], { w: 4760, shade: i % 2 === 0 ? C.white : C.rowAlt }),
+    ]}))
+  ]
+});
+
+// ─── DOCUMENT BUILD ──────────────────────────────────────────────────────────
+const doc = new Document({
+  numbering: {
+    config: [
+      { reference: 'bullets', levels: [
+        { level: 0, format: LevelFormat.BULLET, text: '•', alignment: AlignmentType.LEFT,
+          style: { paragraph: { indent: { left: 560, hanging: 280 } } } },
+        { level: 1, format: LevelFormat.BULLET, text: '◦', alignment: AlignmentType.LEFT,
+          style: { paragraph: { indent: { left: 900, hanging: 280 } } } },
+      ]},
+      { reference: 'numbers', levels: [
+        { level: 0, format: LevelFormat.DECIMAL, text: '%1.', alignment: AlignmentType.LEFT,
+          style: { paragraph: { indent: { left: 560, hanging: 280 } } } },
+      ]},
+    ]
+  },
+  styles: {
+    default: { document: { run: { font: 'Arial', size: 22 } } },
+    paragraphStyles: [
+      { id: 'Heading1', name: 'Heading 1', basedOn: 'Normal', next: 'Normal', quickFormat: true,
+        run: { size: 36, bold: true, font: 'Arial', color: C.purple },
+        paragraph: { spacing: { before: 320, after: 160 }, outlineLevel: 0 } },
+      { id: 'Heading2', name: 'Heading 2', basedOn: 'Normal', next: 'Normal', quickFormat: true,
+        run: { size: 28, bold: true, font: 'Arial', color: C.dark },
+        paragraph: { spacing: { before: 280, after: 120 }, outlineLevel: 1 } },
+      { id: 'Heading3', name: 'Heading 3', basedOn: 'Normal', next: 'Normal', quickFormat: true,
+        run: { size: 24, bold: true, font: 'Arial', color: C.purple },
+        paragraph: { spacing: { before: 200, after: 80 }, outlineLevel: 2 } },
+    ]
+  },
+  sections: [{
+    properties: {
+      page: {
+        size: { width: 12240, height: 15840 },
+        margin: { top: 1080, right: 1080, bottom: 1080, left: 1080 }
+      }
+    },
+    children: [
+
+      // ── COVER ──────────────────────────────────────────────────────────────
+      new Table({
+        width: { size: 9360, type: WidthType.DXA },
+        columnWidths: [9360],
+        rows: [new TableRow({ children: [
+          cell([
+            new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 200, after: 80 },
+              children: [new TextRun({ text: '💍  Wedding Planner CRM', font: 'Arial', size: 28, bold: true, color: C.white })] }),
+            new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 80 },
+              children: [new TextRun({ text: 'Seating Chart Upgrade — Developer Implementation Guide', font: 'Arial', size: 36, bold: true, color: C.white })] }),
+            new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 60 },
+              children: [new TextRun({ text: 'Step-by-step instructions for replacing SeatingChartManager with the new floor-plan UI', font: 'Arial', size: 22, italic: true, color: C.purpleLight })] }),
+            new Paragraph({ alignment: AlignmentType.CENTER,
+              children: [new TextRun({ text: 'For: GLM Developer  •  Stack: React 18 + TypeScript + Tailwind + shadcn/ui + Framer Motion', font: 'Arial', size: 20, color: C.purpleMid })] }),
+          ], { shade: C.purple, w: 9360, vBorders: noBorders })
+        ]})]
+      }),
+
+      ...spacer(1),
+
+      // ── OVERVIEW ───────────────────────────────────────────────────────────
+      h1('Overview'),
+      body('This document explains exactly how to replace the existing SeatingChartManager component with the new visual floor-plan UI. The new UI adds a professional canvas-based editor modelled after tools like AllSeated and Social Tables, featuring:'),
+      bullet('A left sidebar with draggable elements (tables, chairs, dance floor, arch, trees, WC, bar)'),
+      bullet('A central SVG canvas with round/rectangular tables, decorative venue objects, and a minimap'),
+      bullet('A top toolbar with Layout / Guests / Auto tabs, undo/redo, zoom, grid, and tool selector'),
+      bullet('A right Properties panel showing table name, seat count, position, rotation, size, and style'),
+      bullet('A Smart Assist panel for AI-powered auto-assignment (already wired to your autoAssignGuests context call)'),
+
+      ...spacer(1),
+      callout('⚠️', 'Before you start', 'Make a git branch: git checkout -b feature/seating-chart-v2. All changes are isolated to the seating chart subsystem — zero impact on the rest of the CRM.'),
+      ...spacer(1),
+
+      // ── FILE MAP ───────────────────────────────────────────────────────────
+      h1('File Map — What to Change'),
+      body('The table below shows every file in the seating chart subsystem and what action to take:'),
+      ...spacer(1),
+      fileStructureTable(),
+      ...spacer(1),
+
+      // ══════════════════════════════════════════════════════════════════════
+      // STEP 1
+      // ══════════════════════════════════════════════════════════════════════
+      divider(),
+      stepHeader(1, 'Update State & Types in SeatingChartManager.tsx'),
+      ...spacer(1),
+
+      body('The existing state is mostly fine. Add three new state variables and rename one. Open SeatingChartManager.tsx and find the "---- State ----" block around line 160.'),
+      ...spacer(1),
+
+      h3('1a — State variables to add'),
+      body('Add these three new useState declarations directly after the existing ones:'),
+      code("const [selectedTool, setSelectedTool] = useState<'select'|'pan'|'rect'|'text'|'eraser'>('select');"),
+      code("const [canvasElements, setCanvasElements] = useState(defaultCanvasElements);"),
+      code("const [rightPanelTab, setRightPanelTab] = useState<'properties'|'smartassist'>('properties');"),
+      ...spacer(1),
+
+      h3('1b — Rename activeTab values'),
+      body("The existing activeTab state uses 'floorplan' | 'tables' | 'guests' | 'stats'. Change the default value and the tab IDs to match the new three-tab layout:"),
+      code("// BEFORE"),
+      code("const [activeTab, setActiveTab] = useState('floorplan');"),
+      code(""),
+      code("// AFTER"),
+      code("const [activeTab, setActiveTab] = useState('layout');"),
+      note("Also update every TabsTrigger value and TabsContent value from 'floorplan' → 'layout'. The other tabs ('tables', 'guests', 'stats') stay as-is for now — they are hidden inside the right panel in the new UI."),
+      ...spacer(1),
+
+      h3('1c — Add defaultCanvasElements constant'),
+      body('Before the component function, add this constant that seeds the canvas with the venue decorations seen in the design:'),
+      code("const defaultCanvasElements = ["),
+      code("  { id: 'danceFloor', type: 'dance', x: 390, y: 310, label: 'Dance Floor' },"),
+      code("  { id: 'arch',       type: 'arch',  x: 560, y: 85,  label: 'Bride & Groom' },"),
+      code("  { id: 'stage',      type: 'stage', x: 680, y: 200, label: 'Stage' },"),
+      code("  { id: 'wc',         type: 'wc',    x: 300, y: 452, label: 'WC' },"),
+      code("];"),
+      ...spacer(1),
+      stateDiffTable(),
+      ...spacer(1),
+
+      // ══════════════════════════════════════════════════════════════════════
+      // STEP 2
+      // ══════════════════════════════════════════════════════════════════════
+      divider(),
+      stepHeader(2, 'Replace the JSX Layout in SeatingChartManager.tsx'),
+      ...spacer(1),
+
+      body('This is the biggest change. The current return() renders a vertical stack (header → stats cards → Tabs). Replace the entire return() with the three-column layout below.'),
+      ...spacer(1),
+
+      callout('📐', 'New layout structure', 'The root element is a flex column. Inside it: one topbar row, then a flex row containing left sidebar + canvas + right panel. No more Tabs wrapping the floor plan.'),
+      ...spacer(1),
+
+      h3('2a — Root wrapper'),
+      body('Replace the outermost <div className="space-y-4"> with:'),
+      code('<div className="flex flex-col h-screen bg-gray-50 overflow-hidden rounded-xl border border-violet-100">'),
+      ...spacer(1),
+
+      h3('2b — Topbar (replaces the old header + stats row)'),
+      body('Directly inside the root div, add the topbar:'),
+      code('<div className="h-12 border-b border-violet-100 flex items-center px-3 gap-2 bg-white flex-shrink-0">'),
+      code('  {/* Logo pill */}'),
+      code('  <div className="w-7 h-7 rounded-lg bg-violet-600 flex items-center justify-center">'),
+      code('    <Heart className="h-3.5 w-3.5 text-white" />'),
+      code('  </div>'),
+      code('  <span className="text-sm text-gray-400 cursor-pointer px-2 py-1 rounded hover:bg-gray-50">'),
+      code('    Wedding Planner ▾'),
+      code('  </span>'),
+      code('  <div className="w-px h-5 bg-gray-200" />'),
+      code('  <span className="text-sm font-medium px-2 py-1 rounded cursor-pointer">'),
+      code('    Sarah & John Wedding ✎'),
+      code('  </span>'),
+      code('  {/* Layout / Guests / Auto tabs */}'),
+      code('  <div className="flex bg-gray-100 rounded-lg p-0.5 gap-0.5 ml-2">'),
+      code('    {["layout","guests","auto"].map(tab => ('),
+      code('      <button key={tab} onClick={() => setActiveTab(tab)}'),
+      code('        className={`text-xs px-2.5 py-1 rounded-md font-medium capitalize transition-all'),
+      code('          ${activeTab === tab ? "bg-white shadow-sm text-gray-800" : "text-gray-500"}`}>'),
+      code('        {tab === "auto" ? <><Sparkles className="inline h-3 w-3 mr-1"/>Auto'),
+      code('          <span className="ml-1 text-[9px] bg-violet-600 text-white px-1 rounded">NEW</span>'),
+      code('        </> : tab}'),
+      code('      </button>'),
+      code('    ))}'),
+      code('  </div>'),
+      code('  <div className="ml-auto flex items-center gap-2">'),
+      code('    <button className="text-xs px-3 py-1.5 border border-gray-200 rounded-md flex items-center gap-1">'),
+      code('      <Users className="h-3 w-3" /> Share'),
+      code('    </button>'),
+      code('    <button onClick={() => setIsExportOpen(true)}'),
+      code('      className="text-xs px-3 py-1.5 bg-violet-600 text-white rounded-md flex items-center gap-1 font-medium">'),
+      code('      <Download className="h-3 w-3" /> Export ▾'),
+      code('    </button>'),
+      code('  </div>'),
+      code('</div>'),
+      ...spacer(1),
+
+      h3('2c — Three-column main area'),
+      body('After the topbar div, add the main content row:'),
+      code('<div className="flex flex-1 overflow-hidden">'),
+      code('  {/* LEFT SIDEBAR — see Step 3 */}'),
+      code('  <LeftSidebar onAddTable={handleAddTable} />'),
+      code(''),
+      code('  {/* CANVAS — see Step 4 */}'),
+      code('  <div className="flex-1 relative overflow-hidden bg-[#f8f7f5]">'),
+      code('    <CanvasToolbar selectedTool={selectedTool} onSelectTool={setSelectedTool}'),
+      code('      zoom={zoom} onZoom={setZoom} showGrid={showGrid} onToggleGrid={setShowGrid} />'),
+      code('    <FloorPlan'),
+      code('      tables={tables} guests={guests} selectedTable={selectedTable}'),
+      code('      onSelectTable={handleSelectTable} onUpdateTable={handleUpdateTable}'),
+      code('      zoom={zoom} showGrid={showGrid} snapToGrid={snapToGrid}'),
+      code('      showMinimap={showMinimap} resetView={resetView}'),
+      code('      canvasElements={canvasElements} selectedTool={selectedTool} />'),
+      code('  </div>'),
+      code(''),
+      code('  {/* RIGHT PANEL — see Step 5 */}'),
+      code('  <RightPanel'),
+      code('    selectedTable={selectedTable}'),
+      code('    guests={guests}'),
+      code('    unassignedGuests={unassignedGuests}'),
+      code('    activeTab={rightPanelTab}'),
+      code('    onTabChange={setRightPanelTab}'),
+      code('    onUpdateTable={handleUpdateTable}'),
+      code('    onDeleteTable={handleDeleteTable}'),
+      code('    onRemoveGuest={handleRemoveGuest}'),
+      code('    onAutoAssign={handleAutoAssign}'),
+      code('    autoAssignStrategy={autoAssignStrategy}'),
+      code('    onStrategyChange={setAutoAssignStrategy} />'),
+      code('</div>'),
+      ...spacer(1),
+
+      // ══════════════════════════════════════════════════════════════════════
+      // STEP 3
+      // ══════════════════════════════════════════════════════════════════════
+      divider(),
+      stepHeader(3, 'Create LeftSidebar.tsx'),
+      ...spacer(1),
+
+      body('Create a new file: src/components/seating/LeftSidebar.tsx. This component renders the Add Elements grid, Templates list, and Layers panel exactly as shown in the design.'),
+      ...spacer(1),
+
+      h3('3a — Component signature'),
+      code("interface LeftSidebarProps {"),
+      code("  onAddTable: (tableData: Partial<Table>) => void;"),
+      code("}"),
+      code(""),
+      code("const LeftSidebar: React.FC<LeftSidebarProps> = ({ onAddTable }) => {"),
+      ...spacer(1),
+
+      h3('3b — Element definitions'),
+      body('Define the element palette as a constant array. Each entry maps to a draggable item:'),
+      code("const ELEMENTS = ["),
+      code("  { type: 'round',  label: 'Round Table', icon: Circle },"),
+      code("  { type: 'rect',   label: 'Rect Table',  icon: RectangleHorizontal },"),
+      code("  { type: 'chair',  label: 'Chair',       icon: Armchair },"),
+      code("  { type: 'dance',  label: 'Dance Floor', icon: Music },"),
+      code("  { type: 'stage',  label: 'Stage',       icon: LayoutGrid },"),
+      code("  { type: 'arch',   label: 'Arch',        icon: Heart },"),
+      code("  { type: 'tree',   label: 'Tree',        icon: Sparkles },"),
+      code("  { type: 'deco',   label: 'Decoration',  icon: Sparkles },"),
+      code("  { type: 'wc',     label: 'Toilet',      icon: Square },"),
+      code("  { type: 'bar',    label: 'Bar',         icon: Wine },"),
+      code("];"),
+      ...spacer(1),
+
+      h3('3c — Drag-and-drop wiring'),
+      body('Each element item must set the drag payload so FloorPlan knows what to create on drop:'),
+      code("<div"),
+      code("  draggable"),
+      code("  onDragStart={e => e.dataTransfer.setData('elementType', el.type)}"),
+      code("  className='border border-gray-200 rounded-lg p-2 cursor-grab text-center text-[10px]"),
+      code("             text-gray-500 hover:border-violet-400 hover:bg-violet-50 hover:text-violet-600'>"),
+      code("  <el.icon className='h-5 w-5 mx-auto mb-1' />"),
+      code("  {el.label}"),
+      code("</div>"),
+      ...spacer(1),
+
+      h3('3d — Template click handler'),
+      body("When a template is clicked, call onAddTable multiple times with preset positions. Example for 'Classic Wedding':"),
+      code("const loadClassicTemplate = () => {"),
+      code("  const positions = ["),
+      code("    { x: 150, y: 200 }, { x: 350, y: 200 }, { x: 550, y: 200 },"),
+      code("    { x: 150, y: 400 }, { x: 350, y: 400 }, { x: 550, y: 400 },"),
+      code("  ];"),
+      code("  positions.forEach((pos, i) => onAddTable({"),
+      code("    name: `Table ${i + 1}`, shape: 'round', capacity: 8,"),
+      code("    xPosition: pos.x, yPosition: pos.y,"),
+      code("  }));"),
+      code("};"),
+      ...spacer(1),
+
+      // ══════════════════════════════════════════════════════════════════════
+      // STEP 4
+      // ══════════════════════════════════════════════════════════════════════
+      divider(),
+      stepHeader(4, 'Extend FloorPlan.tsx — Canvas, Toolbar & Minimap'),
+      ...spacer(1),
+
+      body('FloorPlan already handles drag-and-drop table repositioning via @dnd-kit. You need to add three things: canvas decorative elements, a canvas toolbar, and the minimap.'),
+      ...spacer(1),
+
+      h3('4a — Accept new props'),
+      body('Add these to the FloorPlanProps interface:'),
+      code("canvasElements: CanvasElement[];   // decorative objects (arch, trees, etc.)"),
+      code("selectedTool:   'select'|'pan'|'rect'|'text'|'eraser';"),
+      ...spacer(1),
+
+      h3('4b — Canvas toolbar (inside FloorPlan, above the DnD canvas)'),
+      body('Add a centered absolute-positioned toolbar at the top of the canvas. It replaces the old zoom/grid controls that were in the main component:'),
+      code("<div className='absolute top-2 left-1/2 -translate-x-1/2 flex items-center gap-0.5"),
+      code("                bg-white border border-gray-200 rounded-lg p-0.5 shadow-sm z-10'>"),
+      code("  {["),
+      code("    { id: 'pan',    icon: MoveHorizontal },"),
+      code("    { id: 'select', icon: MousePointer },"),
+      code("    { id: 'rect',   icon: Square },"),
+      code("    { id: 'text',   icon: Type },"),
+      code("    { id: 'eraser', icon: Eraser },"),
+      code("  ].map(tool => ("),
+      code("    <button key={tool.id} onClick={() => onSelectTool(tool.id)}"),
+      code("      className={`w-7 h-7 rounded-md flex items-center justify-center"),
+      code("        ${selectedTool === tool.id ? 'bg-violet-100 text-violet-600' : 'text-gray-400 hover:bg-gray-100'}`}>"),
+      code("      <tool.icon className='h-3.5 w-3.5' />"),
+      code("    </button>"),
+      code("  ))}"),
+      code("</div>"),
+      ...spacer(1),
+
+      h3('4c — Render canvas elements (decorative SVG)'),
+      body('Inside the SVG that already renders tables, add a layer for decorative elements. Loop over canvasElements and render based on type:'),
+      code("{canvasElements.map(el => ("),
+      code("  <g key={el.id} transform={`translate(${el.x},${el.y})`} style={{cursor:'pointer'}}>"),
+      code("    {el.type === 'dance' && ("),
+      code("      <>"),
+      code("        <circle r={75} fill='rgba(108,92,231,0.06)' stroke='#c9c5f7'"),
+      code("                strokeWidth={1.5} strokeDasharray='5 3' />"),
+      code("        <text textAnchor='middle' dy={4} fontSize={12} fill='#9b8ee8'>Dance Floor</text>"),
+      code("      </>"),
+      code("    )}"),
+      code("    {el.type === 'arch' && <ArchSVG label={el.label} />}"),
+      code("    {el.type === 'stage' && <StageSVG />}"),
+      code("    {el.type === 'wc' && <WcSVG />}"),
+      code("    {el.type === 'tree' && <TreeSVG />}"),
+      code("  </g>"),
+      code("))}"),
+      ...spacer(1),
+
+      h3('4d — Minimap'),
+      body('Add the minimap as an absolutely-positioned div in the bottom-right corner of FloorPlan. It renders a scaled-down version of the canvas:'),
+      code("{showMinimap && ("),
+      code("  <div className='absolute bottom-3 right-3 w-28 h-20 bg-white border"),
+      code("                  border-gray-200 rounded-md overflow-hidden z-10'>"),
+      code("    <svg width='100%' height='100%' viewBox='0 0 750 600'>"),
+      code("      {tables.map(t => ("),
+      code("        <circle key={t.id}"),
+      code("          cx={t.xPosition} cy={t.yPosition} r={14}"),
+      code("          fill='none' stroke='#ccc' strokeWidth={2} />"),
+      code("      ))}"),
+      code("    </svg>"),
+      code("    <div className='flex justify-between p-1 border-t border-gray-100'>"),
+      code("      <button className='text-[10px] text-gray-400 hover:text-gray-600'>+</button>"),
+      code("      <button className='text-[10px] text-gray-400 hover:text-gray-600'>−</button>"),
+      code("    </div>"),
+      code("  </div>"),
+      code(")}"),
+      ...spacer(1),
+
+      callout('💡', 'Drop handler for new elements', "In the FloorPlan onDrop handler, check the dataTransfer for both 'tableData' (existing) and 'elementType' (new). If elementType is a table type ('round','rect'), call onAddTable. Otherwise, call a new onAddCanvasElement prop."),
+      ...spacer(1),
+
+      // ══════════════════════════════════════════════════════════════════════
+      // STEP 5
+      // ══════════════════════════════════════════════════════════════════════
+      divider(),
+      stepHeader(5, 'Create RightPanel.tsx'),
+      ...spacer(1),
+
+      body('Create src/components/seating/RightPanel.tsx. This replaces the old side panel and Edit dialog combo with a persistent right-side panel that updates live as you select tables.'),
+      ...spacer(1),
+
+      h3('5a — Props interface'),
+      code("interface RightPanelProps {"),
+      code("  selectedTable:      Table | null;"),
+      code("  guests:             Guest[];"),
+      code("  unassignedGuests:   Guest[];"),
+      code("  activeTab:          'properties' | 'smartassist';"),
+      code("  onTabChange:        (tab: 'properties' | 'smartassist') => void;"),
+      code("  onUpdateTable:      (id: string, updates: Partial<Table>) => void;"),
+      code("  onDeleteTable:      (id: string) => void;"),
+      code("  onRemoveGuest:      (guestId: string) => void;"),
+      code("  onAutoAssign:       () => void;"),
+      code("  autoAssignStrategy: 'family' | 'random' | 'balanced';"),
+      code("  onStrategyChange:   (s: 'family'|'random'|'balanced') => void;"),
+      code("}"),
+      ...spacer(1),
+
+      h3('5b — Tab bar'),
+      code("<div className='flex border-b border-gray-100'>"),
+      code("  {['properties','smartassist'].map(tab => ("),
+      code("    <button key={tab} onClick={() => onTabChange(tab as any)}"),
+      code("      className={`flex-1 text-xs py-2.5 font-medium border-b-2 transition-colors"),
+      code("        ${activeTab === tab"),
+      code("          ? 'text-violet-600 border-violet-600'"),
+      code("          : 'text-gray-400 border-transparent'}`}>"),
+      code("      {tab === 'smartassist' ? '✦ Smart Assist' : 'Properties'}"),
+      code("    </button>"),
+      code("  ))}"),
+      code("</div>"),
+      ...spacer(1),
+
+      h3('5c — Properties tab fields'),
+      body('When a table is selected, show these live-updating fields. Each input calls onUpdateTable immediately on change (debounce by 300ms to avoid Supabase rate limits):'),
+      bullet('Table Name — text input → updates table.name'),
+      bullet('Seats — +/− buttons → updates table.capacity, redraws chairs in FloorPlan'),
+      bullet('X / Y — number inputs → updates table.xPosition / yPosition'),
+      bullet('Rotation — range slider −180 to 180 → updates table.rotation'),
+      bullet('Width / Height — number inputs (for rectangular tables only)'),
+      bullet('Table Color — <input type="color"> → stored in table metadata (add a color field to your Table type if not present)'),
+      bullet('Border Style — Select: Solid / Dashed / Dotted'),
+      ...spacer(1),
+
+      h3('5d — Smart Assist tab'),
+      body('Show three action buttons that trigger auto-assignment or layout suggestions:'),
+      code("<div className='p-4 space-y-2'>"),
+      code("  <p className='text-xs text-gray-400 text-center mb-3'>"),
+      code("    ✦ Auto-assign guests, suggest layouts, optimize seating"),
+      code("  </p>"),
+      code("  <Select value={autoAssignStrategy} onValueChange={onStrategyChange}>"),
+      code("    <SelectTrigger className='h-8 text-sm'>"),
+      code("      <SelectValue />"),
+      code("    </SelectTrigger>"),
+      code("    <SelectContent>"),
+      code("      <SelectItem value='family'>By family group</SelectItem>"),
+      code("      <SelectItem value='random'>Random</SelectItem>"),
+      code("      <SelectItem value='balanced'>Balanced</SelectItem>"),
+      code("    </SelectContent>"),
+      code("  </Select>"),
+      code("  <Button onClick={onAutoAssign} className='w-full bg-violet-600 text-white text-sm h-9'>"),
+      code("    <Shuffle className='h-4 w-4 mr-2' />"),
+      code("    Auto-assign {unassignedGuests.length} guests"),
+      code("  </Button>"),
+      code("</div>"),
+      ...spacer(1),
+
+      // ══════════════════════════════════════════════════════════════════════
+      // STEP 6
+      // ══════════════════════════════════════════════════════════════════════
+      divider(),
+      stepHeader(6, 'Extend EditTableDialog.tsx — Add Color & Size Fields'),
+      ...spacer(1),
+
+      body("EditTableDialog is still used when a user double-clicks a table in the canvas. Extend it to include the new style fields that are also in the Properties panel:"),
+      ...spacer(1),
+
+      h3('6a — Add color to the Table type'),
+      body('In src/types/index.ts (or wherever Table is defined), add optional fields:'),
+      code("interface Table {"),
+      code("  // ... existing fields"),
+      code("  color?:        string;   // hex e.g. '#6C5CE7'"),
+      code("  borderStyle?:  'solid' | 'dashed' | 'dotted';"),
+      code("  borderColor?:  string;"),
+      code("}"),
+      ...spacer(1),
+
+      h3('6b — Add to Supabase schema'),
+      body('Run this migration against your Supabase project:'),
+      code("ALTER TABLE tables"),
+      code("  ADD COLUMN IF NOT EXISTS color TEXT DEFAULT '#FFFFFF',"),
+      code("  ADD COLUMN IF NOT EXISTS border_style TEXT DEFAULT 'solid',"),
+      code("  ADD COLUMN IF NOT EXISTS border_color TEXT DEFAULT '#CCCCCC';"),
+      ...spacer(1),
+
+      h3('6c — Add fields to EditTableDialog form'),
+      body('Add to the existing form (after the capacity field):'),
+      code("<div className='grid grid-cols-2 gap-3'>"),
+      code("  <div>"),
+      code("    <Label>Table Color</Label>"),
+      code("    <input type='color' value={form.color || '#FFFFFF'}"),
+      code("      onChange={e => setForm(f => ({...f, color: e.target.value}))}"),
+      code("      className='w-full h-9 rounded-md border border-gray-200 cursor-pointer' />"),
+      code("  </div>"),
+      code("  <div>"),
+      code("    <Label>Border Style</Label>"),
+      code("    <Select value={form.borderStyle} onValueChange={v => setForm(f => ({...f, borderStyle: v}))}>"),
+      code("      <SelectTrigger className='h-9'><SelectValue /></SelectTrigger>"),
+      code("      <SelectContent>"),
+      code("        <SelectItem value='solid'>Solid</SelectItem>"),
+      code("        <SelectItem value='dashed'>Dashed</SelectItem>"),
+      code("        <SelectItem value='dotted'>Dotted</SelectItem>"),
+      code("      </SelectContent>"),
+      code("    </Select>"),
+      code("  </div>"),
+      code("</div>"),
+      ...spacer(1),
+
+      // ══════════════════════════════════════════════════════════════════════
+      // STEP 7
+      // ══════════════════════════════════════════════════════════════════════
+      divider(),
+      stepHeader(7, 'Apply Table Color & Style in FloorPlan.tsx'),
+      ...spacer(1),
+
+      body('Now that tables carry color and borderStyle, use them when rendering each DraggableTable in FloorPlan:'),
+      ...spacer(1),
+
+      h3('7a — Round tables'),
+      code("<circle"),
+      code("  r={tableRadius}"),
+      code("  fill={table.color || '#FFFFFF'}"),
+      code("  stroke={table.borderColor || '#CCCCCC'}"),
+      code("  strokeWidth={2}"),
+      code("  strokeDasharray={table.borderStyle === 'dashed' ? '6 3'"),
+      code("                  : table.borderStyle === 'dotted' ? '2 3'"),
+      code("                  : undefined}"),
+      code("/>"),
+      ...spacer(1),
+
+      h3('7b — Rectangular tables'),
+      body('Apply the same stroke/fill attributes to the <rect> element in your rectangular table rendering.'),
+      ...spacer(1),
+
+      // ══════════════════════════════════════════════════════════════════════
+      // STEP 8
+      // ══════════════════════════════════════════════════════════════════════
+      divider(),
+      stepHeader(8, 'Wiring Checklist — Verify Everything Connects'),
+      ...spacer(1),
+
+      body('Before running, go through this checklist to confirm all props and handlers are wired correctly:'),
+      ...spacer(1),
+
+      new Table({
+        width: { size: 9360, type: WidthType.DXA },
+        columnWidths: [600, 3560, 5200],
+        rows: [
+          new TableRow({ children: [
+            cell('✓', { w: 600, shade: C.purple, bold: true, color: C.white, align: AlignmentType.CENTER }),
+            cell('Connection', { w: 3560, shade: C.purple, bold: true, color: C.white }),
+            cell('Verify', { w: 5200, shade: C.purple, bold: true, color: C.white }),
+          ]}),
+          ...[
+            ['□', 'LeftSidebar → SeatingChartManager', 'onAddTable prop passed and imported'],
+            ['□', 'FloorPlan → new props', 'canvasElements, selectedTool props added to interface and passed'],
+            ['□', 'RightPanel → SeatingChartManager', 'All 10 props passed correctly'],
+            ['□', 'FloorPlan drop handler', "checks 'elementType' in dataTransfer for new elements"],
+            ['□', 'Table type', 'color, borderStyle, borderColor fields added'],
+            ['□', 'Supabase schema', 'migration run, AppContext updated to read/write new columns'],
+            ['□', 'activeTab default', "changed from 'floorplan' to 'layout'"],
+            ['□', 'Icon imports', 'Armchair, Wine, Music, MousePointer, Eraser, Type imported from lucide-react'],
+          ].map((r, i) => new TableRow({ children: [
+            cell(r[0], { w: 600, shade: i % 2 === 0 ? C.white : C.rowAlt, align: AlignmentType.CENTER }),
+            cell(r[1], { w: 3560, shade: i % 2 === 0 ? C.white : C.rowAlt }),
+            cell(r[2], { w: 5200, shade: i % 2 === 0 ? C.white : C.rowAlt }),
+          ]}))
+        ]
+      }),
+      ...spacer(1),
+
+      // ══════════════════════════════════════════════════════════════════════
+      // STEP 9
+      // ══════════════════════════════════════════════════════════════════════
+      divider(),
+      stepHeader(9, 'Testing the New UI'),
+      ...spacer(1),
+
+      numbered('Start the dev server: npm run dev'),
+      numbered('Open any client seating chart page.'),
+      numbered("Verify the three-column layout renders: left sidebar | canvas | right panel."),
+      numbered("Drag a 'Round Table' element from the sidebar onto the canvas — a new table should appear."),
+      numbered("Click a table — the Properties panel on the right should populate with that table's data."),
+      numbered("Change the seat count using the +/− buttons — the chair ring in the canvas should update."),
+      numbered("Change the table color in the Properties panel — the circle fill in the canvas should update."),
+      numbered("Click 'Smart Assist' tab — the auto-assign button should be visible and functional."),
+      numbered("Test the minimap — it should show a thumbnail of the layout and zoom controls."),
+      numbered("Run existing tests: npm run test — the stats/tables/guests tabs are still accessible via the Guests tab."),
+      ...spacer(1),
+      callout('✅', 'You\'re done!', 'The seating chart now matches the reference design. Commit your branch and open a PR for review.'),
+      ...spacer(1),
+
+      // ══════════════════════════════════════════════════════════════════════
+      // APPENDIX
+      // ══════════════════════════════════════════════════════════════════════
+      divider(),
+      h1('Appendix — Quick Reference'),
+      ...spacer(1),
+
+      h2('New Files Created'),
+      bullet('src/components/seating/LeftSidebar.tsx'),
+      bullet('src/components/seating/RightPanel.tsx'),
+      bullet('src/components/seating/FloorPlan.css  (or extend existing)'),
+      ...spacer(1),
+
+      h2('Files Modified'),
+      bullet('src/components/seating/SeatingChartManager.tsx  —  state + JSX layout'),
+      bullet('src/components/seating/FloorPlan.tsx  —  new props, canvas elements, minimap, toolbar'),
+      bullet('src/components/seating/EditTableDialog.tsx  —  color + border fields'),
+      bullet('src/types/index.ts  —  Table interface extended'),
+      bullet('supabase/migrations/XXXX_seating_style_columns.sql  —  new columns'),
+      ...spacer(1),
+
+      h2('Key Dependencies (all already in package.json)'),
+      twoCol([
+        ['framer-motion', 'Animate table selection highlight, panel transitions'],
+        ['@dnd-kit/core', 'Drag-and-drop for table repositioning (unchanged)'],
+        ['lucide-react', 'All icons — add Armchair, Wine, Music, Type, Eraser'],
+        ['shadcn/ui Select', 'Border style and auto-assign strategy dropdowns'],
+        ['react-i18next', 'All new string labels need t() wrappers for fr/en support'],
+      ], ['Package', 'Used For']),
+      ...spacer(1),
+
+      h2('Contact'),
+      body('Questions about this guide → open an issue tagged seating-chart-v2 in the project repo or message the original author.'),
+
+    ]
+  }]
+});
+
+Packer.toBuffer(doc).then(buf => {
+  fs.writeFileSync('/mnt/user-data/outputs/SeatingChart_Implementation_Guide.docx', buf);
+  console.log('Done');
+});
