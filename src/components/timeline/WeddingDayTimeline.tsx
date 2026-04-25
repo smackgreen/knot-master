@@ -1,12 +1,13 @@
 /**
  * WeddingDayTimeline
  *
- * A stunning, interactive "Programme de la journée" (Wedding Day Schedule)
+ * A stunning, interactive Wedding Day Schedule
  * with a beautiful vertical timeline, drag-and-drop reordering,
  * inline editing, auto-calculated timestamps, and romantic styling.
  */
 
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   DndContext,
   closestCenter,
@@ -111,34 +112,43 @@ const ICON_MAP: Record<string, { component: React.ElementType; color: string; bg
 const ICON_OPTIONS = Object.keys(ICON_MAP);
 
 // ============================================================================
-// Default Schedule
+// Default Schedule — uses i18n for translated titles
 // ============================================================================
 
-const DEFAULT_EVENTS: TimelineEvent[] = [
-  { id: '1', title: 'Le grand jour', durationMinutes: 40, icon: 'heart' },
-  { id: '2', title: 'Réveil et Douche', durationMinutes: 30, icon: 'sun' },
-  { id: '3', title: 'Petit déjeuner', durationMinutes: 120, icon: 'coffee' },
-  { id: '4', title: 'Coiffure et maquillage', durationMinutes: 30, icon: 'scissors' },
-  { id: '5', title: 'Tout le monde s\'habille', durationMinutes: 20, icon: 'shirt' },
-  { id: '6', title: 'Déjeuner ou collation', durationMinutes: 15, icon: 'utensils' },
-  { id: '7', title: 'Arrivée du photographe', durationMinutes: 15, icon: 'camera' },
-  { id: '8', title: 'Séance photo', durationMinutes: 60, icon: 'camera' },
-  { id: '9', title: 'Photos de famille', durationMinutes: 15, icon: 'users' },
-  { id: '10', title: 'Photos avec les invités', durationMinutes: 15, icon: 'users' },
-  { id: '11', title: 'Arrivée de la limousine', durationMinutes: 20, icon: 'car' },
-  { id: '12', title: 'Arrivée à la cérémonie', durationMinutes: 30, icon: 'church' },
-  { id: '13', title: 'Dites Oui !', durationMinutes: 15, icon: 'diamond' },
-  { id: '14', title: 'Cocktails et photos', durationMinutes: 20, icon: 'wine' },
-  { id: '15', title: 'Tous se rendent à la réception', durationMinutes: 40, icon: 'car' },
-  { id: '16', title: 'Grande entrée', durationMinutes: 20, icon: 'sparkles' },
-  { id: '17', title: 'Première danse', durationMinutes: 15, icon: 'music' },
-  { id: '18', title: 'Dîner', durationMinutes: 40, icon: 'utensils' },
-  { id: '19', title: 'Toasts & Prières', durationMinutes: 40, icon: 'wine' },
-  { id: '20', title: 'C\'est l\'heure de la fête !', durationMinutes: 100, icon: 'partyPopper' },
-  { id: '21', title: 'Gâteau coupé', durationMinutes: 60, icon: 'cake' },
-  { id: '22', title: 'Feu d\'artifice et envoi', durationMinutes: 30, icon: 'sparkles' },
-  { id: '23', title: 'Grande sortie', durationMinutes: 30, icon: 'star' },
+const DEFAULT_EVENT_DEFS: { id: string; titleKey: string; durationMinutes: number; icon: string }[] = [
+  { id: '1', titleKey: 'timeline.defaultEvent1', durationMinutes: 40, icon: 'heart' },
+  { id: '2', titleKey: 'timeline.defaultEvent2', durationMinutes: 30, icon: 'sun' },
+  { id: '3', titleKey: 'timeline.defaultEvent3', durationMinutes: 120, icon: 'coffee' },
+  { id: '4', titleKey: 'timeline.defaultEvent4', durationMinutes: 30, icon: 'scissors' },
+  { id: '5', titleKey: 'timeline.defaultEvent5', durationMinutes: 20, icon: 'shirt' },
+  { id: '6', titleKey: 'timeline.defaultEvent6', durationMinutes: 15, icon: 'utensils' },
+  { id: '7', titleKey: 'timeline.defaultEvent7', durationMinutes: 15, icon: 'camera' },
+  { id: '8', titleKey: 'timeline.defaultEvent8', durationMinutes: 60, icon: 'camera' },
+  { id: '9', titleKey: 'timeline.defaultEvent9', durationMinutes: 15, icon: 'users' },
+  { id: '10', titleKey: 'timeline.defaultEvent10', durationMinutes: 15, icon: 'users' },
+  { id: '11', titleKey: 'timeline.defaultEvent11', durationMinutes: 20, icon: 'car' },
+  { id: '12', titleKey: 'timeline.defaultEvent12', durationMinutes: 30, icon: 'church' },
+  { id: '13', titleKey: 'timeline.defaultEvent13', durationMinutes: 15, icon: 'diamond' },
+  { id: '14', titleKey: 'timeline.defaultEvent14', durationMinutes: 20, icon: 'wine' },
+  { id: '15', titleKey: 'timeline.defaultEvent15', durationMinutes: 40, icon: 'car' },
+  { id: '16', titleKey: 'timeline.defaultEvent16', durationMinutes: 20, icon: 'sparkles' },
+  { id: '17', titleKey: 'timeline.defaultEvent17', durationMinutes: 15, icon: 'music' },
+  { id: '18', titleKey: 'timeline.defaultEvent18', durationMinutes: 40, icon: 'utensils' },
+  { id: '19', titleKey: 'timeline.defaultEvent19', durationMinutes: 40, icon: 'wine' },
+  { id: '20', titleKey: 'timeline.defaultEvent20', durationMinutes: 100, icon: 'partyPopper' },
+  { id: '21', titleKey: 'timeline.defaultEvent21', durationMinutes: 60, icon: 'cake' },
+  { id: '22', titleKey: 'timeline.defaultEvent22', durationMinutes: 30, icon: 'sparkles' },
+  { id: '23', titleKey: 'timeline.defaultEvent23', durationMinutes: 30, icon: 'star' },
 ];
+
+function buildDefaultEvents(t: (key: string) => string): TimelineEvent[] {
+  return DEFAULT_EVENT_DEFS.map((def) => ({
+    id: def.id,
+    title: t(def.titleKey),
+    durationMinutes: def.durationMinutes,
+    icon: def.icon,
+  }));
+}
 
 // ============================================================================
 // Helpers
@@ -193,7 +203,8 @@ const WeddingDayTimeline: React.FC<WeddingDayTimelineProps> = ({
   weddingDate: initialWeddingDate,
   onSave,
 }) => {
-  const [events, setEvents] = useState<TimelineEvent[]>(DEFAULT_EVENTS);
+  const { t } = useTranslation();
+  const [events, setEvents] = useState<TimelineEvent[]>(() => buildDefaultEvents(t));
   const [startHour, setStartHour] = useState(6); // 6:00 AM
   const [use24h, setUse24h] = useState(true);
   const [weddingDate, setWeddingDate] = useState(initialWeddingDate || '');
@@ -273,14 +284,14 @@ const WeddingDayTimeline: React.FC<WeddingDayTimelineProps> = ({
   };
 
   const handleReset = () => {
-    setEvents(DEFAULT_EVENTS);
+    setEvents(buildDefaultEvents(t));
     setStartHour(6);
   };
 
   const addEvent = () => {
     const newEvent: TimelineEvent = {
       id: generateId(),
-      title: 'Nouvel événement',
+      title: t('timeline.newEvent'),
       durationMinutes: 30,
       icon: 'star',
     };
@@ -299,11 +310,10 @@ const WeddingDayTimeline: React.FC<WeddingDayTimelineProps> = ({
           <Heart className="h-8 w-8 text-rose-500" />
         </div>
         <h2 className="text-3xl font-serif font-bold text-gray-800 mb-2">
-          Programme de la journée
+          {t('timeline.programTitle')}
         </h2>
         <p className="text-sm text-gray-500 max-w-lg mx-auto leading-relaxed">
-          Créez et imprimez le planning de votre grand jour. Du réveil jusqu'au « oui »,
-          préparez un itinéraire complet qui vous accompagne pas à pas.
+          {t('timeline.programDescription')}
         </p>
       </div>
 
@@ -311,7 +321,7 @@ const WeddingDayTimeline: React.FC<WeddingDayTimelineProps> = ({
       <div className="flex flex-wrap items-center justify-between gap-4 mb-8 p-4 bg-white/80 backdrop-blur-sm rounded-2xl border border-rose-100 shadow-sm">
         <div className="flex items-center gap-3">
           <Label htmlFor="wedding-date" className="text-sm font-medium text-gray-600 whitespace-nowrap">
-            📅 Date du mariage
+            {t('timeline.weddingDateLabel')}
           </Label>
           <Input
             id="wedding-date"
@@ -340,7 +350,7 @@ const WeddingDayTimeline: React.FC<WeddingDayTimelineProps> = ({
           className="text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700"
         >
           <RotateCcw className="h-4 w-4 mr-1" />
-          Réinitialiser tout le programme
+          {t('timeline.resetProgram')}
         </Button>
       </div>
 
@@ -348,7 +358,7 @@ const WeddingDayTimeline: React.FC<WeddingDayTimelineProps> = ({
       <div className="flex items-center gap-4 mb-6 px-2">
         <div className="flex items-center gap-2">
           <Clock className="h-4 w-4 text-rose-400" />
-          <span className="text-sm font-medium text-gray-600">Début :</span>
+          <span className="text-sm font-medium text-gray-600">{t('timeline.startLabel')}</span>
           <Input
             type="time"
             value={`${String(startHour).padStart(2, '0')}:00`}
@@ -360,7 +370,7 @@ const WeddingDayTimeline: React.FC<WeddingDayTimelineProps> = ({
           />
         </div>
         <div className="text-xs text-gray-400">
-          Fin estimée : <span className="font-medium text-gray-600">{endHour}</span>
+          {t('timeline.estimatedEnd')} <span className="font-medium text-gray-600">{endHour}</span>
           {' '}({Math.floor(totalDuration / 60)}h{totalDuration % 60 > 0 ? `${totalDuration % 60}min` : ''})
         </div>
       </div>
@@ -414,7 +424,7 @@ const WeddingDayTimeline: React.FC<WeddingDayTimelineProps> = ({
           className="gap-2 border-dashed border-2 border-rose-300 text-rose-500 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-400"
         >
           <Plus className="h-4 w-4" />
-          Ajouter un événement
+          {t('timeline.addEvent')}
         </Button>
       </div>
     </div>
@@ -452,6 +462,7 @@ const SortableTimelineItem: React.FC<SortableTimelineItemProps> = ({
   onDelete,
   isLast,
 }) => {
+  const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: event.id,
   });
@@ -467,7 +478,7 @@ const SortableTimelineItem: React.FC<SortableTimelineItemProps> = ({
 
   const hours = Math.floor(event.durationMinutes / 60);
   const mins = event.durationMinutes % 60;
-  const durationLabel = hours > 0 ? `${hours}h${mins > 0 ? `${mins}min` : ''}` : `${mins}min`;
+  const durationLabel = hours > 0 ? `${hours}h${mins > 0 ? `${mins}${t('timeline.min')}` : ''}` : `${mins}${t('timeline.min')}`;
 
   return (
     <div ref={setNodeRef} style={style} className="relative group">
@@ -532,7 +543,7 @@ const SortableTimelineItem: React.FC<SortableTimelineItemProps> = ({
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Changer l'icône</p>
+                    <p>{t('timeline.changeIcon')}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -584,7 +595,7 @@ const SortableTimelineItem: React.FC<SortableTimelineItemProps> = ({
                   min={5}
                   autoFocus
                 />
-                <span className="text-xs text-gray-400">min</span>
+                <span className="text-xs text-gray-400">{t('timeline.min')}</span>
               </div>
             ) : (
               <button

@@ -242,7 +242,17 @@
       "stationery": "Stationery",
       "gifts": "Gifts",
       "other": "Other"
-    }
+    },
+    "contact": "Contact",
+    "client": "Client",
+    "status": "Status",
+    "actions": "Actions",
+    "unpaid": "Unpaid",
+    "noCost": "No Cost",
+    "noEmail": "No email",
+    "unknown": "Unknown",
+    "edit": "Edit",
+    "delete": "Delete"
   },
   "tasks": {
     "title": "Tasks",
@@ -439,7 +449,6 @@
         }
       }
     },
-    "overdueTasks": "Overdue Tasks",
     "noOverdueTasks": "No overdue tasks.",
     "noTasksDisplay": "No tasks to display.",
     "noCompletedTasks": "No completed tasks.",
@@ -809,7 +818,39 @@
     "includeDetails": "Include Details",
     "includeCriticalPath": "Highlight Critical Path",
     "includeResponsibleParties": "Include Responsible Parties",
-    "includeNotes": "Include Notes"
+    "includeNotes": "Include Notes",
+    "programTitle": "Wedding Day Schedule",
+    "programDescription": "Create and print the schedule for your big day. From waking up to saying \"I do\", prepare a complete itinerary that guides you every step of the way.",
+    "weddingDateLabel": "📅 Wedding Date",
+    "startLabel": "Start:",
+    "estimatedEnd": "Estimated end:",
+    "resetProgram": "Reset Schedule",
+    "newEvent": "New Event",
+    "changeIcon": "Change icon",
+    "min": "min",
+    "defaultEvent1": "The Big Day",
+    "defaultEvent2": "Wake Up & Shower",
+    "defaultEvent3": "Breakfast",
+    "defaultEvent4": "Hair & Makeup",
+    "defaultEvent5": "Everyone Gets Dressed",
+    "defaultEvent6": "Lunch or Snack",
+    "defaultEvent7": "Photographer Arrives",
+    "defaultEvent8": "Photo Session",
+    "defaultEvent9": "Family Photos",
+    "defaultEvent10": "Photos with Guests",
+    "defaultEvent11": "Limousine Arrives",
+    "defaultEvent12": "Arrive at Ceremony",
+    "defaultEvent13": "Say Yes!",
+    "defaultEvent14": "Cocktails & Photos",
+    "defaultEvent15": "Head to Reception",
+    "defaultEvent16": "Grand Entrance",
+    "defaultEvent17": "First Dance",
+    "defaultEvent18": "Dinner",
+    "defaultEvent19": "Toasts & Blessings",
+    "defaultEvent20": "Party Time!",
+    "defaultEvent21": "Cake Cutting",
+    "defaultEvent22": "Fireworks & Send-off",
+    "defaultEvent23": "Grand Exit"
   },
   "profile": {
     "title": "Profile",
@@ -1787,7 +1828,38 @@
     "mealPlanUpdated": "Meal plan updated successfully.",
     "mealPlanDeleted": "Meal plan deleted successfully.",
     "mealItemUpdated": "Meal item updated successfully.",
-    "mealItemDeleted": "Meal item deleted successfully."
+    "mealItemDeleted": "Meal item deleted successfully.",
+    "breakfast": "Breakfast",
+    "lunch": "Lunch",
+    "cocktailHour": "Cocktail Hour",
+    "selectMealType": "Select meal type",
+    "beverages": "Beverages",
+    "starters": "Starters",
+    "mainCourses": "Main Courses",
+    "desserts": "Desserts",
+    "snacks": "Snacks",
+    "spring": "Spring",
+    "summer": "Summer",
+    "fall": "Fall",
+    "winter": "Winter",
+    "menuItems": "Menu Items",
+    "noMenuItems": "No menu items yet. Add your first item.",
+    "newMealPlan": "New Meal Plan",
+    "deleteMealPlan": "Delete Meal Plan",
+    "deleteMealPlanConfirm": "Are you sure you want to delete this meal plan? This action cannot be undone.",
+    "deleteMenuItem": "Delete Menu Item",
+    "deleteMenuItemConfirm": "Are you sure you want to delete this menu item?",
+    "regenerate": "Regenerate",
+    "generateMenuSuggestions": "Generate Menu Suggestions",
+    "generating": "Generating...",
+    "estimatedCost": "Estimated Cost",
+    "perPerson": "per person",
+    "bestIn": "Best in",
+    "containsAlcohol": "Contains Alcohol",
+    "additionalNotes": "Additional Notes",
+    "itemRegeneratedSuccess": "Item regenerated successfully",
+    "failedToRegenerateItem": "Failed to regenerate item",
+    "noSuitableReplacement": "No suitable replacement found"
   },
   "signatures": {
     "title": "Signatures",
@@ -2062,5 +2134,145 @@
   "subscription": {
     "fetchError": "Failed to fetch subscription information.",
     "paymentMethodsError": "Failed to fetch payment methods."
+  },
+  "budget": {
+    "categories": {
+      "entertainment": "Entertainment",
+      "beauty": "Beauty & Health",
+      "cake": "Cake",
+      "catering": "Catering",
+      "music": "Ceremony Music",
+      "bride_attire": "Bride's Attire",
+      "groom_attire": "Groom's Suit",
+      "favors": "Favors & Gifts",
+      "flowers": "Flowers",
+      "invitations": "Invitations",
+      "jewelry": "Jewelry",
+      "officiant": "Officiant",
+      "photography": "Photography",
+      "videography": "Videography",
+      "planning": "Planning",
+      "rentals": "Rentals",
+      "transport": "Transport",
+      "venue": "Venue",
+      "other": "Other"
+    },
+    "subcategories": {
+      "entertainment": [
+        "DJ / Entertainment",
+        "Photobooth",
+        "Games & Activities",
+        "Show"
+      ],
+      "beauty": [
+        "Bride's Hair",
+        "Bride's Makeup",
+        "Groom's Hair",
+        "Spa Treatments"
+      ],
+      "cake": [
+        "Main Cake",
+        "Wedding Cake",
+        "Candy Bar",
+        "Delivery & Setup"
+      ],
+      "catering": [
+        "Cocktail Reception",
+        "Main Menu",
+        "Beverages",
+        "Table Service"
+      ],
+      "music": [
+        "Ceremony Music",
+        "Reception DJ",
+        "Live Musicians",
+        "Sound System"
+      ],
+      "bride_attire": [
+        "Wedding Dress",
+        "Veil & Accessories",
+        "Shoes",
+        "Alterations"
+      ],
+      "groom_attire": [
+        "Suit",
+        "Shirt & Tie",
+        "Shoes",
+        "Accessories"
+      ],
+      "favors": [
+        "Favors & Gifts",
+        "Gift Bags",
+        "Personalization",
+        "Thank You Cards"
+      ],
+      "flowers": [
+        "Bride's Bouquet",
+        "Ceremony Decor",
+        "Centerpieces",
+        "Flower Arch"
+      ],
+      "invitations": [
+        "Invitations",
+        "Menus",
+        "Place Cards",
+        "Stationery"
+      ],
+      "jewelry": [
+        "Wedding Bands",
+        "Engagement Ring",
+        "Bride's Jewelry",
+        "Watches"
+      ],
+      "officiant": [
+        "Officiant",
+        "Witnesses",
+        "Official Documents",
+        "Civil Ceremony"
+      ],
+      "photography": [
+        "Photographer",
+        "Photo Album",
+        "Prints",
+        "Engagement Session"
+      ],
+      "videography": [
+        "Videographer",
+        "Editing",
+        "Drone",
+        "Teaser Film"
+      ],
+      "planning": [
+        "Wedding Planner",
+        "Day-of Coordination",
+        "Decor",
+        "Rehearsal"
+      ],
+      "rentals": [
+        "Tents & Canopies",
+        "Tables & Chairs",
+        "Table Linens",
+        "Lighting"
+      ],
+      "transport": [
+        "Wedding Car",
+        "Guest Transport",
+        "Shuttle Bus",
+        "Parking"
+      ],
+      "venue": [
+        "Venue Rental",
+        "Ceremony",
+        "Reception",
+        "Accommodation"
+      ],
+      "other": [
+        "Contingency",
+        "Insurance",
+        "Tips & Gratuities",
+        "Miscellaneous"
+      ]
+    },
+    "newCategoryPlaceholder": "e.g., Decoration"
   }
 }

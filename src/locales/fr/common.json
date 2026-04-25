@@ -336,7 +336,17 @@
       "stationery": "Papeterie",
       "gifts": "Cadeaux",
       "other": "Autre"
-    }
+    },
+    "contact": "Contact",
+    "client": "Client",
+    "status": "Statut",
+    "actions": "Actions",
+    "unpaid": "Non payé",
+    "noCost": "Aucun coût",
+    "noEmail": "Pas d'email",
+    "unknown": "Inconnu",
+    "edit": "Modifier",
+    "delete": "Supprimer"
   },
   "tasks": {
     "title": "Tâches",
@@ -533,7 +543,6 @@
     "errorLoading": "Erreur lors du chargement des tâches",
     "overdueTasks": "Tâches en retard",
     "moreTasks": "+{{count}} autres",
-    "overdueTasks": "Tâches en retard",
     "noOverdueTasks": "Aucune tâche en retard.",
     "noTasksDisplay": "Aucune tâche à afficher.",
     "noCompletedTasks": "Aucune tâche terminée.",
@@ -1445,7 +1454,39 @@
     "shareTimeline": "Partager la chronologie",
     "shareTimelineDescription": "Partager cette chronologie avec les fournisseurs, les clients ou les membres de l'équipe",
     "startToFinish": "Début à Fin",
-    "startToStart": "Début à Début"
+    "startToStart": "Début à Début",
+    "programTitle": "Programme de la journée",
+    "programDescription": "Créez et imprimez le planning de votre grand jour. Du réveil jusqu'au « oui », préparez un itinéraire complet qui vous accompagne pas à pas.",
+    "weddingDateLabel": "📅 Date du mariage",
+    "startLabel": "Début :",
+    "estimatedEnd": "Fin estimée :",
+    "resetProgram": "Réinitialiser tout le programme",
+    "newEvent": "Nouvel événement",
+    "changeIcon": "Changer l'icône",
+    "min": "min",
+    "defaultEvent1": "Le grand jour",
+    "defaultEvent2": "Réveil et Douche",
+    "defaultEvent3": "Petit déjeuner",
+    "defaultEvent4": "Coiffure et maquillage",
+    "defaultEvent5": "Tout le monde s'habille",
+    "defaultEvent6": "Déjeuner ou collation",
+    "defaultEvent7": "Arrivée du photographe",
+    "defaultEvent8": "Séance photo",
+    "defaultEvent9": "Photos de famille",
+    "defaultEvent10": "Photos avec les invités",
+    "defaultEvent11": "Arrivée de la limousine",
+    "defaultEvent12": "Arrivée à la cérémonie",
+    "defaultEvent13": "Dites Oui !",
+    "defaultEvent14": "Cocktails et photos",
+    "defaultEvent15": "Tous se rendent à la réception",
+    "defaultEvent16": "Grande entrée",
+    "defaultEvent17": "Première danse",
+    "defaultEvent18": "Dîner",
+    "defaultEvent19": "Toasts & Prières",
+    "defaultEvent20": "C'est l'heure de la fête !",
+    "defaultEvent21": "Gâteau coupé",
+    "defaultEvent22": "Feu d'artifice et envoi",
+    "defaultEvent23": "Grande sortie"
   },
   "resources": {
     "title": "Gestion des Ressources",
@@ -1634,7 +1675,38 @@
     "mealPlanUpdated": "Plan de repas mis à jour avec succès.",
     "mealPlanDeleted": "Plan de repas supprimé avec succès.",
     "mealItemUpdated": "Élément du repas mis à jour avec succès.",
-    "mealItemDeleted": "Élément du repas supprimé avec succès."
+    "mealItemDeleted": "Élément du repas supprimé avec succès.",
+    "breakfast": "Petit déjeuner",
+    "lunch": "Déjeuner",
+    "cocktailHour": "Heure du cocktail",
+    "selectMealType": "Sélectionner le type de repas",
+    "beverages": "Boissons",
+    "starters": "Entrées",
+    "mainCourses": "Plats principaux",
+    "desserts": "Desserts",
+    "snacks": "En-cas",
+    "spring": "Printemps",
+    "summer": "Été",
+    "fall": "Automne",
+    "winter": "Hiver",
+    "menuItems": "Éléments du menu",
+    "noMenuItems": "Aucun élément au menu. Ajoutez votre premier élément.",
+    "newMealPlan": "Nouveau plan de repas",
+    "deleteMealPlan": "Supprimer le plan de repas",
+    "deleteMealPlanConfirm": "Êtes-vous sûr de vouloir supprimer ce plan de repas ? Cette action est irréversible.",
+    "deleteMenuItem": "Supprimer l'élément du menu",
+    "deleteMenuItemConfirm": "Êtes-vous sûr de vouloir supprimer cet élément du menu ?",
+    "regenerate": "Régénérer",
+    "generateMenuSuggestions": "Générer des suggestions de menu",
+    "generating": "Génération...",
+    "estimatedCost": "Coût estimé",
+    "perPerson": "par personne",
+    "bestIn": "Meilleur en",
+    "containsAlcohol": "Contient de l'alcool",
+    "additionalNotes": "Notes supplémentaires",
+    "itemRegeneratedSuccess": "Élément régénéré avec succès",
+    "failedToRegenerateItem": "Échec de la régénération de l'élément",
+    "noSuitableReplacement": "Aucun remplacement approprié trouvé"
   },
   "documents": {
     "title": "Documents",
@@ -2070,5 +2142,145 @@
   "subscription": {
     "fetchError": "Échec de la récupération des informations d'abonnement.",
     "paymentMethodsError": "Échec de la récupération des méthodes de paiement."
+  },
+  "budget": {
+    "categories": {
+      "entertainment": "Divertissement",
+      "beauty": "Beauté et santé",
+      "cake": "Gâteau",
+      "catering": "Restauration",
+      "music": "Musique de la cérémonie",
+      "bride_attire": "Robe et tenue - Mariée",
+      "groom_attire": "Costume - Marié",
+      "favors": "Faveurs et cadeaux",
+      "flowers": "Fleurs",
+      "invitations": "Invitations",
+      "jewelry": "Bijoux",
+      "officiant": "Fonctionnaire",
+      "photography": "Photographie",
+      "videography": "Vidéographie",
+      "planning": "Planification",
+      "rentals": "Locations",
+      "transport": "Transport",
+      "venue": "Lieu",
+      "other": "Autres"
+    },
+    "subcategories": {
+      "entertainment": [
+        "DJ / Animation",
+        "Photobooth",
+        "Jeux & Activités",
+        "Spectacle"
+      ],
+      "beauty": [
+        "Coiffure mariée",
+        "Maquillage mariée",
+        "Coiffure marié",
+        "Soins spa"
+      ],
+      "cake": [
+        "Gâteau principal",
+        "Pièce montée",
+        "Candy bar",
+        "Livraison & installation"
+      ],
+      "catering": [
+        "Cocktail dînatoire",
+        "Menu principal",
+        "Boissons",
+        "Service à table"
+      ],
+      "music": [
+        "Musique cérémonie",
+        "DJ réception",
+        "Musiciens live",
+        "Sonorisation"
+      ],
+      "bride_attire": [
+        "Robe de mariée",
+        "Voile & accessoires",
+        "Chaussures",
+        "Retouches"
+      ],
+      "groom_attire": [
+        "Costume",
+        "Chemise & cravate",
+        "Chaussures",
+        "Accessoires"
+      ],
+      "favors": [
+        "Dragées & cadeaux",
+        "Sac à cadeau",
+        "Personnalisation",
+        "Cartes de remerciement"
+      ],
+      "flowers": [
+        "Bouquet mariée",
+        "Décoration ceremony",
+        "Centres de table",
+        "Arch de fleurs"
+      ],
+      "invitations": [
+        "Faire-part",
+        "Menus",
+        "Marque-places",
+        "Papeterie divers"
+      ],
+      "jewelry": [
+        "Alliances",
+        "Bague de fiançailles",
+        "Bijoux mariée",
+        "Montres"
+      ],
+      "officiant": [
+        "Officiant",
+        "Témoins",
+        "Documents officiels",
+        "Cérémonie laïque"
+      ],
+      "photography": [
+        "Photographe",
+        "Album photo",
+        "Tirages",
+        "Session engagement"
+      ],
+      "videography": [
+        "Vidéaste",
+        "Montage",
+        "Drone",
+        "Film teaser"
+      ],
+      "planning": [
+        "Wedding planner",
+        "Coordination jour J",
+        "Décoration",
+        "Réhéarsal"
+      ],
+      "rentals": [
+        "Tentes & chapiteaux",
+        "Tables & chaises",
+        "Linge de table",
+        "Éclairage"
+      ],
+      "transport": [
+        "Voiture mariés",
+        "Transport invités",
+        "Bus/navette",
+        "Parking"
+      ],
+      "venue": [
+        "Location salle",
+        "Cérémonie",
+        "Réception",
+        "Hébergement"
+      ],
+      "other": [
+        "Imprévus",
+        "Assurance",
+        "Tips & pourboires",
+        "Divers"
+      ]
+    },
+    "newCategoryPlaceholder": "Ex : Décoration"
   }
 }

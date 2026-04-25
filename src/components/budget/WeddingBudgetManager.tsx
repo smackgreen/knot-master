@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip,
@@ -65,7 +66,8 @@ const ROMANTIC_COLORS = [
   '#78716c', '#64748b',
 ];
 
-const DEFAULT_SUBCATEGORIES: Record<string, string[]> = {
+// Fallback subcategory names (used when i18n is not yet ready)
+const FALLBACK_SUBCATEGORIES: Record<string, string[]> = {
   entertainment: ['DJ / Animation', 'Photobooth', 'Jeux & Activités', 'Spectacle'],
   beauty: ['Coiffure mariée', 'Maquillage mariée', 'Coiffure marié', 'Soins spa'],
   cake: ['Gâteau principal', 'Pièce montée', 'Candy bar', 'Livraison & installation'],
@@ -87,32 +89,33 @@ const DEFAULT_SUBCATEGORIES: Record<string, string[]> = {
   other: ['Imprévus', 'Assurance', 'Tips & pourboires', 'Divers'],
 };
 
+// Budget template — labels are i18n keys resolved at runtime
 const BUDGET_TEMPLATE: {
   key: string;
-  label: string;
+  labelKey: string;
   icon: React.ElementType;
   color: string;
   vendorCategory: VendorCategory;
 }[] = [
-  { key: 'entertainment', label: 'Divertissement', icon: PartyPopper, color: '#e11d48', vendorCategory: 'other' },
-  { key: 'beauty', label: 'Beauté et santé', icon: Sparkles, color: '#d946ef', vendorCategory: 'hair_makeup' },
-  { key: 'cake', label: 'Gâteau', icon: Cake, color: '#f472b6', vendorCategory: 'cake' },
-  { key: 'catering', label: 'Restauration', icon: Utensils, color: '#f59e0b', vendorCategory: 'catering' },
-  { key: 'music', label: 'Musique de la cérémonie', icon: Music, color: '#a855f7', vendorCategory: 'music' },
-  { key: 'bride_attire', label: 'Robe et tenue - Mariée', icon: Crown, color: '#ec4899', vendorCategory: 'attire' },
-  { key: 'groom_attire', label: 'Costume - Marié', icon: Shirt, color: '#3b82f6', vendorCategory: 'attire' },
-  { key: 'favors', label: 'Faveurs et cadeaux', icon: Gift, color: '#e879f9', vendorCategory: 'gifts' },
-  { key: 'flowers', label: 'Fleurs', icon: Flower2, color: '#10b981', vendorCategory: 'florist' },
-  { key: 'invitations', label: 'Invitations', icon: FileText, color: '#78716c', vendorCategory: 'stationery' },
-  { key: 'jewelry', label: 'Bijoux', icon: Gem, color: '#eab308', vendorCategory: 'other' },
-  { key: 'officiant', label: 'Fonctionnaire', icon: Building, color: '#6366f1', vendorCategory: 'venue' },
-  { key: 'photography', label: 'Photographie', icon: Camera, color: '#8b5cf6', vendorCategory: 'photography' },
-  { key: 'videography', label: 'Vidéographie', icon: Film, color: '#0ea5e9', vendorCategory: 'videography' },
-  { key: 'planning', label: 'Planification', icon: Palette, color: '#14b8a6', vendorCategory: 'other' },
-  { key: 'rentals', label: 'Locations', icon: Truck, color: '#64748b', vendorCategory: 'rentals' },
-  { key: 'transport', label: 'Transport', icon: Car, color: '#f97316', vendorCategory: 'transportation' },
-  { key: 'venue', label: 'Lieu', icon: Building, color: '#e11d48', vendorCategory: 'venue' },
-  { key: 'other', label: 'Autres', icon: MoreHorizontal, color: '#9ca3af', vendorCategory: 'other' },
+  { key: 'entertainment', labelKey: 'budget.categories.entertainment', icon: PartyPopper, color: '#e11d48', vendorCategory: 'other' },
+  { key: 'beauty', labelKey: 'budget.categories.beauty', icon: Sparkles, color: '#d946ef', vendorCategory: 'hair_makeup' },
+  { key: 'cake', labelKey: 'budget.categories.cake', icon: Cake, color: '#f472b6', vendorCategory: 'cake' },
+  { key: 'catering', labelKey: 'budget.categories.catering', icon: Utensils, color: '#f59e0b', vendorCategory: 'catering' },
+  { key: 'music', labelKey: 'budget.categories.music', icon: Music, color: '#a855f7', vendorCategory: 'music' },
+  { key: 'bride_attire', labelKey: 'budget.categories.bride_attire', icon: Crown, color: '#ec4899', vendorCategory: 'attire' },
+  { key: 'groom_attire', labelKey: 'budget.categories.groom_attire', icon: Shirt, color: '#3b82f6', vendorCategory: 'attire' },
+  { key: 'favors', labelKey: 'budget.categories.favors', icon: Gift, color: '#e879f9', vendorCategory: 'gifts' },
+  { key: 'flowers', labelKey: 'budget.categories.flowers', icon: Flower2, color: '#10b981', vendorCategory: 'florist' },
+  { key: 'invitations', labelKey: 'budget.categories.invitations', icon: FileText, color: '#78716c', vendorCategory: 'stationery' },
+  { key: 'jewelry', labelKey: 'budget.categories.jewelry', icon: Gem, color: '#eab308', vendorCategory: 'other' },
+  { key: 'officiant', labelKey: 'budget.categories.officiant', icon: Building, color: '#6366f1', vendorCategory: 'venue' },
+  { key: 'photography', labelKey: 'budget.categories.photography', icon: Camera, color: '#8b5cf6', vendorCategory: 'photography' },
+  { key: 'videography', labelKey: 'budget.categories.videography', icon: Film, color: '#0ea5e9', vendorCategory: 'videography' },
+  { key: 'planning', labelKey: 'budget.categories.planning', icon: Palette, color: '#14b8a6', vendorCategory: 'other' },
+  { key: 'rentals', labelKey: 'budget.categories.rentals', icon: Truck, color: '#64748b', vendorCategory: 'rentals' },
+  { key: 'transport', labelKey: 'budget.categories.transport', icon: Car, color: '#f97316', vendorCategory: 'transportation' },
+  { key: 'venue', labelKey: 'budget.categories.venue', icon: Building, color: '#e11d48', vendorCategory: 'venue' },
+  { key: 'other', labelKey: 'budget.categories.other', icon: MoreHorizontal, color: '#9ca3af', vendorCategory: 'other' },
 ];
 
 // ============================================================================
@@ -122,21 +125,30 @@ const BUDGET_TEMPLATE: {
 let _nextId = 1000;
 function genId() { return String(_nextId++); }
 
-function buildDefaultCategories(): BudgetCategoryFull[] {
-  return BUDGET_TEMPLATE.map((t) => ({
-    id: genId(),
-    key: t.key,
-    label: t.label,
-    icon: t.icon,
-    color: t.color,
-    vendorCategory: t.vendorCategory,
-    allocated: 0,
-    subcategories: (DEFAULT_SUBCATEGORIES[t.key] || []).map((name) => ({
+function buildDefaultCategories(t: (key: string, options?: any) => string): BudgetCategoryFull[] {
+  return BUDGET_TEMPLATE.map((tmpl) => {
+    // Try to get translated subcategories array from i18n
+    let subcatNames: string[] = FALLBACK_SUBCATEGORIES[tmpl.key] || [];
+    try {
+      const arr = t(`budget.subcategories.${tmpl.key}`, { returnObjects: true });
+      if (Array.isArray(arr)) subcatNames = arr;
+    } catch { /* use fallback */ }
+
+    return {
       id: genId(),
-      name,
+      key: tmpl.key,
+      label: t(tmpl.labelKey),
+      icon: tmpl.icon,
+      color: tmpl.color,
+      vendorCategory: tmpl.vendorCategory,
       allocated: 0,
-    })),
-  }));
+      subcategories: subcatNames.map((name) => ({
+        id: genId(),
+        name,
+        allocated: 0,
+      })),
+    };
+  });
 }
 
 /** Load subcategories from localStorage */
@@ -158,23 +170,31 @@ function saveSubcategories(clientId: string, data: Record<string, BudgetSubcateg
 function mergeWithTemplate(
   budgetCats: BudgetCategory[],
   savedSubcats: Record<string, BudgetSubcategory[]>,
+  t: (key: string, options?: any) => string,
 ): BudgetCategoryFull[] {
-  return BUDGET_TEMPLATE.map((t) => {
-    const dbCat = budgetCats.find((c) => c.category === t.vendorCategory);
+  return BUDGET_TEMPLATE.map((tmpl) => {
+    const dbCat = budgetCats.find((c) => c.category === tmpl.vendorCategory);
     const allocated = dbCat?.allocated || 0;
-    const subKey = t.key;
-    const subcats = savedSubcats[subKey] || (DEFAULT_SUBCATEGORIES[t.key] || []).map((name) => ({
+    const subKey = tmpl.key;
+
+    let subcatNames: string[] = FALLBACK_SUBCATEGORIES[tmpl.key] || [];
+    try {
+      const arr = t(`budget.subcategories.${tmpl.key}`, { returnObjects: true });
+      if (Array.isArray(arr)) subcatNames = arr;
+    } catch { /* use fallback */ }
+
+    const subcats = savedSubcats[subKey] || subcatNames.map((name) => ({
       id: genId(),
       name,
       allocated: 0,
     }));
     return {
       id: genId(),
-      key: t.key,
-      label: t.label,
-      icon: t.icon,
-      color: t.color,
-      vendorCategory: t.vendorCategory,
+      key: tmpl.key,
+      label: t(tmpl.labelKey),
+      icon: tmpl.icon,
+      color: tmpl.color,
+      vendorCategory: tmpl.vendorCategory,
       allocated,
       subcategories: subcats,
     };
@@ -196,16 +216,17 @@ const WeddingBudgetManager: React.FC<WeddingBudgetManagerProps> = ({
   onUpdateBudget,
   onCreateBudget,
 }) => {
+  const { t } = useTranslation();
   const budget = client.budget;
   const vendors = client.vendors || [];
 
-  // Initialize categories from database or defaults
+  // Initialize categories from database or defaults (using i18n-translated labels)
   const [categories, setCategories] = useState<BudgetCategoryFull[]>(() => {
     if (budget && budget.categories.length > 0) {
       const savedSubcats = loadSubcategories(client.id);
-      return mergeWithTemplate(budget.categories, savedSubcats);
+      return mergeWithTemplate(budget.categories, savedSubcats, t);
     }
-    return buildDefaultCategories();
+    return buildDefaultCategories(t);
   });
 
   const [totalBudget, setTotalBudget] = useState(budget?.totalBudget || 0);
@@ -356,7 +377,7 @@ const WeddingBudgetManager: React.FC<WeddingBudgetManagerProps> = ({
   };
 
   const handleReset = () => {
-    setCategories(buildDefaultCategories());
+    setCategories(buildDefaultCategories(t));
     setTotalBudget(budget?.totalBudget || 0);
   };
 
@@ -693,7 +714,7 @@ const WeddingBudgetManager: React.FC<WeddingBudgetManagerProps> = ({
           <div className="py-4">
             <Label className="text-sm">Nom de la catégorie</Label>
             <Input value={newCatName} onChange={(e) => setNewCatName(e.target.value)}
-              placeholder="Ex: Décoration" className="mt-2 h-10 text-sm"
+              placeholder={t('budget.newCategoryPlaceholder')} className="mt-2 h-10 text-sm"
               onKeyDown={(e) => { if (e.key === 'Enter') addNewCategory(); }} autoFocus />
           </div>
           <DialogFooter>
