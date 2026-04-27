@@ -2273,6 +2273,34 @@
         "Miscellaneous"
       ]
     },
-    "newCategoryPlaceholder": "e.g., Decoration"
+    "newCategoryPlaceholder": "e.g., Decoration",
+    "title": "Wedding Budget",
+    "subtitle": "{{count}} categories • {{active}} active",
+    "reset": "Reset",
+    "totalBudget": "Total Budget",
+    "allocated": "Allocated",
+    "spent": "Spent",
+    "remaining": "Remaining",
+    "edit": "Edit",
+    "newBudgetLabel": "New budget:",
+    "spentLabel": "spent",
+    "budgetCategories": "Budget Categories",
+    "addCategory": "Category",
+    "subcategoriesCount": "{{count}} subcategories",
+    "addSubcategory": "Add subcategory",
+    "subcategoriesTotal": "Subcategories total",
+    "totalAllocated": "Total allocated",
+    "budgetDistribution": "Budget Distribution",
+    "allocateToSeeChart": "Allocate amounts to see the chart",
+    "activeCategories": "Active Categories",
+    "noActiveCategories": "No active categories",
+    "newCategory": "New Category",
+    "newCategoryDescription": "Add a custom budget category.",
+    "categoryName": "Category name",
+    "cancel": "Cancel",
+    "add": "Add",
+    "createBudget": "Create my budget",
+    "emptyTitle": "Wedding Budget",
+    "emptyDescription": "Plan your wedding budget with our pre-filled categories."
   }
 }

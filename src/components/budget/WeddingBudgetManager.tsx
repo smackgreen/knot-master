@@ -414,15 +414,15 @@ const WeddingBudgetManager: React.FC<WeddingBudgetManagerProps> = ({
         <div className="w-24 h-24 rounded-full bg-gradient-to-br from-rose-100 to-pink-100 flex items-center justify-center mb-5">
           <Wallet className="h-10 w-10 text-rose-400" />
         </div>
-        <h3 className="text-xl font-serif font-bold text-gray-700 mb-2">Budget mariage</h3>
+        <h3 className="text-xl font-serif font-bold text-gray-700 mb-2">{t('budget.emptyTitle')}</h3>
         <p className="text-sm text-gray-400 max-w-sm text-center mb-6">
-          Planifiez le budget de votre mariage avec nos catégories pré-remplies.
+          {t('budget.emptyDescription')}
         </p>
         <Button
           onClick={() => persistToDb(categories, totalBudget)}
           className="bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white shadow-lg shadow-rose-200 px-6 py-2 text-base"
         >
-          <Heart className="mr-2 h-5 w-5" /> Créer mon budget
+          <Heart className="mr-2 h-5 w-5" /> {t('budget.createBudget')}
         </Button>
       </motion.div>
     );
@@ -441,13 +441,13 @@ const WeddingBudgetManager: React.FC<WeddingBudgetManagerProps> = ({
             <DollarSign className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h2 className="text-xl font-serif font-bold text-gray-800">Budget Mariage</h2>
-            <p className="text-xs text-gray-400">{categories.length} catégories • {categories.filter(c => c.allocated > 0).length} actives</p>
+            <h2 className="text-xl font-serif font-bold text-gray-800">{t('budget.title')}</h2>
+            <p className="text-xs text-gray-400">{t('budget.subtitle', { count: categories.length, active: categories.filter(c => c.allocated > 0).length })}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={handleReset} className="h-9 text-sm">
-            <RotateCcw className="h-4 w-4 mr-1.5" /> Réinitialiser
+            <RotateCcw className="h-4 w-4 mr-1.5" /> {t('budget.reset')}
           </Button>
         </div>
       </div>
@@ -455,10 +455,10 @@ const WeddingBudgetManager: React.FC<WeddingBudgetManagerProps> = ({
       {/* Stats Row */}
       <div className="grid grid-cols-4 gap-4">
         {[
-          { label: 'Budget Total', value: formatCurrency(totalBudget), icon: Wallet, bg: 'from-rose-500 to-pink-500', editable: true },
-          { label: 'Alloué', value: formatCurrency(totalAllocated), icon: Receipt, bg: 'from-violet-500 to-purple-500', editable: false },
-          { label: 'Dépensé', value: formatCurrency(totalSpent), icon: CreditCard, bg: 'from-amber-500 to-orange-500', editable: false },
-          { label: 'Restant', value: formatCurrency(remaining), icon: remaining >= 0 ? TrendingUp : TrendingDown, bg: remaining >= 0 ? 'from-emerald-500 to-teal-500' : 'from-red-500 to-red-600', editable: false },
+          { label: t('budget.totalBudget'), value: formatCurrency(totalBudget), icon: Wallet, bg: 'from-rose-500 to-pink-500', editable: true },
+          { label: t('budget.allocated'), value: formatCurrency(totalAllocated), icon: Receipt, bg: 'from-violet-500 to-purple-500', editable: false },
+          { label: t('budget.spent'), value: formatCurrency(totalSpent), icon: CreditCard, bg: 'from-amber-500 to-orange-500', editable: false },
+          { label: t('budget.remaining'), value: formatCurrency(remaining), icon: remaining >= 0 ? TrendingUp : TrendingDown, bg: remaining >= 0 ? 'from-emerald-500 to-teal-500' : 'from-red-500 to-red-600', editable: false },
         ].map((stat, i) => (
           <motion.div key={stat.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
             className="bg-white rounded-xl border border-rose-100 p-4 shadow-sm"
@@ -472,7 +472,7 @@ const WeddingBudgetManager: React.FC<WeddingBudgetManagerProps> = ({
             <p className="text-lg font-bold text-gray-800">{stat.value}</p>
             {stat.editable && (
               <button onClick={() => startEdit('__total__', 'totalBudget', totalBudget)}
-                className="text-xs text-rose-400 hover:text-rose-600 mt-1">Modifier</button>
+                className="text-xs text-rose-400 hover:text-rose-600 mt-1">{t('budget.edit')}</button>
             )}
           </motion.div>
         ))}
@@ -481,7 +481,7 @@ const WeddingBudgetManager: React.FC<WeddingBudgetManagerProps> = ({
       {/* Inline edit for total budget */}
       {editingId === '__total__' && editField === 'totalBudget' && (
         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="flex items-center gap-2">
-          <Label className="text-sm">Nouveau budget :</Label>
+          <Label className="text-sm">{t('budget.newBudgetLabel')}</Label>
           <Input type="number" value={editValue} onChange={(e) => setEditValue(e.target.value)}
             className="w-48 h-9 text-sm" autoFocus
             onKeyDown={(e) => { if (e.key === 'Enter') { setTotalBudget(parseFloat(editValue) || 0); cancelEdit(); } if (e.key === 'Escape') cancelEdit(); }}
@@ -498,7 +498,7 @@ const WeddingBudgetManager: React.FC<WeddingBudgetManagerProps> = ({
       {/* Progress bar */}
       <div className="bg-white rounded-xl border border-rose-100 p-4 shadow-sm">
         <div className="flex justify-between text-sm mb-2">
-          <span className="text-gray-500 font-medium">{spentPercent}% dépensé</span>
+          <span className="text-gray-500 font-medium">{spentPercent}% {t('budget.spentLabel')}</span>
           <span className="text-gray-400">{formatCurrency(totalSpent)} / {formatCurrency(totalBudget)}</span>
         </div>
         <div className="h-3 bg-rose-100 rounded-full overflow-hidden">
@@ -514,10 +514,10 @@ const WeddingBudgetManager: React.FC<WeddingBudgetManagerProps> = ({
         <div className="lg:col-span-8">
           <div className="bg-white rounded-xl border border-rose-100 shadow-sm overflow-hidden">
             <div className="flex items-center justify-between px-5 py-3 border-b border-rose-50">
-              <h3 className="text-base font-serif font-bold text-gray-700">Catégories du budget</h3>
+              <h3 className="text-base font-serif font-bold text-gray-700">{t('budget.budgetCategories')}</h3>
               <Button variant="ghost" size="sm" onClick={() => setIsAddCategoryOpen(true)}
                 className="h-8 text-sm text-rose-500 hover:text-rose-700">
-                <Plus className="h-4 w-4 mr-1.5" /> Catégorie
+                <Plus className="h-4 w-4 mr-1.5" /> {t('budget.addCategory')}
               </Button>
             </div>
 
@@ -558,7 +558,7 @@ const WeddingBudgetManager: React.FC<WeddingBudgetManagerProps> = ({
                             </button>
                           )}
                           {cat.subcategories.length > 0 && (
-                            <p className="text-xs text-gray-400 mt-0.5">{cat.subcategories.length} sous-catégories</p>
+                            <p className="text-xs text-gray-400 mt-0.5">{t('budget.subcategoriesCount', { count: cat.subcategories.length })}</p>
                           )}
                         </div>
 
@@ -583,7 +583,7 @@ const WeddingBudgetManager: React.FC<WeddingBudgetManagerProps> = ({
                               <button onClick={() => addSubcategory(cat.id)} className="p-1.5 rounded-lg hover:bg-rose-100 text-gray-400 hover:text-rose-500">
                                 <Plus className="h-4 w-4" />
                               </button>
-                            </TooltipTrigger><TooltipContent>Ajouter sous-catégorie</TooltipContent></Tooltip>
+                            </TooltipTrigger><TooltipContent>{t('budget.addSubcategory')}</TooltipContent></Tooltip>
                           </TooltipProvider>
                           <button onClick={() => startEdit(cat.id, 'label', cat.label)}
                             className="p-1.5 rounded-lg hover:bg-rose-100 text-gray-400 hover:text-rose-500">
@@ -649,7 +649,7 @@ const WeddingBudgetManager: React.FC<WeddingBudgetManagerProps> = ({
 
                             {/* Subcategory total */}
                             <div className="flex items-center justify-between pl-16 pr-5 py-2.5 border-t border-gray-100">
-                              <span className="text-xs text-gray-400 font-medium">Total sous-catégories</span>
+                              <span className="text-xs text-gray-400 font-medium">{t('budget.subcategoriesTotal')}</span>
                               <span className="text-xs font-semibold text-gray-500">{formatCurrency(subAllocated)}</span>
                             </div>
                           </motion.div>
@@ -663,7 +663,7 @@ const WeddingBudgetManager: React.FC<WeddingBudgetManagerProps> = ({
 
             {/* Footer total */}
             <div className="flex items-center justify-between px-5 py-3.5 bg-rose-50/30 border-t border-rose-100">
-              <span className="text-sm font-medium text-gray-600">Total alloué</span>
+              <span className="text-sm font-medium text-gray-600">{t('budget.totalAllocated')}</span>
               <span className="text-base font-bold text-gray-800">{formatCurrency(totalAllocated)}</span>
             </div>
           </div>
@@ -673,7 +673,7 @@ const WeddingBudgetManager: React.FC<WeddingBudgetManagerProps> = ({
         <div className="lg:col-span-4 space-y-5">
           {/* Donut Chart */}
           <div className="bg-white rounded-xl border border-rose-100 p-5 shadow-sm">
-            <h3 className="text-sm font-serif font-bold text-gray-700 mb-4">Répartition du budget</h3>
+            <h3 className="text-sm font-serif font-bold text-gray-700 mb-4">{t('budget.budgetDistribution')}</h3>
             {pieData.length > 0 ? (
               <div className="h-[240px]">
                 <ResponsiveContainer width="100%" height="100%">
@@ -689,14 +689,14 @@ const WeddingBudgetManager: React.FC<WeddingBudgetManagerProps> = ({
               </div>
             ) : (
               <div className="h-[240px] flex items-center justify-center">
-                <p className="text-sm text-gray-400">Allouez des montants pour voir le graphique</p>
+                <p className="text-sm text-gray-400">{t('budget.allocateToSeeChart')}</p>
               </div>
             )}
           </div>
 
           {/* Active Categories Legend */}
           <div className="bg-white rounded-xl border border-rose-100 p-5 shadow-sm">
-            <h3 className="text-sm font-serif font-bold text-gray-700 mb-3">Catégories actives</h3>
+            <h3 className="text-sm font-serif font-bold text-gray-700 mb-3">{t('budget.activeCategories')}</h3>
             <div className="space-y-2.5 max-h-[280px] overflow-y-auto">
               {categories.filter((c) => c.allocated > 0).map((cat) => {
                 const Icon = cat.icon;
@@ -710,7 +710,7 @@ const WeddingBudgetManager: React.FC<WeddingBudgetManagerProps> = ({
                 );
               })}
               {categories.filter((c) => c.allocated > 0).length === 0 && (
-                <p className="text-sm text-gray-400 text-center py-6">Aucune catégorie active</p>
+                <p className="text-sm text-gray-400 text-center py-6">{t('budget.noActiveCategories')}</p>
               )}
             </div>
           </div>
@@ -721,18 +721,18 @@ const WeddingBudgetManager: React.FC<WeddingBudgetManagerProps> = ({
       <Dialog open={isAddCategoryOpen} onOpenChange={setIsAddCategoryOpen}>
         <DialogContent className="sm:max-w-[420px]">
           <DialogHeader>
-            <DialogTitle className="text-lg font-serif">Nouvelle catégorie</DialogTitle>
-            <DialogDescription>Ajoutez une catégorie de budget personnalisée.</DialogDescription>
+            <DialogTitle className="text-lg font-serif">{t('budget.newCategory')}</DialogTitle>
+            <DialogDescription>{t('budget.newCategoryDescription')}</DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <Label className="text-sm">Nom de la catégorie</Label>
+            <Label className="text-sm">{t('budget.categoryName')}</Label>
             <Input value={newCatName} onChange={(e) => setNewCatName(e.target.value)}
               placeholder={t('budget.newCategoryPlaceholder')} className="mt-2 h-10 text-sm"
               onKeyDown={(e) => { if (e.key === 'Enter') addNewCategory(); }} autoFocus />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddCategoryOpen(false)} className="h-10">Annuler</Button>
-            <Button onClick={addNewCategory} className="h-10 bg-gradient-to-r from-rose-500 to-pink-500 text-white">Ajouter</Button>
+            <Button variant="outline" onClick={() => setIsAddCategoryOpen(false)} className="h-10">{t('budget.cancel')}</Button>
+            <Button onClick={addNewCategory} className="h-10 bg-gradient-to-r from-rose-500 to-pink-500 text-white">{t('budget.add')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

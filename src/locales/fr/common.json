@@ -2281,6 +2281,34 @@
         "Divers"
       ]
     },
-    "newCategoryPlaceholder": "Ex : Décoration"
+    "newCategoryPlaceholder": "Ex : Décoration",
+    "title": "Budget Mariage",
+    "subtitle": "{{count}} catégories • {{active}} actives",
+    "reset": "Réinitialiser",
+    "totalBudget": "Budget Total",
+    "allocated": "Alloué",
+    "spent": "Dépensé",
+    "remaining": "Restant",
+    "edit": "Modifier",
+    "newBudgetLabel": "Nouveau budget :",
+    "spentLabel": "dépensé",
+    "budgetCategories": "Catégories du budget",
+    "addCategory": "Catégorie",
+    "subcategoriesCount": "{{count}} sous-catégories",
+    "addSubcategory": "Ajouter sous-catégorie",
+    "subcategoriesTotal": "Total sous-catégories",
+    "totalAllocated": "Total alloué",
+    "budgetDistribution": "Répartition du budget",
+    "allocateToSeeChart": "Allouez des montants pour voir le graphique",
+    "activeCategories": "Catégories actives",
+    "noActiveCategories": "Aucune catégorie active",
+    "newCategory": "Nouvelle catégorie",
+    "newCategoryDescription": "Ajoutez une catégorie de budget personnalisée.",
+    "categoryName": "Nom de la catégorie",
+    "cancel": "Annuler",
+    "add": "Ajouter",
+    "createBudget": "Créer mon budget",
+    "emptyTitle": "Budget mariage",
+    "emptyDescription": "Planifiez le budget de votre mariage avec nos catégories pré-remplies."
   }
 }
