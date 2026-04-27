@@ -5,7 +5,7 @@
  * CRUD operations, and full database persistence.
  */
 
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -280,14 +280,27 @@ const WeddingBudgetManager: React.FC<WeddingBudgetManagerProps> = ({
     saveSubcategories(client.id, data);
   }, [client.id]);
 
-  // Auto-save with debounce
+  // Use refs so the useEffect does not depend on unstable callback references
+  const persistToDbRef = useRef(persistToDb);
+  persistToDbRef.current = persistToDb;
+  const persistSubcategoriesRef = useRef(persistSubcategories);
+  persistSubcategoriesRef.current = persistSubcategories;
+
+  // Skip the very first render — no user action has occurred yet
+  const isInitialMount = useRef(true);
+
+  // Auto-save with debounce (only on actual category/budget changes)
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
     const timer = setTimeout(() => {
-      persistToDb(categories, totalBudget);
-      persistSubcategories(categories);
+      persistToDbRef.current(categories, totalBudget);
+      persistSubcategoriesRef.current(categories);
     }, 800);
     return () => clearTimeout(timer);
-  }, [categories, totalBudget, persistToDb, persistSubcategories]);
+  }, [categories, totalBudget]);
 
   // Toggle category expand
   const toggleCat = (id: string) => {
