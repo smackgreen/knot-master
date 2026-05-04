@@ -514,6 +514,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Demo login method removed
 
+  // Clear stale PKCE code verifier state from localStorage.
+  // Prevents "code verifier mismatch" / "expired link" errors when a user
+  // starts an OAuth flow, abandons it, signs out, and starts a new flow.
+  const clearStalePkceState = () => {
+    try {
+      const keysToRemove = Object.keys(localStorage).filter(
+        k => k.includes('pkce') || k.includes('code_verifier')
+      );
+      keysToRemove.forEach(k => localStorage.removeItem(k));
+      if (keysToRemove.length > 0) {
+        console.log(`Cleared ${keysToRemove.length} stale PKCE key(s) from localStorage`);
+      }
+    } catch (e) {
+      // localStorage may be unavailable in some environments
+      console.warn('Failed to clear PKCE state:', e);
+    }
+  };
+
   // Sign in with Google OAuth
   const signInWithGoogle = async (options?: { plan?: string }) => {
     // Prevent double-click — calling signInWithOAuth twice generates two
@@ -527,6 +545,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // clicks Google again from a different page would be sent to the old page.
     sessionStorage.removeItem('post_oauth_return');
     sessionStorage.removeItem('post_oauth_plan');
+
+    // Clear any stale PKCE code verifier from localStorage.
+    // Prevents "code verifier mismatch" errors when a user starts an OAuth
+    // flow, abandons it, signs out, and starts a new flow. The stale verifier
+    // from the abandoned attempt can conflict with the new one.
+    clearStalePkceState();
 
     // Set OAuth flow flag — distinguishes from email/password logins
     // so onAuthStateChange only reads post_oauth_return for OAuth flows
@@ -552,6 +576,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
+          // Force Google to show the account picker every time.
+          // Without this, Google auto-selects the previously used account
+          // when the user has an active Google session, making it impossible
+          // to switch accounts after logging out.
+          queryParams: {
+            prompt: 'select_account',
+          },
         }
       });
 
@@ -587,6 +618,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       // Reset the initial sign-in flag before signing out
       resetInitialSignIn();
+
+      // Clear stale PKCE state to prevent "expired link" errors on next login
+      clearStalePkceState();
 
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
