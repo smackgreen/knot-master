@@ -158,6 +158,14 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
 
   return (
     <div className="w-56 border-r border-gray-200 bg-white flex flex-col flex-shrink-0 overflow-hidden">
+      {/* ── Sidebar Header ────────────────────────────────────────────── */}
+      <div className="px-3 py-3 border-b border-gray-100 flex items-center gap-2">
+        <div className="w-6 h-6 rounded-md bg-violet-600 flex items-center justify-center flex-shrink-0">
+          <Heart className="h-3 w-3 text-white" />
+        </div>
+        <span className="text-sm font-semibold text-gray-800">Seating Chart</span>
+      </div>
+
       <ScrollArea className="flex-1">
         <div className="p-3 space-y-4">
           {/* ── Add Elements ────────────────────────────────────────────── */}

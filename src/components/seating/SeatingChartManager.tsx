@@ -22,8 +22,8 @@ import { toast } from 'sonner';
 // Icons
 import {
   Heart, Download, Users, Sparkles, LayoutGrid,
-  MoveHorizontal, MousePointer, Square, Type,
-  ZoomIn, ZoomOut,
+  MoveHorizontal, MousePointer, Square, Type, Eraser,
+  ZoomIn, ZoomOut, RotateCcw,
 } from 'lucide-react';
 
 // Components
@@ -47,6 +47,7 @@ const CANVAS_TOOLS: { id: ToolType; icon: any; label: string }[] = [
   { id: 'select', icon: MousePointer, label: 'Select' },
   { id: 'rect', icon: Square, label: 'Rectangle' },
   { id: 'text', icon: Type, label: 'Text' },
+  { id: 'eraser', icon: Eraser, label: 'Eraser' },
 ];
 
 // ============================================================================
@@ -466,6 +467,19 @@ const SeatingChartManager: React.FC<SeatingChartManagerProps> = ({ clientId }) =
               <LayoutGrid className="h-3.5 w-3.5" />
             </button>
           </div>
+
+          {/* Reset View button */}
+          <button
+            onClick={() => {
+              setZoom(1);
+              // Trigger a reset in the floor plan by changing zoom
+            }}
+            className="absolute bottom-3 left-3 text-[10px] px-2 py-1 bg-white border border-gray-200 rounded-md text-gray-500 hover:bg-gray-50 hover:text-gray-700 shadow-sm z-10 flex items-center gap-1"
+            title="Reset view to default"
+          >
+            <RotateCcw className="h-3 w-3" />
+            Reset View
+          </button>
 
           {/* Konva Canvas */}
           <div ref={floorPlanRef} className="w-full h-full">

@@ -39,6 +39,18 @@ const KonvaTable: React.FC<KonvaTableProps> = ({
 
   // Determine table category color
   const colors = useMemo(() => {
+    // If a custom color is set on the table, use it
+    const customColor = (table as any).color;
+    if (customColor && customColor !== '#FFFFFF' && customColor !== '#ffffff') {
+      // Generate a color scheme from the custom color
+      return {
+        fill: customColor + '33', // 20% opacity for fill
+        stroke: customColor,
+        seatFill: customColor + '55', // 33% opacity for seats
+        text: customColor,
+      };
+    }
+
     // Try to determine category from table name or use default
     const nameLower = (table.name || '').toLowerCase();
     if (nameLower.includes('family') || nameLower.includes('famille')) return TABLE_COLORS.family;
@@ -46,7 +58,7 @@ const KonvaTable: React.FC<KonvaTableProps> = ({
     if (nameLower.includes('colleague') || nameLower.includes('collègue')) return TABLE_COLORS.colleagues;
     if (nameLower.includes('vip')) return TABLE_COLORS.vip;
     return TABLE_COLORS.default;
-  }, [table.name]);
+  }, [table.name, (table as any).color]);
 
   // Calculate seat positions around the table
   const seatPositions = useMemo(() => {
