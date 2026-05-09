@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/context/AuthContext';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Heart, ArrowRight } from 'lucide-react';
 
 const MarketingLayout = () => {
   const navigate = useNavigate();
@@ -12,9 +12,16 @@ const MarketingLayout = () => {
   const { t } = useTranslation(['nav']);
   const { user } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
-  // No need to redirect authenticated users from marketing pages
-  // They should be able to browse the website even when logged in
+  // Track scroll position for navbar background
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -22,140 +29,182 @@ const MarketingLayout = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="border-b bg-background">
-        <div className="container mx-auto px-4">
+      {/* ── Navbar ─────────────────────────────────────────────────────────── */}
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          isScrolled
+            ? 'bg-white/80 backdrop-blur-xl border-b border-gray-100 shadow-sm'
+            : 'bg-transparent'
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-6">
           <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-6">
-              <Link to="/" className="flex items-center gap-2">
-                <span className="text-xl font-bold text-primary">Knot To It</span>
+            {/* Logo */}
+            <div className="flex items-center gap-8">
+              <Link to="/" className="flex items-center gap-2.5 group">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rose-400 to-violet-500 flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
+                  <Heart className="h-4 w-4 text-white" />
+                </div>
+                <span className={`text-lg font-serif font-bold transition-colors ${
+                  isScrolled ? 'text-gray-900' : 'text-gray-900'
+                }`}>
+                  Knot To It
+                </span>
               </Link>
-              <nav className="hidden md:flex items-center gap-6">
-                <Link
-                  to="/"
-                  className={`text-sm font-medium transition-colors hover:text-primary ${
-                    isActive('/') ? 'text-primary' : 'text-muted-foreground'
-                  }`}
-                >
-                  {t('nav:home')}
-                </Link>
-                <Link
-                  to="/features"
-                  className={`text-sm font-medium transition-colors hover:text-primary ${
-                    isActive('/features') ? 'text-primary' : 'text-muted-foreground'
-                  }`}
-                >
-                  {t('nav:features')}
-                </Link>
-                <Link
-                  to="/pricing"
-                  className={`text-sm font-medium transition-colors hover:text-primary ${
-                    isActive('/pricing') ? 'text-primary' : 'text-muted-foreground'
-                  }`}
-                >
-                  {t('nav:pricing')}
-                </Link>
+
+              {/* Desktop nav */}
+              <nav className="hidden md:flex items-center gap-1">
+                {[
+                  { path: '/', label: t('nav:home', 'Home') },
+                  { path: '/features', label: t('nav:features', 'Features') },
+                  { path: '/pricing', label: t('nav:pricing', 'Pricing') },
+                ].map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                      isActive(item.path)
+                        ? 'text-gray-900 bg-gray-100'
+                        : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
               </nav>
             </div>
-            <div className="hidden md:flex items-center gap-4">
+
+            {/* Desktop auth buttons */}
+            <div className="hidden md:flex items-center gap-3">
               {user ? (
                 <>
-                  <Button variant="ghost" onClick={() => navigate('/app/dashboard')}>
-                    {t('nav:dashboard')}
+                  <Button
+                    variant="ghost"
+                    onClick={() => navigate('/app/dashboard')}
+                    className="text-sm text-gray-600 hover:text-gray-900"
+                  >
+                    {t('nav:dashboard', 'Dashboard')}
                   </Button>
-                  <Button onClick={() => navigate('/account')}>
-                    {t('nav:account')}
+                  <Button
+                    onClick={() => navigate('/account')}
+                    className="bg-gradient-to-r from-rose-400 to-violet-500 text-white hover:opacity-90 shadow-sm"
+                  >
+                    {t('nav:account', 'Account')}
                   </Button>
                 </>
               ) : (
                 <>
-                  <Button variant="ghost" onClick={() => navigate('/login')}>
-                    {t('nav:login')}
+                  <Button
+                    variant="ghost"
+                    onClick={() => navigate('/login')}
+                    className="text-sm text-gray-600 hover:text-gray-900"
+                  >
+                    {t('nav:login', 'Log In')}
                   </Button>
-                  <Button onClick={() => navigate('/signup')}>
-                    {t('nav:signup')}
-                  </Button>
+                  <button
+                    onClick={() => navigate('/signup')}
+                    className="group flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-rose-400 to-violet-500 text-white text-sm font-medium rounded-xl hover:opacity-90 shadow-sm shadow-rose-200/50 transition-all duration-300"
+                  >
+                    {t('nav:signup', 'Get Started')}
+                    <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
+                  </button>
                 </>
               )}
             </div>
+
+            {/* Mobile menu */}
             <div className="md:hidden">
               <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <Menu className="h-6 w-6" />
+                  <Button variant="ghost" size="icon" className="text-gray-600">
+                    <Menu className="h-5 w-5" />
                     <span className="sr-only">Toggle menu</span>
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right">
+                <SheetContent side="right" className="w-80">
                   <div className="flex flex-col h-full">
-                    <div className="flex items-center justify-between border-b py-4">
+                    {/* Header */}
+                    <div className="flex items-center justify-between py-4 border-b border-gray-100">
                       <Link to="/" className="flex items-center gap-2" onClick={() => setIsMenuOpen(false)}>
-                        <span className="text-xl font-bold text-primary">Knot To It</span>
+                        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-rose-400 to-violet-500 flex items-center justify-center">
+                          <Heart className="h-3.5 w-3.5 text-white" />
+                        </div>
+                        <span className="text-lg font-serif font-bold text-gray-900">Knot To It</span>
                       </Link>
-                      <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(false)}>
-                        <X className="h-6 w-6" />
-                        <span className="sr-only">Close menu</span>
+                      <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(false)} className="text-gray-400">
+                        <X className="h-5 w-5" />
                       </Button>
                     </div>
-                    <nav className="flex flex-col gap-4 py-6">
-                      <Link
-                        to="/"
-                        className={`text-sm font-medium transition-colors hover:text-primary ${
-                          isActive('/') ? 'text-primary' : 'text-muted-foreground'
-                        }`}
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        {t('nav:home')}
-                      </Link>
-                      <Link
-                        to="/features"
-                        className={`text-sm font-medium transition-colors hover:text-primary ${
-                          isActive('/features') ? 'text-primary' : 'text-muted-foreground'
-                        }`}
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        {t('nav:features')}
-                      </Link>
-                      <Link
-                        to="/pricing"
-                        className={`text-sm font-medium transition-colors hover:text-primary ${
-                          isActive('/pricing') ? 'text-primary' : 'text-muted-foreground'
-                        }`}
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        {t('nav:pricing')}
-                      </Link>
+
+                    {/* Nav links */}
+                    <nav className="flex flex-col gap-1 py-6">
+                      {[
+                        { path: '/', label: t('nav:home', 'Home') },
+                        { path: '/features', label: t('nav:features', 'Features') },
+                        { path: '/pricing', label: t('nav:pricing', 'Pricing') },
+                      ].map((item) => (
+                        <Link
+                          key={item.path}
+                          to={item.path}
+                          className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                            isActive(item.path)
+                              ? 'text-gray-900 bg-gray-50'
+                              : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+                          }`}
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          {item.label}
+                        </Link>
+                      ))}
                     </nav>
-                    <div className="mt-auto border-t py-6">
+
+                    {/* Auth buttons */}
+                    <div className="mt-auto border-t border-gray-100 py-6 space-y-3">
                       {user ? (
-                        <div className="flex flex-col gap-4">
-                          <Button variant="outline" onClick={() => {
-                            navigate('/app/dashboard');
-                            setIsMenuOpen(false);
-                          }}>
-                            {t('nav:dashboard')}
+                        <>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-center"
+                            onClick={() => {
+                              navigate('/app/dashboard');
+                              setIsMenuOpen(false);
+                            }}
+                          >
+                            {t('nav:dashboard', 'Dashboard')}
                           </Button>
-                          <Button onClick={() => {
-                            navigate('/account');
-                            setIsMenuOpen(false);
-                          }}>
-                            {t('nav:account')}
+                          <Button
+                            className="w-full justify-center bg-gradient-to-r from-rose-400 to-violet-500 text-white"
+                            onClick={() => {
+                              navigate('/account');
+                              setIsMenuOpen(false);
+                            }}
+                          >
+                            {t('nav:account', 'Account')}
                           </Button>
-                        </div>
+                        </>
                       ) : (
-                        <div className="flex flex-col gap-4">
-                          <Button variant="outline" onClick={() => {
-                            navigate('/login');
-                            setIsMenuOpen(false);
-                          }}>
-                            {t('nav:login')}
+                        <>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-center"
+                            onClick={() => {
+                              navigate('/login');
+                              setIsMenuOpen(false);
+                            }}
+                          >
+                            {t('nav:login', 'Log In')}
                           </Button>
-                          <Button onClick={() => {
-                            navigate('/signup');
-                            setIsMenuOpen(false);
-                          }}>
-                            {t('nav:signup')}
-                          </Button>
-                        </div>
+                          <button
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-rose-400 to-violet-500 text-white text-sm font-medium rounded-xl"
+                            onClick={() => {
+                              navigate('/signup');
+                              setIsMenuOpen(false);
+                            }}
+                          >
+                            {t('nav:signup', 'Get Started Free')}
+                            <ArrowRight className="h-3.5 w-3.5" />
+                          </button>
+                        </>
                       )}
                     </div>
                   </div>
@@ -165,6 +214,8 @@ const MarketingLayout = () => {
           </div>
         </div>
       </header>
+
+      {/* ── Main Content ───────────────────────────────────────────────────── */}
       <main className="flex-1">
         <Outlet />
       </main>
