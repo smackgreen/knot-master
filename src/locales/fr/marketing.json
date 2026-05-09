@@ -1,34 +1,52 @@
 {
   "tagline": "CRM pour Planificateurs de Mariage",
-  "heroDescription": "Optimisez votre entreprise de planification de mariage avec notre système complet de gestion de clients conçu exclusivement pour les planificateurs de mariage.",
+  "heroBadge": "La plateforme n°1 de planification de mariage",
+  "heroLine1": "Planifiez des mariages",
+  "heroLine2": "qui inspirent",
+  "heroDescription": "La plateforme tout-en-un qui aide les planificateurs de mariage à gérer clients, invités, budgets, plans de table et chronologies — avec élégance.",
   "getStarted": "Commencer",
   "viewPricing": "Voir les Tarifs",
-  "featuresTitle": "Tout ce dont vous avez besoin pour gérer votre entreprise de planification de mariage",
+  "watchDemo": "Découvrir comment ça marche",
+  "featuresBadge": "Fonctionnalités Puissantes",
+  "featuresTitle": "Tout ce dont vous avez besoin pour planifier le mariage parfait",
+  "featuresSubtitle": "Une boîte à outils complète conçue par des planificateurs de mariage, pour des planificateurs de mariage.",
   "viewPricingPlans": "Voir les Forfaits",
-  "readyToStart": "Prêt à optimiser votre entreprise de planification de mariage ?",
+  "showcaseBadge": "Conçu pour les Professionnels",
+  "showcaseTitle": "Tout votre flux de travail,",
+  "showcaseTitleHighlight": "en un seul endroit",
+  "showcaseDescription": "Du premier rendez-vous client jusqu'à la dernière danse, Knot To It simplifie chaque étape de la planification de mariage.",
+  "testimonialsBadge": "Adoré par les Planificateurs",
+  "testimonialsTitle": "Ce que disent les planificateurs de mariage",
+  "testimonialsSubtitle": "Rejoignez des centaines de professionnels qui font confiance à Knot To It pour leur activité.",
+  "readyToStart": "Prêt à planifier le mariage de vos rêves ?",
   "choosePlan": "Choisissez un forfait qui vous convient et commencez dès aujourd'hui.",
+  "ctaTitle": "Prêt à planifier",
+  "ctaTitleHighlight": "le mariage de vos rêves ?",
+  "ctaDescription": "Rejoignez des milliers de planificateurs de mariage qui ont propulsé leur activité grâce à Knot To It. Commencez votre essai gratuit aujourd'hui.",
+  "signIn": "Se connecter",
   "featuresPageTitle": "Fonctionnalités",
   "featuresPageDescription": "Découvrez tous les outils et fonctionnalités puissants que Knot To It offre pour vous aider à gérer votre entreprise de planification de mariage.",
+  "learnMore": "En savoir plus",
   
   "features": {
     "clientManagement": {
       "title": "Gestion des Clients",
-      "description": "Gardez tous les détails de vos clients organisés en un seul endroit, des coordonnées aux préférences de mariage.",
+      "description": "Organisez tous vos couples en un seul endroit. Suivez les préférences, les chronologies et les communications sans effort.",
       "fullDescription": "Gérez tous vos clients dans un système centralisé. Stockez les coordonnées, les détails du mariage, les préférences et les notes. Suivez le statut des clients de la demande initiale au suivi post-mariage. Recherchez et filtrez facilement les clients selon divers critères."
     },
     "weddingTimelines": {
-      "title": "Calendriers de Mariage",
-      "description": "Suivez les mariages à venir, les échéances importantes et la coordination des fournisseurs dans un seul calendrier.",
-      "fullDescription": "Créez des calendriers détaillés pour chaque mariage. Définissez des jalons et des échéances importantes. Coordonnez avec les fournisseurs et les clients à l'aide d'une vue de calendrier partagée. Recevez des rappels pour les tâches et rendez-vous à venir."
+      "title": "Chronologies de Mariage",
+      "description": "Créez des chronologies minute par minute qui gardent tout le monde synchronisé le jour J.",
+      "fullDescription": "Créez des chronologies détaillées pour chaque mariage. Définissez des jalons et des échéances importantes. Coordonnez avec les fournisseurs et les clients à l'aide d'une vue de calendrier partagée. Recevez des rappels pour les tâches et rendez-vous à venir."
     },
     "taskTracking": {
       "title": "Suivi des Tâches",
-      "description": "Ne manquez jamais une échéance avec notre système complet de gestion des tâches pour chaque mariage.",
+      "description": "Ne manquez jamais une échéance grâce à la gestion intelligente des tâches et aux rappels automatiques.",
       "fullDescription": "Créez et assignez des tâches pour chaque mariage. Définissez des priorités, des échéances et des catégories. Suivez le statut et la progression des tâches. Recevez des notifications pour les tâches à venir et en retard. Organisez les tâches par client, priorité ou échéance."
     },
     "budgetTracking": {
       "title": "Suivi Budgétaire",
-      "description": "Suivez les budgets de mariage, les dépenses et les paiements en temps réel.",
+      "description": "Suivi budgétaire en temps réel avec catégories de dépenses, suivi des paiements et gestion des coûts fournisseurs.",
       "fullDescription": "Créez des budgets détaillés pour chaque mariage. Suivez les dépenses par catégorie. Surveillez les montants payés et impayés. Générez des rapports budgétaires pour les clients. Comparez les coûts estimés et réels."
     },
     "vendorManagement": {
@@ -37,29 +55,42 @@
       "fullDescription": "Stockez les informations et coordonnées des fournisseurs. Suivez les services, les tarifs et la disponibilité des fournisseurs. Gérez les contrats et les calendriers de paiement. Évaluez les fournisseurs et gardez des notes sur leurs performances."
     },
     "invoicesQuotations": {
-      "title": "Factures et Devis",
-      "description": "Créez des factures et des devis professionnels pour vos clients.",
+      "title": "Factures & Devis",
+      "description": "Créez des factures et devis professionnels pour vos clients.",
       "fullDescription": "Générez des factures et des devis professionnels. Personnalisez avec l'image de marque de votre entreprise. Suivez le statut des paiements et envoyez des rappels. Téléchargez et partagez des documents au format PDF."
     },
     "guestManagement": {
       "title": "Gestion des Invités",
-      "description": "Gérez les listes d'invités, les RSVP et les exigences spéciales en toute simplicité.",
+      "description": "Suivi des RSVP, préférences de repas, gestion des accompagnants et communications automatisées.",
       "fullDescription": "Créez et gérez des listes d'invités complètes. Suivez les RSVP, les choix de repas et les exigences spéciales. Importez et exportez les données des invités depuis Excel. Organisez les invités par groupes ou relations."
     },
     "seatingCharts": {
       "title": "Plans de Table",
-      "description": "Concevez et gérez les dispositions des places avec notre interface intuitive de glisser-déposer.",
+      "description": "Concepteur de plans de table par glisser-déposer avec plans de salle interactifs et attribution des invités.",
       "fullDescription": "Créez des plans de table visuels avec la fonctionnalité glisser-déposer. Concevez différentes dispositions et arrangements de tables. Assignez des invités aux tables et suivez les préférences de placement. Générez des cartons de place et des plans de table imprimables."
     },
     "mealPlanning": {
       "title": "Planification de Repas IA",
-      "description": "Générez des suggestions de repas basées sur les préférences, les restrictions alimentaires et le budget.",
+      "description": "Suggestions de repas alimentées par l'IA basées sur les besoins alimentaires et les préférences des invités.",
       "fullDescription": "Utilisez l'IA pour générer des suggestions de repas personnalisées. Tenez compte des restrictions alimentaires, des préférences culturelles et de la saisonnalité. Planifiez des menus dans les limites du budget. Organisez les repas par service et suivez les coûts par personne."
     },
     "designSuggestions": {
       "title": "Suggestions de Design IA",
-      "description": "Obtenez des idées de design générées par IA pour les palettes de couleurs, la décoration et les dispositions de lieu.",
+      "description": "Obtenez des suggestions de design curées par l'IA pour les thèmes, palettes de couleurs et décorations.",
       "fullDescription": "Générez des palettes de couleurs et des concepts de design avec l'IA. Obtenez des idées de décoration basées sur les thèmes et préférences de mariage. Visualisez les dispositions de lieu et les plans d'étage. Créez des planches d'ambiance et des présentations de design pour les clients."
     }
+  },
+
+  "testimonials": {
+    "title": "Ce que disent les planificateurs de mariage",
+    "quote1": "Knot To It a complètement transformé la façon dont je gère mon entreprise de planification de mariage. La gestion des clients et le suivi des tâches me font gagner des heures chaque semaine.",
+    "author1": "Sarah Johnson",
+    "role1": "Planificatrice de Mariage, Elegant Events",
+    "quote2": "Le concepteur de plans de table est une vraie révolution ! Mes clients adorent pouvoir visualiser la disposition de leur réception, et cela rend le processus de planification beaucoup plus fluide.",
+    "author2": "Michael Rodriguez",
+    "role2": "Fondateur, Dream Day Weddings",
+    "quote3": "J'étais sceptique quant aux fonctionnalités IA, mais elles se sont révélées inestimables. Les suggestions de planification des repas ont impressionné même mes clients les plus exigeants.",
+    "author3": "Emma Thompson",
+    "role3": "Consultante Indépendante en Mariage"
   }
 }

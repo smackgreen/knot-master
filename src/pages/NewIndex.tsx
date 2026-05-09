@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -435,65 +435,15 @@ const SocialProofBar = () => {
 // FEATURES SECTION — BENTO GRID
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const features = [
-  {
-    icon: Users,
-    title: 'Client Management',
-    description: 'Organize all your couples in one place. Track preferences, timelines, and communications effortlessly.',
-    gradient: 'from-rose-400 to-pink-500',
-    size: 'large' as const,
-  },
-  {
-    icon: Calendar,
-    title: 'Wedding Timelines',
-    description: 'Create minute-by-minute timelines that keep everyone synchronized on the big day.',
-    gradient: 'from-violet-400 to-purple-500',
-    size: 'medium' as const,
-  },
-  {
-    icon: CheckSquare,
-    title: 'Task Tracking',
-    description: 'Never miss a deadline with smart task management and automated reminders.',
-    gradient: 'from-blue-400 to-indigo-500',
-    size: 'medium' as const,
-  },
-  {
-    icon: CreditCard,
-    title: 'Budget Tracking',
-    description: 'Real-time budget monitoring with expense categories, payment tracking, and vendor cost management.',
-    gradient: 'from-emerald-400 to-green-500',
-    size: 'medium' as const,
-  },
-  {
-    icon: LayoutGrid,
-    title: 'Seating Charts',
-    description: 'Drag-and-drop seating chart designer with interactive floor plans and guest assignment.',
-    gradient: 'from-amber-400 to-orange-500',
-    size: 'large' as const,
-  },
-  {
-    icon: UserPlus,
-    title: 'Guest Management',
-    description: 'RSVP tracking, meal preferences, plus-one management, and automated communications.',
-    gradient: 'from-cyan-400 to-teal-500',
-    size: 'medium' as const,
-  },
-  {
-    icon: Utensils,
-    title: 'Meal Planning',
-    description: 'AI-powered meal suggestions based on guest dietary needs and preferences.',
-    gradient: 'from-fuchsia-400 to-pink-500',
-    size: 'medium' as const,
-    badge: 'AI',
-  },
-  {
-    icon: Palette,
-    title: 'Design Suggestions',
-    description: 'Get AI-curated design inspiration for themes, color palettes, and décor.',
-    gradient: 'from-indigo-400 to-violet-500',
-    size: 'medium' as const,
-    badge: 'AI',
-  },
+const featureKeys = [
+  { key: 'clientManagement', icon: Users, gradient: 'from-rose-400 to-pink-500', size: 'large' as const },
+  { key: 'weddingTimelines', icon: Calendar, gradient: 'from-violet-400 to-purple-500', size: 'medium' as const },
+  { key: 'taskTracking', icon: CheckSquare, gradient: 'from-blue-400 to-indigo-500', size: 'medium' as const },
+  { key: 'budgetTracking', icon: CreditCard, gradient: 'from-emerald-400 to-green-500', size: 'medium' as const },
+  { key: 'seatingCharts', icon: LayoutGrid, gradient: 'from-amber-400 to-orange-500', size: 'large' as const },
+  { key: 'guestManagement', icon: UserPlus, gradient: 'from-cyan-400 to-teal-500', size: 'medium' as const },
+  { key: 'mealPlanning', icon: Utensils, gradient: 'from-fuchsia-400 to-pink-500', size: 'medium' as const, badge: 'AI' },
+  { key: 'designSuggestions', icon: Palette, gradient: 'from-indigo-400 to-violet-500', size: 'medium' as const, badge: 'AI' },
 ];
 
 const FeaturesSection = ({ t }: { t: any }) => {
@@ -522,9 +472,9 @@ const FeaturesSection = ({ t }: { t: any }) => {
 
         {/* Bento Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
-          {features.map((feature, i) => (
+          {featureKeys.map((feature, i) => (
             <div
-              key={feature.title}
+              key={feature.key}
               className={`group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-6 md:p-8 hover:shadow-xl hover:shadow-gray-100/80 hover:-translate-y-1 transition-all duration-500 cursor-default ${
                 feature.size === 'large' ? 'lg:col-span-2' : ''
               } ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
@@ -534,14 +484,8 @@ const FeaturesSection = ({ t }: { t: any }) => {
               <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-[0.03] transition-opacity duration-500`} />
 
               {/* Icon */}
-              <div className={`relative w-12 h-12 rounded-xl bg-gradient-to-br ${feature.gradient} p-0.5 mb-5`}>
-                <div className="w-full h-full rounded-[10px] bg-white flex items-center justify-center">
-                  <feature.icon className={`h-5 w-5 bg-gradient-to-br ${feature.gradient} bg-clip-text`} style={{
-                    color: 'transparent',
-                    backgroundImage: `linear-gradient(to bottom right, var(--tw-gradient-stops))`,
-                    WebkitBackgroundClip: 'text',
-                  }} />
-                </div>
+              <div className={`relative w-12 h-12 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-5 shadow-sm`}>
+                <feature.icon className="h-5 w-5 text-white" />
               </div>
 
               {/* Badge */}
@@ -554,14 +498,21 @@ const FeaturesSection = ({ t }: { t: any }) => {
               )}
 
               {/* Text */}
-              <h3 className="relative text-lg font-semibold text-gray-900 mb-2">{feature.title}</h3>
-              <p className="relative text-sm text-gray-400 leading-relaxed">{feature.description}</p>
+              <h3 className="relative text-lg font-semibold text-gray-900 mb-2">
+                {t(`marketing:features.${feature.key}.title`)}
+              </h3>
+              <p className="relative text-sm text-gray-400 leading-relaxed">
+                {t(`marketing:features.${feature.key}.description`)}
+              </p>
 
               {/* Arrow */}
-              <div className="relative mt-4 flex items-center text-sm font-medium text-gray-300 group-hover:text-gray-500 transition-colors">
-                Learn more
+              <Link
+                to="/features"
+                className="relative mt-4 inline-flex items-center text-sm font-medium text-gray-300 group-hover:text-violet-500 transition-colors hover:text-violet-500"
+              >
+                {t('marketing:learnMore', 'Learn more')}
                 <ArrowRight className="h-3.5 w-3.5 ml-1 group-hover:translate-x-1 transition-transform" />
-              </div>
+              </Link>
             </div>
           ))}
         </div>
@@ -598,9 +549,9 @@ const DashboardShowcase = ({ navigate, t }: { navigate: any; t: any }) => {
 
             <div className="space-y-4 mb-10">
               {[
-                { icon: Shield, text: 'Secure client data with role-based access' },
-                { icon: Zap, text: 'Real-time collaboration with your team' },
-                { icon: Globe, text: 'Access from anywhere, on any device' },
+                { icon: Shield, text: t('marketing:showcaseFeature1', 'Secure client data with role-based access') },
+                { icon: Zap, text: t('marketing:showcaseFeature2', 'Real-time collaboration with your team') },
+                { icon: Globe, text: t('marketing:showcaseFeature3', 'Access from anywhere, on any device') },
               ].map((item) => (
                 <div key={item.text} className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center flex-shrink-0">
@@ -615,7 +566,7 @@ const DashboardShowcase = ({ navigate, t }: { navigate: any; t: any }) => {
               onClick={() => navigate('/signup')}
               className="group inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 hover:-translate-y-0.5 transition-all duration-300 shadow-lg shadow-gray-200"
             >
-              Start Free Trial
+              {t('marketing:startFreeTrial', 'Start Free Trial')}
               <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
