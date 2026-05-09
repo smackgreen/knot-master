@@ -82,6 +82,7 @@ const SeatingChartManager: React.FC<SeatingChartManagerProps> = ({ clientId }) =
   const [activeTab, setActiveTab] = useState<'layout' | 'guests' | 'auto'>('layout');
   const [selectedTool, setSelectedTool] = useState<ToolType>('select');
   const [canvasElements, setCanvasElements] = useState<CanvasElement[]>(defaultCanvasElements);
+  const [selectedCanvasElementId, setSelectedCanvasElementId] = useState<string | null>(null);
   const [rightPanelTab, setRightPanelTab] = useState<'properties' | 'smartassist'>('properties');
   const [autoAssignStrategy, setAutoAssignStrategy] = useState<'family' | 'random' | 'balanced'>('family');
   const [isLoading, setIsLoading] = useState(true);
@@ -263,7 +264,10 @@ const SeatingChartManager: React.FC<SeatingChartManagerProps> = ({ clientId }) =
    */
   const handleSelectTable = useCallback((table: Table | null) => {
     setSelectedTable(table);
-    if (table) setRightPanelTab('properties');
+    if (table) {
+      setRightPanelTab('properties');
+      setSelectedCanvasElementId(null);
+    }
   }, []);
 
   /**
@@ -287,6 +291,52 @@ const SeatingChartManager: React.FC<SeatingChartManagerProps> = ({ clientId }) =
       });
       positionSaveTimerRef.current.delete(tableId);
     }, 1000)); // 1 second debounce
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /**
+   * Resize table — optimistic local update, debounced persist.
+   */
+  const handleTableResize = useCallback((tableId: string, width: number, height: number) => {
+    setTables((prev) => prev.map((t) => (t.id === tableId ? { ...t, width, height } : t)));
+
+    // Update selectedTable if this is the selected one
+    if (selectedTableRef.current?.id === tableId) {
+      setSelectedTable((prev) => (prev ? { ...prev, width, height } : null));
+    }
+
+    // Debounced background persist
+    const existingTimer = positionSaveTimerRef.current.get(`resize-${tableId}`);
+    if (existingTimer) clearTimeout(existingTimer);
+
+    positionSaveTimerRef.current.set(`resize-${tableId}`, setTimeout(() => {
+      updateTable(tableId, { width, height } as Partial<Table>).catch((err) => {
+        console.error('Resize save failed:', err);
+      });
+      positionSaveTimerRef.current.delete(`resize-${tableId}`);
+    }, 500));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /**
+   * Rotate table — optimistic local update, debounced persist.
+   */
+  const handleTableRotate = useCallback((tableId: string, rotation: number) => {
+    setTables((prev) => prev.map((t) => (t.id === tableId ? { ...t, rotation } : t)));
+
+    // Update selectedTable if this is the selected one
+    if (selectedTableRef.current?.id === tableId) {
+      setSelectedTable((prev) => (prev ? { ...prev, rotation } : null));
+    }
+
+    // Debounced background persist
+    const existingTimer = positionSaveTimerRef.current.get(`rotate-${tableId}`);
+    if (existingTimer) clearTimeout(existingTimer);
+
+    positionSaveTimerRef.current.set(`rotate-${tableId}`, setTimeout(() => {
+      updateTable(tableId, { rotation } as Partial<Table>).catch((err) => {
+        console.error('Rotation save failed:', err);
+      });
+      positionSaveTimerRef.current.delete(`rotate-${tableId}`);
+    }, 500));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   /**
@@ -326,6 +376,27 @@ const SeatingChartManager: React.FC<SeatingChartManagerProps> = ({ clientId }) =
 
   const handleAddCanvasElement = useCallback((element: CanvasElement) => {
     setCanvasElements((prev) => [...prev, element]);
+  }, []);
+
+  /**
+   * Select canvas element — lightweight, no Supabase call.
+   */
+  const handleSelectCanvasElement = useCallback((elementId: string | null) => {
+    setSelectedCanvasElementId(elementId);
+    if (elementId) {
+      // Deselect table when selecting a canvas element
+      setSelectedTable(null);
+    }
+  }, []);
+
+  /**
+   * Transform canvas element (resize, rotate, move) — local state update.
+   * Canvas elements are local-only (not persisted to Supabase).
+   */
+  const handleCanvasElementTransform = useCallback((elementId: string, updates: Partial<CanvasElement>) => {
+    setCanvasElements((prev) =>
+      prev.map((el) => (el.id === elementId ? { ...el, ...updates } : el))
+    );
   }, []);
 
   // Cleanup debounce timers on unmount
@@ -491,10 +562,15 @@ const SeatingChartManager: React.FC<SeatingChartManagerProps> = ({ clientId }) =
               showGrid={showGrid}
               selectedTool={selectedTool}
               canvasElements={canvasElements}
+              selectedCanvasElementId={selectedCanvasElementId}
               onTablePositionChange={handleTablePositionChange}
               onSelectTable={handleSelectTable}
+              onSelectCanvasElement={handleSelectCanvasElement}
               onZoomChange={handleZoomChange}
               onDropElement={handleDropElement}
+              onTableResize={handleTableResize}
+              onTableRotate={handleTableRotate}
+              onCanvasElementTransform={handleCanvasElementTransform}
               stageRef={stageRef}
             />
           </div>

@@ -37,6 +37,9 @@ interface CanvasElement {
   x: number;
   y: number;
   label: string;
+  width?: number;
+  height?: number;
+  rotation?: number;
   visible?: boolean;
   locked?: boolean;
 }
