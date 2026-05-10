@@ -27,6 +27,10 @@
   "featuresPageTitle": "Features",
   "featuresPageDescription": "Discover all the powerful tools and features that Knot To It offers to help you manage your wedding planning business.",
   "learnMore": "Learn more",
+  "startFreeTrial": "Start Free Trial",
+  "showcaseFeature1": "Secure client data with role-based access",
+  "showcaseFeature2": "Real-time collaboration with your team",
+  "showcaseFeature3": "Access from anywhere, on any device",
   
   "features": {
     "clientManagement": {
