@@ -1,6 +1,7 @@
 {
   "title": "Forfaits Tarifaires",
   "description": "Choisissez le forfait qui convient à votre entreprise de planification de mariage.",
+  "badge": "Tarification Simple",
   "monthly": "Mensuel",
   "yearly": "Annuel",
   "savePercent": "Économisez {{percent}}%",

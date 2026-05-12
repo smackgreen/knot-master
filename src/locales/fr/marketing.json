@@ -26,6 +26,17 @@
   "signIn": "Se connecter",
   "featuresPageTitle": "Fonctionnalités",
   "featuresPageDescription": "Découvrez tous les outils et fonctionnalités puissants que Knot To It offre pour vous aider à gérer votre entreprise de planification de mariage.",
+  "featuresPage": {
+    "heroTitle": "Tout ce dont vous avez besoin",
+    "heroTitleHighlight": "pour planifier le mariage parfait"
+  },
+  "pricingPage": {
+    "heroTitle": "Des forfaits pour chaque",
+    "heroTitleHighlight": "étape de croissance",
+    "guarantee": "Garantie satisfait ou remboursé 30 jours. Sans condition.",
+    "faqTitle": "Des questions ? Nous avons les réponses",
+    "faqSubtitle": "Tout ce que vous devez savoir sur nos tarifs et forfaits."
+  },
   "learnMore": "En savoir plus",
   "startFreeTrial": "Essai Gratuit",
   "showcaseFeature1": "Données clients sécurisées avec accès basé sur les rôles",

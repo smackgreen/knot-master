@@ -1,6 +1,7 @@
 {
   "title": "Pricing Plans",
   "description": "Choose the plan that's right for your wedding planning business.",
+  "badge": "Simple Pricing",
   "monthly": "Monthly",
   "yearly": "Yearly",
   "savePercent": "Save {{percent}}%",

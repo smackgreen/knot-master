@@ -26,6 +26,17 @@
   "signIn": "Sign In",
   "featuresPageTitle": "Features",
   "featuresPageDescription": "Discover all the powerful tools and features that Knot To It offers to help you manage your wedding planning business.",
+  "featuresPage": {
+    "heroTitle": "Everything you need",
+    "heroTitleHighlight": "to plan the perfect wedding"
+  },
+  "pricingPage": {
+    "heroTitle": "Plans for every",
+    "heroTitleHighlight": "stage of growth",
+    "guarantee": "30-day money-back guarantee. No questions asked.",
+    "faqTitle": "Questions? We've got answers",
+    "faqSubtitle": "Everything you need to know about our pricing and plans."
+  },
   "learnMore": "Learn more",
   "startFreeTrial": "Start Free Trial",
   "showcaseFeature1": "Secure client data with role-based access",
