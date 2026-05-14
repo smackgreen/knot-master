@@ -6,6 +6,7 @@ import { toast } from "@/components/ui/use-toast";
 import EmailAuthForm from "@/components/auth/EmailAuthForm";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { getDefaultDashboard } from "@/utils/adminRedirect";
 
 const Login = () => {
   const { isLoading, user, session, isAuthenticating } = useAuth();
@@ -25,7 +26,7 @@ const Login = () => {
     // If user is already authenticated, redirect to dashboard
     if (user && session) {
       console.log("Login page: User already authenticated, redirecting to dashboard");
-      const from = location.state?.from?.pathname || "/app/dashboard";
+      const from = location.state?.from?.pathname || getDefaultDashboard(user);
       navigate(from, { replace: true });
     }
   }, [user, session, navigate, location, isAuthenticating]);

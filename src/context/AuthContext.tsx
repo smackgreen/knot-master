@@ -42,6 +42,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           email,
           profile_image,
           created_at,
+          role,
           company_name,
           company_address,
           company_city,
@@ -67,6 +68,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           email: data.email,
           profileImage: data.profile_image,
           created_at: data.created_at,
+          role: data.role,
           // Company profile fields
           companyName: data.company_name,
           companyAddress: data.company_address,
@@ -151,6 +153,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       email: authUser.email || profileData?.email || '',
       profileImage: profileData?.profileImage || authUser.user_metadata?.avatar_url || null,
       created_at: authUser.created_at,
+      role: profileData?.role || null,
       // Company profile fields
       companyName: profileData?.companyName || '',
       companyAddress: profileData?.companyAddress || '',

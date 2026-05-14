@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { getDashboardPath } from "@/utils/adminRedirect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -49,8 +50,14 @@ export const EmailAuthForm = ({ defaultTab = "login", selectedPlan = null }: Ema
         });
 
         // Navigate to dashboard or the page the user was trying to access
-        const from = location.state?.from?.pathname || "/app/dashboard";
-        navigate(from, { replace: true });
+        const from = location.state?.from?.pathname;
+        if (from) {
+          navigate(from, { replace: true });
+        } else {
+          // Role-based redirect: admins go to /admin/dashboard
+          const dashboardPath = user?.id ? await getDashboardPath(user.id) : "/app/dashboard";
+          navigate(dashboardPath, { replace: true });
+        }
       }
     } catch (err: any) {
       setError(err?.message || t('auth.loginFailed'));
@@ -101,8 +108,9 @@ export const EmailAuthForm = ({ defaultTab = "login", selectedPlan = null }: Ema
           if (selectedPlan) {
             navigate(`/account/subscription?plan=${selectedPlan}`, { replace: true });
           } else {
-            // Otherwise redirect to dashboard
-            navigate('/app/dashboard', { replace: true });
+            // Otherwise redirect to dashboard (role-based)
+            const dashboardPath = user?.id ? await getDashboardPath(user.id) : "/app/dashboard";
+            navigate(dashboardPath, { replace: true });
           }
         }
       }

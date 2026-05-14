@@ -7,6 +7,7 @@ export interface UserProfile {
   email?: string;
   profileImage?: string;
   created_at?: string;
+  role?: string;
   // Company profile information
   companyName?: string;
   companyAddress?: string;

@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import type { EmailOtpType } from '@supabase/supabase-js';
+import { getDashboardPath } from "@/utils/adminRedirect";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -51,7 +52,8 @@ const AuthCallback = () => {
               description: "Welcome back!",
             });
             // AuthContext.onAuthStateChange will handle plan/return recovery
-            window.location.href = `${window.location.origin}/app/dashboard`;
+            const dashboardPath = await getDashboardPath(existingSession.user.id);
+            window.location.href = `${window.location.origin}${dashboardPath}`;
             return;
           }
 
@@ -77,7 +79,8 @@ const AuthCallback = () => {
               description: "Welcome back!",
             });
             // AuthContext.onAuthStateChange will handle plan/return recovery
-            window.location.href = `${window.location.origin}/app/dashboard`;
+            const dashboardPath = await getDashboardPath(data.session.user.id);
+            window.location.href = `${window.location.origin}${dashboardPath}`;
           } else {
             console.log("Auth callback: No session after code exchange");
             setError("No session was established. Please try signing in again.");
@@ -116,7 +119,8 @@ const AuthCallback = () => {
               title: "Email verified",
               description: "Your account has been confirmed.",
             });
-            window.location.href = `${window.location.origin}/app/dashboard`;
+            const dashboardPath = await getDashboardPath(data.session.user.id);
+            window.location.href = `${window.location.origin}${dashboardPath}`;
           } else {
             setError("No session was established. Please try signing in again.");
             setIsProcessing(false);
@@ -133,7 +137,8 @@ const AuthCallback = () => {
           console.log("Auth callback: Processing legacy hash fragment fallback");
           const { data } = await supabase.auth.getSession();
           if (data.session) {
-            window.location.href = `${window.location.origin}/app/dashboard`;
+            const dashboardPath = await getDashboardPath(data.session.user.id);
+            window.location.href = `${window.location.origin}${dashboardPath}`;
             return;
           }
         }
