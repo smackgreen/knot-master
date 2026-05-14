@@ -93,6 +93,31 @@
       "title": "Suggestions de Design IA",
       "description": "Obtenez des suggestions de design curées par l'IA pour les thèmes, palettes de couleurs et décorations.",
       "fullDescription": "Générez des palettes de couleurs et des concepts de design avec l'IA. Obtenez des idées de décoration basées sur les thèmes et préférences de mariage. Visualisez les dispositions de lieu et les plans d'étage. Créez des planches d'ambiance et des présentations de design pour les clients."
+    },
+    "contractsSignatures": {
+      "title": "Contrats & Signatures Électroniques",
+      "description": "Créez, envoyez et signez électroniquement des contrats avec des modèles intégrés et des signatures électroniques juridiquement contraignantes.",
+      "fullDescription": "Créez des contrats professionnels à partir de modèles personnalisables. Envoyez des contrats pour signature électronique aux clients et fournisseurs. Suivez l'état des signatures en temps réel. Stockez les documents signés en toute sécurité avec des pistes d'audit complètes."
+    },
+    "documentManagement": {
+      "title": "Gestion des Documents",
+      "description": "Téléchargez, organisez et partagez les documents de mariage en toute sécurité avec contrôle de version et aperçu PDF.",
+      "fullDescription": "Téléchargez et organisez tous les documents liés au mariage en un seul endroit. Prévisualisez les fichiers PDF directement dans le navigateur. Partagez des documents avec les clients et fournisseurs en toute sécurité. Suivez les versions des documents et maintenez un historique complet des fichiers."
+    },
+    "resourceManagement": {
+      "title": "Gestion des Ressources",
+      "description": "Gérez le personnel, les équipements, les véhicules et les stocks avec suivi de disponibilité et planification calendrier.",
+      "fullDescription": "Suivez et gérez toutes vos ressources, y compris le personnel, les équipements, les véhicules et les articles en stock. Surveillez la disponibilité et allouez les ressources aux événements. Planifiez les ressources avec un calendrier visuel. Générez des rapports sur l'utilisation des ressources."
+    },
+    "analyticsReporting": {
+      "title": "Analytique & Rapports",
+      "description": "Suivez les performances commerciales avec l'analytique des revenus, les métriques d'acquisition clients et les insights de conversion.",
+      "fullDescription": "Surveillez les indicateurs clés de votre activité avec un tableau de bord analytique complet. Suivez les tendances de revenus, les coûts d'acquisition clients et les taux de conversion. Analysez les tendances saisonnières et les services populaires. Générez des rapports détaillés pour la planification commerciale."
+    },
+    "calendarScheduling": {
+      "title": "Calendrier & Planification",
+      "description": "Calendrier intégré avec synchronisation Google Calendar, planification d'événements et gestion des disponibilités.",
+      "fullDescription": "Gérez tous vos événements et rendez-vous dans une vue calendrier unifiée. Synchronisez avec Google Calendar pour une intégration transparente. Définissez vos disponibilités et gérez les fenêtres de réservation. Recevez des rappels et notifications pour les événements à venir."
     }
   },
 

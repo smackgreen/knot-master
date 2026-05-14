@@ -24,6 +24,10 @@ import {
   Quote,
   Play,
   Globe,
+  FileSignature,
+  FolderOpen,
+  Package,
+  BarChart3,
 } from "lucide-react";
 
 // ─── Intersection Observer Hook for Scroll Animations ────────────────────────
@@ -122,6 +126,41 @@ const featureDetails = [
     accentColor: "indigo",
     mockupType: "design" as const,
     badge: "AI",
+  },
+  {
+    key: "contractsSignatures",
+    icon: FileSignature,
+    gradient: "from-pink-400 to-rose-500",
+    accentColor: "pink",
+    mockupType: "contracts" as const,
+  },
+  {
+    key: "documentManagement",
+    icon: FolderOpen,
+    gradient: "from-sky-400 to-blue-500",
+    accentColor: "sky",
+    mockupType: "documents" as const,
+  },
+  {
+    key: "resourceManagement",
+    icon: Package,
+    gradient: "from-lime-400 to-emerald-500",
+    accentColor: "lime",
+    mockupType: "resources" as const,
+  },
+  {
+    key: "analyticsReporting",
+    icon: BarChart3,
+    gradient: "from-purple-400 to-indigo-500",
+    accentColor: "purple",
+    mockupType: "analytics" as const,
+  },
+  {
+    key: "calendarScheduling",
+    icon: Calendar,
+    gradient: "from-teal-400 to-cyan-500",
+    accentColor: "teal",
+    mockupType: "calendar" as const,
   },
 ];
 
@@ -344,6 +383,135 @@ const FeatureMockup = ({ type, gradient }: { type: string; gradient: string }) =
         <div className="flex items-center gap-2 py-1 px-3 rounded-lg bg-violet-50/60">
           <Sparkles className="h-3 w-3 text-violet-500" />
           <span className="text-[11px] text-violet-600 font-medium">AI-curated for your wedding theme</span>
+        </div>
+      </div>
+    ),
+    contracts: (
+      <div className="space-y-2">
+        {[
+          { title: "Service Agreement", status: "Signed", statusColor: "bg-emerald-50 text-emerald-600", progress: 100 },
+          { title: "Venue Contract", status: "Pending", statusColor: "bg-amber-50 text-amber-600", progress: 60 },
+          { title: "Photography Deal", status: "Draft", statusColor: "bg-gray-50 text-gray-500", progress: 20 },
+        ].map((contract) => (
+          <div key={contract.title} className="flex items-center gap-3 py-3 px-4 rounded-xl bg-white/60 border border-white/80">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center">
+              <FileSignature className="h-4 w-4 text-white" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-800">{contract.title}</p>
+              <div className="w-full bg-gray-100 rounded-full h-1.5 mt-1">
+                <div className="bg-gradient-to-r from-pink-400 to-rose-500 h-1.5 rounded-full" style={{ width: `${contract.progress}%` }} />
+              </div>
+            </div>
+            <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${contract.statusColor}`}>{contract.status}</span>
+          </div>
+        ))}
+      </div>
+    ),
+    documents: (
+      <div className="space-y-2">
+        <div className="grid grid-cols-3 gap-2 mb-2">
+          {[
+            { label: "Total", value: "24", icon: "📄" },
+            { label: "Signed", value: "18", icon: "✅" },
+            { label: "Pending", value: "6", icon: "⏳" },
+          ].map((stat) => (
+            <div key={stat.label} className="text-center py-2 rounded-lg bg-white/60 border border-white/80">
+              <span className="text-sm">{stat.icon}</span>
+              <p className="text-sm font-bold text-gray-800">{stat.value}</p>
+              <p className="text-[10px] text-gray-400">{stat.label}</p>
+            </div>
+          ))}
+        </div>
+        {["Budget_Overview.pdf", "Floor_Plan_v2.pdf", "Vendor_Contract.pdf"].map((doc, i) => (
+          <div key={i} className="flex items-center gap-2 py-2 px-3 rounded-lg bg-white/60">
+            <FolderOpen className="h-4 w-4 text-sky-500" />
+            <span className="text-xs text-gray-600 flex-1">{doc}</span>
+            <span className="text-[10px] text-gray-400">{["2.4 MB", "1.1 MB", "856 KB"][i]}</span>
+          </div>
+        ))}
+      </div>
+    ),
+    resources: (
+      <div className="space-y-2">
+        {[
+          { category: "Staff", items: 12, available: 8, icon: "👥", color: "from-lime-400 to-emerald-500" },
+          { category: "Equipment", items: 24, available: 18, icon: "🎬", color: "from-emerald-400 to-green-500" },
+          { category: "Vehicles", items: 6, available: 4, icon: "🚗", color: "from-teal-400 to-cyan-500" },
+          { category: "Inventory", items: 45, available: 32, icon: "📦", color: "from-cyan-400 to-blue-500" },
+        ].map((res) => (
+          <div key={res.category} className="flex items-center gap-3 py-2 px-3 rounded-lg bg-white/60">
+            <span className="text-lg">{res.icon}</span>
+            <div className="flex-1">
+              <div className="flex justify-between">
+                <span className="text-xs font-medium text-gray-700">{res.category}</span>
+                <span className="text-[10px] text-gray-400">{res.available}/{res.items} available</span>
+              </div>
+              <div className="w-full bg-gray-100 rounded-full h-1.5 mt-1">
+                <div className={`bg-gradient-to-r ${res.color} h-1.5 rounded-full`} style={{ width: `${(res.available / res.items) * 100}%` }} />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    ),
+    analytics: (
+      <div className="space-y-3">
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { label: "Revenue", value: "$48.2K", change: "+23%", positive: true },
+            { label: "Clients", value: "24", change: "+12%", positive: true },
+            { label: "Conversion", value: "68%", change: "+5%", positive: true },
+            { label: "Avg. Budget", value: "$8.4K", change: "-2%", positive: false },
+          ].map((stat) => (
+            <div key={stat.label} className="py-2 px-3 rounded-lg bg-white/60 border border-white/80">
+              <p className="text-[10px] text-gray-400">{stat.label}</p>
+              <div className="flex items-baseline gap-1">
+                <p className="text-sm font-bold text-gray-800">{stat.value}</p>
+                <span className={`text-[10px] font-medium ${stat.positive ? "text-emerald-500" : "text-red-400"}`}>{stat.change}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="flex items-end gap-1.5 h-16 px-2">
+          {[35, 50, 40, 65, 55, 80, 70, 90, 60, 85, 75, 95].map((h, i) => (
+            <div key={i} className="flex-1 rounded-t-sm bg-gradient-to-t from-purple-400 to-indigo-300 opacity-80" style={{ height: `${h}%` }} />
+          ))}
+        </div>
+      </div>
+    ),
+    calendar: (
+      <div className="space-y-2">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-sm font-medium text-gray-700">May 2024</span>
+          <div className="flex gap-1">
+            <div className="w-5 h-5 rounded bg-gray-100 flex items-center justify-center text-[10px]">◀</div>
+            <div className="w-5 h-5 rounded bg-gray-100 flex items-center justify-center text-[10px]">▶</div>
+          </div>
+        </div>
+        <div className="grid grid-cols-7 gap-1 text-center">
+          {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((d) => (
+            <span key={d} className="text-[9px] text-gray-400 font-medium">{d}</span>
+          ))}
+          {Array.from({ length: 35 }, (_, i) => {
+            const day = i - 2;
+            const isToday = day === 15;
+            const hasEvent = [5, 12, 15, 22, 28].includes(day);
+            return (
+              <div key={i} className={`w-5 h-5 rounded text-[9px] flex items-center justify-center ${
+                day < 1 || day > 31 ? "text-gray-200" :
+                isToday ? "bg-gradient-to-r from-teal-400 to-cyan-500 text-white font-bold rounded-full" :
+                hasEvent ? "text-gray-700 font-medium" : "text-gray-500"
+              }`}>
+                {day >= 1 && day <= 31 ? day : ""}
+                {hasEvent && !isToday && <div className="absolute -mt-3 w-1 h-1 rounded-full bg-teal-400" />}
+              </div>
+            );
+          })}
+        </div>
+        <div className="flex items-center gap-2 py-1 px-2 rounded-lg bg-teal-50/60">
+          <Calendar className="h-3 w-3 text-teal-500" />
+          <span className="text-[10px] text-teal-600 font-medium">3 events this week · Google Calendar synced</span>
         </div>
       </div>
     ),

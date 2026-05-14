@@ -93,6 +93,31 @@
       "title": "AI Design Suggestions",
       "description": "Get AI-curated design inspiration for themes, color palettes, and décor.",
       "fullDescription": "Generate color schemes and design concepts with AI. Get decor ideas based on wedding themes and preferences. Visualize venue layouts and floor plans. Create mood boards and design presentations for clients."
+    },
+    "contractsSignatures": {
+      "title": "Contracts & E-Signatures",
+      "description": "Create, send, and electronically sign contracts with built-in templates and legally binding e-signatures.",
+      "fullDescription": "Create professional contracts from customizable templates. Send contracts for electronic signature to clients and vendors. Track signature status in real-time. Store signed documents securely with full audit trails."
+    },
+    "documentManagement": {
+      "title": "Document Management",
+      "description": "Upload, organize, and share wedding documents securely with version control and PDF preview.",
+      "fullDescription": "Upload and organize all wedding-related documents in one place. Preview PDF files directly in the browser. Share documents with clients and vendors securely. Track document versions and maintain a complete file history."
+    },
+    "resourceManagement": {
+      "title": "Resource Management",
+      "description": "Manage staff, equipment, vehicles, and inventory with availability tracking and calendar scheduling.",
+      "fullDescription": "Track and manage all your resources including staff members, equipment, vehicles, and inventory items. Monitor availability and allocate resources to events. Schedule resources with a visual calendar. Generate reports on resource utilization."
+    },
+    "analyticsReporting": {
+      "title": "Analytics & Reporting",
+      "description": "Track business performance with revenue analytics, client acquisition metrics, and conversion insights.",
+      "fullDescription": "Monitor key business metrics with a comprehensive analytics dashboard. Track revenue trends, client acquisition costs, and conversion rates. Analyze seasonal patterns and popular services. Generate detailed reports for business planning."
+    },
+    "calendarScheduling": {
+      "title": "Calendar & Scheduling",
+      "description": "Integrated calendar with Google Calendar sync, event scheduling, and availability management.",
+      "fullDescription": "Manage all your events and appointments in a unified calendar view. Sync with Google Calendar for seamless integration. Set availability and manage booking windows. Get reminders and notifications for upcoming events."
     }
   },
 

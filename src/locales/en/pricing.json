@@ -37,7 +37,12 @@
     "invoicesQuotations": "Invoices & Quotations",
     "seatingCharts": "Seating Charts",
     "mealPlanning": "AI Meal Planning",
-    "designSuggestions": "AI Design Suggestions"
+    "designSuggestions": "AI Design Suggestions",
+    "contractsSignatures": "Contracts & E-Signatures",
+    "documentManagement": "Document Management",
+    "resourceManagement": "Resource Management",
+    "analyticsReporting": "Analytics & Reporting",
+    "calendarScheduling": "Calendar & Scheduling"
   },
   
   "limits": {

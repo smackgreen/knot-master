@@ -37,6 +37,25 @@ const AuthCallback = () => {
         // Case 1: OAuth redirect with PKCE code (e.g., Google OAuth)
         if (code) {
           console.log("Auth callback: Processing PKCE code exchange");
+
+          // First check if the session was already established by
+          // detectSessionInUrl (Supabase auto-exchange). This prevents
+          // a race condition where both auto-exchange and manual exchange
+          // compete, causing "code verifier mismatch" / "expired link" errors.
+          const { data: { session: existingSession } } = await supabase.auth.getSession();
+
+          if (existingSession) {
+            console.log("Auth callback: Session already established (auto-exchange), redirecting");
+            toast({
+              title: "Signed in successfully",
+              description: "Welcome back!",
+            });
+            // AuthContext.onAuthStateChange will handle plan/return recovery
+            window.location.href = `${window.location.origin}/app/dashboard`;
+            return;
+          }
+
+          // Session not yet established — do manual exchange
           const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
           if (error) {

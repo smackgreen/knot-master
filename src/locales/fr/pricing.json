@@ -37,7 +37,12 @@
     "invoicesQuotations": "Factures et Devis",
     "seatingCharts": "Plans de Table",
     "mealPlanning": "Planification de Repas IA",
-    "designSuggestions": "Suggestions de Design IA"
+    "designSuggestions": "Suggestions de Design IA",
+    "contractsSignatures": "Contrats et Signatures Électroniques",
+    "documentManagement": "Gestion des Documents",
+    "resourceManagement": "Gestion des Ressources",
+    "analyticsReporting": "Analytique et Rapports",
+    "calendarScheduling": "Calendrier et Planification"
   },
   
   "limits": {

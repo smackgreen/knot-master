@@ -3,16 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield } from "lucide-react";
 import AdminSubscriptions from "./AdminSubscriptions";
 import AdminCoupons from "./AdminCoupons";
+import AdminPricingManager from "./AdminPricingManager";
 
 const AdminDashboard = () => {
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-6 max-w-[1600px] mx-auto">
       <div className="flex items-center gap-3 mb-6">
         <Shield className="h-7 w-7 text-wedding-blush" />
         <div>
           <h1 className="text-3xl font-serif font-bold">Admin Dashboard</h1>
           <p className="text-sm text-muted-foreground">
-            Manage users, subscriptions and promotional coupons
+            Manage users, subscriptions, pricing plans and promotional coupons
           </p>
         </div>
       </div>
@@ -22,11 +23,15 @@ const AdminDashboard = () => {
           <CardTitle className="sr-only">Admin tools</CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
-          <Tabs defaultValue="subscriptions">
+          <Tabs defaultValue="pricing">
             <TabsList>
+              <TabsTrigger value="pricing">Plans & Pricing</TabsTrigger>
               <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
               <TabsTrigger value="coupons">Coupons</TabsTrigger>
             </TabsList>
+            <TabsContent value="pricing" className="mt-6">
+              <AdminPricingManager />
+            </TabsContent>
             <TabsContent value="subscriptions" className="mt-6">
               <AdminSubscriptions />
             </TabsContent>

@@ -15,6 +15,8 @@ import enNav from './locales/en/nav.json';
 import frNav from './locales/fr/nav.json';
 import enAccount from './locales/en/account.json';
 import frAccount from './locales/fr/account.json';
+import enAdmin from './locales/en/admin.json';
+import frAdmin from './locales/fr/admin.json';
 
 // Configure i18next
 i18n
@@ -37,6 +39,7 @@ i18n
         subscription: enSubscription,
         nav: enNav,
         account: enAccount,
+        admin: enAdmin,
       },
       fr: {
         common: frCommon,
@@ -45,6 +48,7 @@ i18n
         subscription: frSubscription,
         nav: frNav,
         account: frAccount,
+        admin: frAdmin,
       },
     },
     defaultNS: 'common',

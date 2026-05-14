@@ -520,7 +520,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const clearStalePkceState = () => {
     try {
       const keysToRemove = Object.keys(localStorage).filter(
-        k => k.includes('pkce') || k.includes('code_verifier')
+        k => k.includes('pkce') || k.includes('code_verifier') || k.includes('code-verifier')
       );
       keysToRemove.forEach(k => localStorage.removeItem(k));
       if (keysToRemove.length > 0) {
@@ -622,11 +622,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Clear stale PKCE state to prevent "expired link" errors on next login
       clearStalePkceState();
 
-      const { error } = await supabase.auth.signOut();
+      // Clear all OAuth flow markers from sessionStorage
+      sessionStorage.removeItem('post_oauth_flow');
+      sessionStorage.removeItem('post_oauth_plan');
+      sessionStorage.removeItem('post_oauth_return');
+
+      // Sign out from Supabase (global scope signs out from all sessions)
+      const { error } = await supabase.auth.signOut({ scope: 'global' });
       if (error) throw error;
 
       setUser(null);
       setSession(null);
+
+      // Clear any remaining Supabase auth keys from localStorage
+      // This prevents stale sessions from being restored on next login
+      try {
+        const supabaseKeys = Object.keys(localStorage).filter(
+          k => k.startsWith('sb-') && k.includes('-auth-token')
+        );
+        supabaseKeys.forEach(k => localStorage.removeItem(k));
+      } catch (e) {
+        console.warn('Failed to clear Supabase auth tokens:', e);
+      }
 
       toast({
         title: "Logged out successfully",
