@@ -211,27 +211,54 @@ export type Database = {
       }
       profiles: {
         Row: {
+          company_address: string | null
+          company_city: string | null
+          company_description: string | null
+          company_email: string | null
+          company_logo: string | null
+          company_name: string | null
+          company_phone: string | null
+          company_website: string | null
           created_at: string | null
           email: string | null
           id: string
           name: string | null
           profile_image: string | null
+          role: string | null
           wedding_date: string | null
         }
         Insert: {
+          company_address?: string | null
+          company_city?: string | null
+          company_description?: string | null
+          company_email?: string | null
+          company_logo?: string | null
+          company_name?: string | null
+          company_phone?: string | null
+          company_website?: string | null
           created_at?: string | null
           email?: string | null
           id: string
           name?: string | null
           profile_image?: string | null
+          role?: string | null
           wedding_date?: string | null
         }
         Update: {
+          company_address?: string | null
+          company_city?: string | null
+          company_description?: string | null
+          company_email?: string | null
+          company_logo?: string | null
+          company_name?: string | null
+          company_phone?: string | null
+          company_website?: string | null
           created_at?: string | null
           email?: string | null
           id?: string
           name?: string | null
           profile_image?: string | null
+          role?: string | null
           wedding_date?: string | null
         }
         Relationships: []

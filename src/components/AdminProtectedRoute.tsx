@@ -1,9 +1,13 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, ReactNode } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
-export const AdminProtectedRoute = () => {
+interface AdminProtectedRouteProps {
+  children?: ReactNode;
+}
+
+export const AdminProtectedRoute = ({ children }: AdminProtectedRouteProps) => {
   const { user, session, isLoading, isAuthenticating } = useAuth();
   const location = useLocation();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
@@ -51,6 +55,6 @@ export const AdminProtectedRoute = () => {
     return <Navigate to="/app/dashboard" replace />;
   }
 
-  return <Outlet />;
+  return children ? <>{children}</> : <Outlet />;
 };
 

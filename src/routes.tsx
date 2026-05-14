@@ -32,6 +32,8 @@ import GoogleCalendarCallback from './pages/auth/GoogleCalendarCallback';
 import AuthCallback from './pages/AuthCallback';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { PublicRoute } from './components/PublicRoute';
+import { AdminProtectedRoute } from './components/AdminProtectedRoute';
+import AdminDashboard from './pages/admin/AdminDashboard';
 
 // Marketing pages
 import HomePage from './pages/marketing/HomePage';
@@ -261,6 +263,26 @@ const router = createBrowserRouter([
           {
             path: 'seating/:id',
             element: <SeatingChart />,
+          },
+        ],
+      },
+
+      // Admin routes (protected — requires admin role)
+      {
+        path: '/admin',
+        element: (
+          <AdminProtectedRoute>
+            <Layout />
+          </AdminProtectedRoute>
+        ),
+        children: [
+          {
+            index: true,
+            element: <Navigate to="/admin/dashboard" replace />,
+          },
+          {
+            path: 'dashboard',
+            element: <AdminDashboard />,
           },
         ],
       },
