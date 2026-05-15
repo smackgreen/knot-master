@@ -16,26 +16,69 @@ export const AdminProtectedRoute = ({ children }: AdminProtectedRouteProps) => {
     let cancelled = false;
     const checkAdmin = async () => {
       if (!user?.id) {
+        console.log('[AdminRoute] No user ID available');
         setIsAdmin(false);
         return;
       }
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .maybeSingle();
-      if (cancelled) return;
-      if (error) {
-        console.error('Error checking admin role:', error);
-        setIsAdmin(false);
+
+      console.log('[AdminRoute] Checking admin role for user:', user.id);
+
+      // Method 1: Check user.role from AuthContext profile fetch (already available)
+      if (user.role === 'admin') {
+        console.log('[AdminRoute] Admin confirmed via user.role from AuthContext');
+        if (!cancelled) setIsAdmin(true);
         return;
       }
-      setIsAdmin(data?.role === 'admin');
+
+      // Method 2: Direct query to profiles table
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (cancelled) return;
+
+        if (error) {
+          console.error('[AdminRoute] Error querying profiles.role:', error);
+          // Don't give up yet — try a raw RPC call as fallback
+          setIsAdmin(false);
+          return;
+        }
+
+        console.log('[AdminRoute] Profile query result:', { data, role: data?.role });
+
+        if (data?.role === 'admin') {
+          console.log('[AdminRoute] Admin confirmed via profiles query');
+          setIsAdmin(true);
+          return;
+        }
+
+        // Method 3: Try the is_admin() RPC function as a final fallback
+        const { data: rpcResult, error: rpcError } = await (supabase.rpc as any)('is_admin');
+
+        if (cancelled) return;
+
+        if (rpcError) {
+          console.error('[AdminRoute] Error calling is_admin RPC:', rpcError);
+          setIsAdmin(false);
+          return;
+        }
+
+        console.log('[AdminRoute] is_admin RPC result:', rpcResult);
+        setIsAdmin(!!rpcResult);
+      } catch (err) {
+        console.error('[AdminRoute] Unexpected error during admin check:', err);
+        if (!cancelled) setIsAdmin(false);
+      }
     };
+
     checkAdmin();
     return () => { cancelled = true; };
-  }, [user?.id]);
+  }, [user?.id, user?.role]);
 
+  // Show loading state if we're loading or in the process of authenticating or checking admin
   if (isLoading || isAuthenticating || isAdmin === null) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -48,13 +91,15 @@ export const AdminProtectedRoute = ({ children }: AdminProtectedRouteProps) => {
   }
 
   if (!user || !session) {
+    console.log('[AdminRoute] No user/session, redirecting to login');
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   if (!isAdmin) {
+    console.log('[AdminRoute] User is not admin, redirecting to /app/dashboard');
     return <Navigate to="/app/dashboard" replace />;
   }
 
+  console.log('[AdminRoute] Admin access granted');
   return children ? <>{children}</> : <Outlet />;
 };
-
