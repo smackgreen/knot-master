@@ -6,15 +6,22 @@ import { Session } from '@supabase/supabase-js';
 import { ExtendedUser, UserProfile } from "@/types/auth";
 import { shouldRedirectForEvent, resetInitialSignIn } from "@/utils/authEvents";
 
+interface AuthResult {
+  success: boolean;
+  error?: any;
+  userId?: string;
+  requiresEmailConfirmation?: boolean;
+}
+
 interface AuthContextType {
   user: ExtendedUser | null;
   session: Session | null;
   isLoading: boolean;
   isAuthenticating: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, metadata?: { [key: string]: any }) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<AuthResult>;
+  signUp: (email: string, password: string, metadata?: { [key: string]: any }) => Promise<AuthResult>;
   signInWithGoogle: (options?: { plan?: string }) => Promise<void>;
-  signOut: () => Promise<void>;
+  signOut: () => Promise<AuthResult>;
   resetPassword: (email: string) => Promise<void>;
   updatePassword: (token: string, newPassword: string) => Promise<void>;
   updateUserProfile: (data: Partial<UserProfile>) => Promise<void>;
@@ -421,7 +428,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         });
 
         // No longer redirecting here - components will handle redirects
-        return { success: true };
+        return { success: true, userId: data.user.id };
       }
     } catch (error: any) {
       console.error("Email login error:", error);
@@ -491,14 +498,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           });
 
           // No longer redirecting here - components will handle redirects
-          return { success: true, requiresEmailConfirmation: false };
+          return { success: true, requiresEmailConfirmation: false, userId: data.user.id };
         } else {
           // Email confirmation required
           toast({
             title: "Verification email sent",
             description: "Please check your email to confirm your account.",
           });
-          return { success: true, requiresEmailConfirmation: true };
+          return { success: true, requiresEmailConfirmation: true, userId: data.user.id };
         }
       }
       return { success: false };

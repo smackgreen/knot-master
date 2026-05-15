@@ -55,7 +55,8 @@ export const EmailAuthForm = ({ defaultTab = "login", selectedPlan = null }: Ema
           navigate(from, { replace: true });
         } else {
           // Role-based redirect: admins go to /admin/dashboard
-          const dashboardPath = user?.id ? await getDashboardPath(user.id) : "/app/dashboard";
+          const dashboardPath = result.userId ? await getDashboardPath(result.userId) : "/app/dashboard";
+          console.log("[EmailAuthForm] Login redirect:", { userId: result.userId, dashboardPath });
           navigate(dashboardPath, { replace: true });
         }
       }
@@ -109,7 +110,8 @@ export const EmailAuthForm = ({ defaultTab = "login", selectedPlan = null }: Ema
             navigate(`/account/subscription?plan=${selectedPlan}`, { replace: true });
           } else {
             // Otherwise redirect to dashboard (role-based)
-            const dashboardPath = user?.id ? await getDashboardPath(user.id) : "/app/dashboard";
+            const dashboardPath = result.userId ? await getDashboardPath(result.userId) : "/app/dashboard";
+            console.log("[EmailAuthForm] Signup redirect:", { userId: result.userId, dashboardPath });
             navigate(dashboardPath, { replace: true });
           }
         }

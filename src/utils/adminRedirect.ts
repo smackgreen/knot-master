@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
  */
 export const getDashboardPath = async (userId: string): Promise<string> => {
   try {
+    console.log('[getDashboardPath] Querying role for user:', userId);
     const { data, error } = await supabase
       .from('profiles')
       .select('role')
@@ -19,13 +20,15 @@ export const getDashboardPath = async (userId: string): Promise<string> => {
       .maybeSingle();
 
     if (error) {
-      console.error('Error checking user role for redirect:', error);
+      console.error('[getDashboardPath] Error checking user role:', error);
       return '/app/dashboard';
     }
 
-    return data?.role === 'admin' ? '/admin/dashboard' : '/app/dashboard';
+    const path = data?.role === 'admin' ? '/admin/dashboard' : '/app/dashboard';
+    console.log('[getDashboardPath] Result:', { role: data?.role, path });
+    return path;
   } catch (err) {
-    console.error('Unexpected error checking user role:', err);
+    console.error('[getDashboardPath] Unexpected error:', err);
     return '/app/dashboard';
   }
 };
