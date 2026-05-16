@@ -3,8 +3,10 @@
   "currentPlan": "Forfait Actuel",
   "managePlan": "Gérez votre forfait d'abonnement et votre facturation",
   "active": "Actif",
+  "trialing": "Essai",
   "cancelPending": "Annulation en Attente",
   "freePlan": "Forfait gratuit - Pas de facturation",
+  "freePlanDescription": "Vous êtes sur le forfait gratuit avec des fonctionnalités limitées.",
   "starterPlanPrice": "19,99 € par mois",
   "proPlanPrice": "39,99 € par mois",
   "renewsOn": "Se renouvelle le {{date}}",
@@ -35,10 +37,12 @@
   "billedYearly": "Facturé annuellement, économisez 15%",
   "securePayment": {
     "title": "Paiement Sécurisé",
-    "description": "Vos informations de paiement sont traitées en toute sécurité. Nous ne stockons pas les détails de votre carte de crédit."
+    "description": "Vos informations de paiement sont traitées en toute sécurité via Stripe. Nous ne stockons pas les détails de votre carte de crédit."
   },
   "proceedToCheckout": "Procéder au Paiement",
   "viewPlans": "Voir les Forfaits",
+  "checkoutSuccess": "Abonnement activé avec succès ! Bienvenue à bord.",
+  "checkoutCanceled": "Le paiement a été annulé. Aucune modification n'a été apportée à votre abonnement.",
 
   "cancelAlert": {
     "title": "Annulation de l'Abonnement",
@@ -54,5 +58,60 @@
     "title": "Aucun Abonnement Actif",
     "description": "Vous êtes actuellement sur le forfait Gratuit. Passez à un forfait supérieur pour accéder à plus de fonctionnalités et de capacités.",
     "viewPlans": "Voir les Forfaits"
+  },
+
+  "tabs": {
+    "plan": "Forfait & Utilisation",
+    "billing": "Historique de Facturation"
+  },
+
+  "billingHistory": "Historique de Facturation",
+  "billingHistoryDescription": "Consultez et téléchargez vos factures passées.",
+  "noInvoices": "Aucune facture pour le moment. Les factures apparaîtront ici après votre premier paiement.",
+  "downloadInvoice": "Télécharger PDF",
+  "viewInvoice": "Voir la Facture",
+  "invoiceStatus": {
+    "paid": "Payée",
+    "open": "En attente",
+    "void": "Annulée",
+    "uncollectible": "Échouée"
+  },
+
+  "paymentFailed": {
+    "title": "Paiement Échoué",
+    "description": "Votre dernier paiement a échoué. Veuillez mettre à jour votre moyen de paiement pour éviter toute interruption de service.",
+    "updatePayment": "Mettre à jour le Paiement"
+  },
+
+  "trial": {
+    "activeTitle": "Période d'Essai — {{days}} jours restants",
+    "endingSoonTitle": "Essai se terminant bientôt — {{days}} jours restants !",
+    "activeDescription": "Votre essai gratuit se termine le {{date}}. Passez à un forfait supérieur pour garder l'accès aux fonctionnalités {{plan}}.",
+    "expiredTitle": "Essai Expiré",
+    "expiredDescription": "Votre essai gratuit a expiré. Passez à un forfait supérieur pour retrouver l'accès aux fonctionnalités premium.",
+    "upgradeNow": "Passer à un Forfait Supérieur",
+    "manageSubscription": "Gérer l'Abonnement"
+  },
+
+  "guard": {
+    "title": "Fonctionnalité Premium",
+    "description": "L'accès à {{feature}} nécessite un forfait payant.",
+    "currentPlan": "Votre forfait",
+    "requiredPlan": "Forfait requis",
+    "upgradeButton": "Passer à un Forfait Supérieur",
+    "pastDueWarning": "Le paiement de votre abonnement est en retard. Veuillez mettre à jour votre moyen de paiement.",
+    "trialExpired": "Votre période d'essai a expiré. Passez à un forfait supérieur pour continuer à utiliser les fonctionnalités premium."
+  },
+
+  "featureGate": {
+    "title": "Fonctionnalité Premium",
+    "description": "Cette fonctionnalité nécessite un abonnement payant. Passez à un forfait supérieur pour la débloquer.",
+    "upgradeButton": "Passer à un Forfait Supérieur"
+  },
+
+  "resourceLimit": {
+    "title": "Limite de Ressources Atteinte",
+    "description": "Vous avez atteint la limite pour {{resourceType}} sur votre forfait actuel.",
+    "upgradeButton": "Passer à un Forfait Supérieur"
   }
 }

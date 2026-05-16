@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -19,10 +19,14 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import BillingHistory from '@/components/subscription/BillingHistory';
+import { PaymentFailureAlert } from '@/components/subscription/PaymentFailureAlert';
+import { TrialBanner } from '@/components/subscription/TrialBanner';
 
 const SubscriptionManager = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { t } = useTranslation(['subscription', 'pricing']);
   const { user } = useAuth();
   const { subscription, isLoading, refreshSubscription, paymentMethods } = useSubscription();
@@ -31,8 +35,21 @@ const SubscriptionManager = () => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 
   // Get the plan from URL query params
-  const queryParams = new URLSearchParams(location.search);
-  const selectedPlan = queryParams.get('plan') as 'starter' | 'pro' | null;
+  const selectedPlan = new URLSearchParams(location.search).get('plan') as 'starter' | 'pro' | null;
+
+  // Handle success/cancel feedback from Stripe redirect
+  useEffect(() => {
+    if (searchParams.get('success') === 'true') {
+      toast.success(t('subscription:checkoutSuccess'));
+      refreshSubscription();
+      // Clean URL
+      window.history.replaceState({}, '', '/account/subscription');
+    } else if (searchParams.get('canceled') === 'true') {
+      toast.info(t('subscription:checkoutCanceled'));
+      // Clean URL
+      window.history.replaceState({}, '', '/account/subscription');
+    }
+  }, [searchParams]);
 
   // Handle subscription checkout
   const handleSubscribe = async (planId: 'starter' | 'pro') => {
@@ -43,10 +60,7 @@ const SubscriptionManager = () => {
 
     setProcessingPayment(true);
     try {
-      // Create a checkout session with Stripe
       const checkoutUrl = await createCheckoutSession(planId, billingCycle);
-
-      // Redirect to Stripe Checkout
       window.location.href = checkoutUrl;
     } catch (error) {
       console.error('Error creating checkout session:', error);
@@ -61,12 +75,8 @@ const SubscriptionManager = () => {
 
     setCancelingSubscription(true);
     try {
-      // Cancel the subscription with Stripe
       await cancelStripeSubscription(subscription.stripeSubscriptionId);
-
-      // Refresh the subscription data
       await refreshSubscription();
-
       toast.success(t('subscription:cancelSuccess'));
     } catch (error) {
       console.error('Error canceling subscription:', error);
@@ -82,12 +92,8 @@ const SubscriptionManager = () => {
 
     setProcessingPayment(true);
     try {
-      // Reactivate the subscription with Stripe
       await reactivateStripeSubscription(subscription.stripeSubscriptionId);
-
-      // Refresh the subscription data
       await refreshSubscription();
-
       toast.success(t('subscription:reactivateSuccess'));
     } catch (error) {
       console.error('Error reactivating subscription:', error);
@@ -100,10 +106,7 @@ const SubscriptionManager = () => {
   // Handle opening the customer portal
   const handleManagePayment = async () => {
     try {
-      // Create a customer portal session with Stripe
       const portalUrl = await createCustomerPortalSession();
-
-      // Redirect to Stripe Customer Portal
       window.location.href = portalUrl;
     } catch (error) {
       console.error('Error creating customer portal session:', error);
@@ -152,115 +155,138 @@ const SubscriptionManager = () => {
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">{t('subscription:title')}</h2>
 
+      {/* Payment failure alert */}
+      <PaymentFailureAlert />
+
+      {/* Trial banner */}
+      <TrialBanner />
+
       {subscription ? (
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between items-start">
-              <div>
-                <CardTitle>{t('subscription:currentPlan')}</CardTitle>
-                <CardDescription>{t('subscription:managePlan')}</CardDescription>
-              </div>
-              <Badge variant={subscription.status === 'active' ? 'default' : 'destructive'}>
-                {subscription.status === 'active'
-                  ? subscription.cancelAtPeriodEnd
-                    ? t('subscription:cancelPending')
-                    : t('subscription:active')
-                  : subscription.status}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-medium">{getPlanName(subscription.planId)}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {getPlanPrice(subscription.planId, subscription.billingCycle)}
-                  {subscription.billingCycle === 'yearly' && (
-                    <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                      {t('subscription:yearlyDiscount')}
-                    </span>
-                  )}
-                </p>
-              </div>
+        <Tabs defaultValue="plan" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="plan">{t('subscription:tabs.plan')}</TabsTrigger>
+            <TabsTrigger value="billing">{t('subscription:tabs.billing')}</TabsTrigger>
+          </TabsList>
 
-              {paymentMethods.length > 0 && (
-                <div>
-                  <p className="text-sm font-medium mb-1">{t('subscription:paymentMethod')}</p>
-                  <div className="flex items-center">
-                    <CreditCardIcon className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span className="text-sm">
-                      {formatPaymentMethod(paymentMethods[0])}
-                    </span>
+          <TabsContent value="plan" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle>{t('subscription:currentPlan')}</CardTitle>
+                    <CardDescription>{t('subscription:managePlan')}</CardDescription>
                   </div>
+                  <Badge variant={subscription.status === 'active' ? 'default' : 'destructive'}>
+                    {subscription.status === 'active'
+                      ? subscription.cancelAtPeriodEnd
+                        ? t('subscription:cancelPending')
+                        : t('subscription:active')
+                      : subscription.status === 'trialing'
+                        ? t('subscription:trialing')
+                        : subscription.status}
+                  </Badge>
                 </div>
-              )}
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-medium">{getPlanName(subscription.planId)}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {subscription.planId === 'free'
+                        ? t('subscription:freePlanDescription')
+                        : getPlanPrice(subscription.planId, subscription.billingCycle)}
+                      {subscription.billingCycle === 'yearly' && subscription.planId !== 'free' && (
+                        <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                          {t('subscription:yearlyDiscount')}
+                        </span>
+                      )}
+                    </p>
+                  </div>
 
-              {subscription.status === 'active' && (
-                <div>
-                  <p className="text-sm">
-                    {subscription.cancelAtPeriodEnd
-                      ? t('subscription:expiresOn', { date: new Date(subscription.currentPeriodEnd).toLocaleDateString() })
-                      : t('subscription:renewsOn', { date: new Date(subscription.currentPeriodEnd).toLocaleDateString() })}
-                  </p>
+                  {paymentMethods.length > 0 && (
+                    <div>
+                      <p className="text-sm font-medium mb-1">{t('subscription:paymentMethod')}</p>
+                      <div className="flex items-center">
+                        <CreditCardIcon className="h-4 w-4 mr-2 text-muted-foreground" />
+                        <span className="text-sm">
+                          {formatPaymentMethod(paymentMethods[0])}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {subscription.status === 'active' && (
+                    <div>
+                      <p className="text-sm">
+                        {subscription.cancelAtPeriodEnd
+                          ? t('subscription:expiresOn', { date: new Date(subscription.currentPeriodEnd).toLocaleDateString() })
+                          : t('subscription:renewsOn', { date: new Date(subscription.currentPeriodEnd).toLocaleDateString() })}
+                      </p>
+                    </div>
+                  )}
+
+                  {subscription.cancelAtPeriodEnd && (
+                    <Alert>
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertTitle>{t('subscription:cancelAlert.title')}</AlertTitle>
+                      <AlertDescription>
+                        {t('subscription:cancelAlert.description', { date: new Date(subscription.currentPeriodEnd).toLocaleDateString() })}
+                      </AlertDescription>
+                    </Alert>
+                  )}
                 </div>
-              )}
+              </CardContent>
+              <CardFooter className="flex flex-wrap gap-2">
+                {subscription.planId !== 'free' && (
+                  <Button
+                    variant="outline"
+                    onClick={handleManagePayment}
+                    className="flex-1"
+                  >
+                    <CreditCardIcon className="mr-2 h-4 w-4" />
+                    {t('subscription:manageBilling')}
+                  </Button>
+                )}
 
-              {subscription.cancelAtPeriodEnd && (
-                <Alert>
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>{t('subscription:cancelAlert.title')}</AlertTitle>
-                  <AlertDescription>
-                    {t('subscription:cancelAlert.description', { date: new Date(subscription.currentPeriodEnd).toLocaleDateString() })}
-                  </AlertDescription>
-                </Alert>
-              )}
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-wrap gap-2">
-            {subscription.planId !== 'free' && (
-              <Button
-                variant="outline"
-                onClick={handleManagePayment}
-                className="flex-1"
-              >
-                <CreditCardIcon className="mr-2 h-4 w-4" />
-                {t('subscription:manageBilling')}
-              </Button>
-            )}
+                {subscription.planId !== 'free' && !subscription.cancelAtPeriodEnd && (
+                  <Button
+                    variant="outline"
+                    onClick={handleCancelSubscription}
+                    disabled={cancelingSubscription}
+                    className="flex-1"
+                  >
+                    {cancelingSubscription && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {t('subscription:cancelPlan')}
+                  </Button>
+                )}
 
-            {subscription.planId !== 'free' && !subscription.cancelAtPeriodEnd && (
-              <Button
-                variant="outline"
-                onClick={handleCancelSubscription}
-                disabled={cancelingSubscription}
-                className="flex-1"
-              >
-                {cancelingSubscription && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {t('subscription:cancelPlan')}
-              </Button>
-            )}
+                {subscription.planId !== 'pro' && !subscription.cancelAtPeriodEnd && (
+                  <Button
+                    onClick={() => navigate('/pricing')}
+                    className="flex-1"
+                  >
+                    {t('subscription:upgradePlan')}
+                  </Button>
+                )}
 
-            {subscription.planId !== 'pro' && !subscription.cancelAtPeriodEnd && (
-              <Button
-                onClick={() => navigate('/pricing')}
-                className="flex-1"
-              >
-                {t('subscription:upgradePlan')}
-              </Button>
-            )}
+                {subscription.cancelAtPeriodEnd && (
+                  <Button
+                    onClick={handleReactivateSubscription}
+                    disabled={processingPayment}
+                    className="flex-1"
+                  >
+                    {processingPayment && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {t('subscription:reactivate')}
+                  </Button>
+                )}
+              </CardFooter>
+            </Card>
+          </TabsContent>
 
-            {subscription.cancelAtPeriodEnd && (
-              <Button
-                onClick={handleReactivateSubscription}
-                disabled={processingPayment}
-                className="flex-1"
-              >
-                {processingPayment && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {t('subscription:reactivate')}
-              </Button>
-            )}
-          </CardFooter>
-        </Card>
+          <TabsContent value="billing">
+            <BillingHistory />
+          </TabsContent>
+        </Tabs>
       ) : selectedPlan ? (
         <Card>
           <CardHeader>
@@ -298,6 +324,18 @@ const SubscriptionManager = () => {
                 ? t('subscription:billedMonthly')
                 : t('subscription:billedYearly')}
             </p>
+
+            {/* Plan features */}
+            <div className="space-y-2 mb-4">
+              {Object.entries(PLAN_DETAILS[selectedPlan]?.features || {})
+                .filter(([, value]) => value === true)
+                .map(([key]) => (
+                  <div key={key} className="flex items-center gap-2 text-sm">
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    <span>{key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase())}</span>
+                  </div>
+                ))}
+            </div>
 
             <Alert>
               <CreditCard className="h-4 w-4" />

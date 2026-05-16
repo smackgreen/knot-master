@@ -217,27 +217,30 @@ export const SubscriptionProvider = ({ children }: SubscriptionProviderProps) =>
       return false;
     }
 
+    // If subscription is past_due, deny premium features
+    if (subscription?.status === 'past_due') {
+      return false;
+    }
+
+    // If trial has expired, treat as free plan
+    if (subscription?.trialEnd && new Date(subscription.trialEnd) < new Date() && subscription.status === 'trialing') {
+      return false;
+    }
+
     // Get the current plan (default to free if no subscription)
     const currentPlan = subscription?.planId || 'free';
 
     // Get the plan details
     const planDetails = PLAN_DETAILS[currentPlan];
+    if (!planDetails) return false;
 
     // Check if the feature is available in the plan
-    switch (feature) {
-      case 'budgetTracking':
-        return planDetails.features.budgetTracking;
-      case 'invoicing':
-        return planDetails.features.invoicing;
-      case 'seatingCharts':
-        return planDetails.features.seatingCharts;
-      case 'mealPlanning':
-        return planDetails.features.mealPlanning;
-      case 'designSuggestions':
-        return planDetails.features.designSuggestions;
-      default:
-        return false;
+    const featureKey = feature as keyof typeof planDetails.features;
+    if (featureKey in planDetails.features) {
+      return planDetails.features[featureKey] as boolean;
     }
+
+    return false;
   };
 
   // Check if user is within plan limits

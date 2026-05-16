@@ -8,17 +8,36 @@ const STRIPE_API_ENDPOINT = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/s
 // These would be created in the Stripe dashboard
 export const STRIPE_PRICE_IDS = {
   starter: {
-    monthly: 'price_starter_monthly', // Replace with actual Stripe price ID
-    yearly: 'price_starter_yearly',   // Replace with actual Stripe price ID
+    monthly: import.meta.env.VITE_STRIPE_PRICE_STARTER_MONTHLY || 'price_starter_monthly',
+    yearly: import.meta.env.VITE_STRIPE_PRICE_STARTER_YEARLY || 'price_starter_yearly',
   },
   pro: {
-    monthly: 'price_pro_monthly',     // Replace with actual Stripe price ID
-    yearly: 'price_pro_yearly',       // Replace with actual Stripe price ID
+    monthly: import.meta.env.VITE_STRIPE_PRICE_PRO_MONTHLY || 'price_pro_monthly',
+    yearly: import.meta.env.VITE_STRIPE_PRICE_PRO_YEARLY || 'price_pro_yearly',
   },
 };
 
 // Plan details
-export const PLAN_DETAILS = {
+export const PLAN_DETAILS: Record<string, {
+  name: string;
+  price: number;
+  yearlyPrice: number;
+  features: {
+    maxClients: number;
+    maxVendors: number;
+    maxGuests: number;
+    budgetTracking: boolean;
+    invoicing: boolean;
+    seatingCharts: boolean;
+    mealPlanning: boolean;
+    designSuggestions: boolean;
+    contracts: boolean;
+    documents: boolean;
+    calendarScheduling: boolean;
+    analytics: boolean;
+    resourceManagement: boolean;
+  };
+}> = {
   free: {
     name: 'Free',
     price: 0,
@@ -32,6 +51,11 @@ export const PLAN_DETAILS = {
       seatingCharts: false,
       mealPlanning: false,
       designSuggestions: false,
+      contracts: false,
+      documents: false,
+      calendarScheduling: false,
+      analytics: false,
+      resourceManagement: false,
     },
   },
   starter: {
@@ -47,6 +71,11 @@ export const PLAN_DETAILS = {
       seatingCharts: false,
       mealPlanning: false,
       designSuggestions: false,
+      contracts: true,
+      documents: true,
+      calendarScheduling: true,
+      analytics: false,
+      resourceManagement: false,
     },
   },
   pro: {
@@ -62,9 +91,25 @@ export const PLAN_DETAILS = {
       seatingCharts: true,
       mealPlanning: true,
       designSuggestions: true,
+      contracts: true,
+      documents: true,
+      calendarScheduling: true,
+      analytics: true,
+      resourceManagement: true,
     },
   },
 };
+
+/**
+ * Get the current session's access token
+ */
+async function getAccessToken(): Promise<string> {
+  const { data: { session }, error } = await supabase.auth.getSession();
+  if (error || !session) {
+    throw new Error('User not authenticated');
+  }
+  return session.access_token;
+}
 
 /**
  * Create a Stripe Checkout session for subscription
@@ -77,10 +122,7 @@ export const createCheckoutSession = async (
   billingCycle: 'monthly' | 'yearly'
 ): Promise<string> => {
   try {
-    const session = supabase.auth.session();
-    if (!session) {
-      throw new Error('User not authenticated');
-    }
+    const accessToken = await getAccessToken();
 
     // Get the price ID based on plan and billing cycle
     const priceId = STRIPE_PRICE_IDS[planId][billingCycle];
@@ -93,7 +135,7 @@ export const createCheckoutSession = async (
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.access_token}`,
+        'Authorization': `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
         priceId,
@@ -122,17 +164,14 @@ export const createCheckoutSession = async (
  */
 export const createCustomerPortalSession = async (): Promise<string> => {
   try {
-    const session = supabase.auth.session();
-    if (!session) {
-      throw new Error('User not authenticated');
-    }
+    const accessToken = await getAccessToken();
 
     // Call the Stripe API endpoint
     const response = await fetch(`${STRIPE_API_ENDPOINT}/create-portal-session`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.access_token}`,
+        'Authorization': `Bearer ${accessToken}`,
       },
     });
 
@@ -157,17 +196,14 @@ export const createCustomerPortalSession = async (): Promise<string> => {
  */
 export const cancelSubscription = async (subscriptionId: string): Promise<boolean> => {
   try {
-    const session = supabase.auth.session();
-    if (!session) {
-      throw new Error('User not authenticated');
-    }
+    const accessToken = await getAccessToken();
 
     // Call the Stripe API endpoint
     const response = await fetch(`${STRIPE_API_ENDPOINT}/cancel-subscription`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.access_token}`,
+        'Authorization': `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
         subscriptionId,
@@ -194,17 +230,14 @@ export const cancelSubscription = async (subscriptionId: string): Promise<boolea
  */
 export const reactivateSubscription = async (subscriptionId: string): Promise<boolean> => {
   try {
-    const session = supabase.auth.session();
-    if (!session) {
-      throw new Error('User not authenticated');
-    }
+    const accessToken = await getAccessToken();
 
     // Call the Stripe API endpoint
     const response = await fetch(`${STRIPE_API_ENDPOINT}/reactivate-subscription`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.access_token}`,
+        'Authorization': `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
         subscriptionId,
@@ -220,6 +253,50 @@ export const reactivateSubscription = async (subscriptionId: string): Promise<bo
   } catch (error) {
     console.error('Error reactivating subscription:', error);
     toast.error('Failed to reactivate subscription. Please try again.');
+    throw error;
+  }
+};
+
+/**
+ * Get billing history (invoices) for the current user
+ * @returns Array of invoice objects
+ */
+export interface BillingInvoice {
+  id: string;
+  stripeInvoiceId: string;
+  amount: number;
+  currency: string;
+  status: string;
+  description: string;
+  invoicePdf: string;
+  hostedInvoiceUrl: string;
+  createdAt: string;
+  periodStart: string;
+  periodEnd: string;
+}
+
+export const getBillingHistory = async (): Promise<BillingInvoice[]> => {
+  try {
+    const accessToken = await getAccessToken();
+
+    const response = await fetch(`${STRIPE_API_ENDPOINT}/billing-history`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to fetch billing history');
+    }
+
+    const data = await response.json();
+    return data.invoices || [];
+  } catch (error) {
+    console.error('Error fetching billing history:', error);
+    toast.error('Failed to fetch billing history.');
     throw error;
   }
 };

@@ -3,8 +3,10 @@
   "currentPlan": "Current Plan",
   "managePlan": "Manage your subscription plan and billing",
   "active": "Active",
+  "trialing": "Trial",
   "cancelPending": "Cancellation Pending",
   "freePlan": "Free plan - No billing",
+  "freePlanDescription": "You're on the free plan with limited features.",
   "starterPlanPrice": "$19.99 per month",
   "proPlanPrice": "$39.99 per month",
   "renewsOn": "Renews on {{date}}",
@@ -35,10 +37,12 @@
   "billedYearly": "Billed yearly, save 15%",
   "securePayment": {
     "title": "Secure Payment",
-    "description": "Your payment information is processed securely. We do not store your credit card details."
+    "description": "Your payment information is processed securely via Stripe. We do not store your credit card details."
   },
   "proceedToCheckout": "Proceed to Checkout",
   "viewPlans": "View Plans",
+  "checkoutSuccess": "Subscription activated successfully! Welcome aboard.",
+  "checkoutCanceled": "Checkout was canceled. No changes were made to your subscription.",
 
   "cancelAlert": {
     "title": "Subscription Cancellation",
@@ -54,5 +58,60 @@
     "title": "No Active Subscription",
     "description": "You're currently on the Free plan. Upgrade to access more features and capabilities.",
     "viewPlans": "View Plans"
+  },
+
+  "tabs": {
+    "plan": "Plan & Usage",
+    "billing": "Billing History"
+  },
+
+  "billingHistory": "Billing History",
+  "billingHistoryDescription": "View and download your past invoices.",
+  "noInvoices": "No invoices yet. Invoices will appear here after your first payment.",
+  "downloadInvoice": "Download PDF",
+  "viewInvoice": "View Invoice",
+  "invoiceStatus": {
+    "paid": "Paid",
+    "open": "Open",
+    "void": "Void",
+    "uncollectible": "Failed"
+  },
+
+  "paymentFailed": {
+    "title": "Payment Failed",
+    "description": "Your last payment attempt failed. Please update your payment method to avoid service interruption.",
+    "updatePayment": "Update Payment Method"
+  },
+
+  "trial": {
+    "activeTitle": "Trial Period — {{days}} days remaining",
+    "endingSoonTitle": "Trial ending soon — {{days}} days left!",
+    "activeDescription": "Your free trial ends on {{date}}. Upgrade to keep access to {{plan}} features.",
+    "expiredTitle": "Trial Expired",
+    "expiredDescription": "Your free trial has expired. Upgrade now to regain access to premium features.",
+    "upgradeNow": "Upgrade Now",
+    "manageSubscription": "Manage Subscription"
+  },
+
+  "guard": {
+    "title": "Premium Feature",
+    "description": "Access to {{feature}} requires a paid subscription plan.",
+    "currentPlan": "Your plan",
+    "requiredPlan": "Required plan",
+    "upgradeButton": "Upgrade to Access",
+    "pastDueWarning": "Your subscription payment is overdue. Please update your payment method.",
+    "trialExpired": "Your trial period has expired. Upgrade to continue using premium features."
+  },
+
+  "featureGate": {
+    "title": "Premium Feature",
+    "description": "This feature requires a paid subscription. Upgrade your plan to unlock it.",
+    "upgradeButton": "Upgrade Plan"
+  },
+
+  "resourceLimit": {
+    "title": "Resource Limit Reached",
+    "description": "You've reached the limit for {{resourceType}} on your current plan.",
+    "upgradeButton": "Upgrade Plan"
   }
 }
